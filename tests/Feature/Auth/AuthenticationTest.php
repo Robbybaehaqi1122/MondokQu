@@ -18,6 +18,7 @@ test('users can authenticate using username on the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
+    expect($user->fresh()->last_login_at)->not->toBeNull();
     $response->assertRedirect(route('dashboard.home', absolute: false));
 });
 
@@ -47,6 +48,20 @@ test('admin users are redirected to the admin dashboard after login', function (
     $response->assertRedirect(route('admin.dashboard', absolute: false));
 });
 
+test('superadmin users are redirected to the admin dashboard after login', function () {
+    Role::findOrCreate('Superadmin', 'web');
+    $user = User::factory()->create();
+    $user->assignRole('Superadmin');
+
+    $response = $this->post('/login', [
+        'login' => $user->username,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('admin.dashboard', absolute: false));
+});
+
 test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 
@@ -58,6 +73,36 @@ test('users can not authenticate with invalid password', function () {
     $this->assertGuest();
 });
 
+test('inactive users can not authenticate', function () {
+    $user = User::factory()->create([
+        'status' => User::STATUS_INACTIVE,
+    ]);
+
+    $response = $this->from('/login')->post('/login', [
+        'login' => $user->username,
+        'password' => 'password',
+    ]);
+
+    $this->assertGuest();
+    $response->assertRedirect('/login');
+    $response->assertSessionHasErrors('login');
+});
+
+test('suspended users can not authenticate', function () {
+    $user = User::factory()->create([
+        'status' => User::STATUS_SUSPENDED,
+    ]);
+
+    $response = $this->from('/login')->post('/login', [
+        'login' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertGuest();
+    $response->assertRedirect('/login');
+    $response->assertSessionHasErrors('login');
+});
+
 test('users can logout', function () {
     $user = User::factory()->create();
 
@@ -65,4 +110,18 @@ test('users can logout', function () {
 
     $this->assertGuest();
     $response->assertRedirect('/');
+});
+
+test('users with password change required are redirected to profile after login', function () {
+    $user = User::factory()->create([
+        'password_change_required' => true,
+    ]);
+
+    $response = $this->post('/login', [
+        'login' => $user->username,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('profile.edit', absolute: false));
 });

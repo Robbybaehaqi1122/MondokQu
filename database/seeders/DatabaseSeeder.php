@@ -21,12 +21,13 @@ class DatabaseSeeder extends Seeder
         $user = User::updateOrCreate([
             'email' => 'admin@example.com',
         ], [
-            'name' => 'Admin User',
+            'name' => 'Superadmin User',
             'username' => 'superadmin',
             'email' => 'admin@example.com',
+            'status' => User::STATUS_ACTIVE,
             'password' => bcrypt('password'),
         ]);
 
-        $user->assignRole('Admin');
+        $user->syncRoles(['Superadmin']);
     }
 }

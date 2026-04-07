@@ -45,10 +45,10 @@
                     <span>Dashboard</span>
                 </a>
 
-                @if ($user->hasRole('Admin'))
+                @if ($user->hasAnyRole(['Superadmin', 'Admin']) || $user->canAny(['assign roles', 'manage system settings', 'view activity logs']))
                     <div class="sidebar-section-title">Modul</div>
-                    <details class="sidebar-dropdown" @if (request()->routeIs('admin.users')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('admin.users') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-shield-lock"></i>
                             </span>
@@ -59,12 +59,41 @@
                         </summary>
 
                         <div class="sidebar-submenu">
-                            <a class="sidebar-sublink {{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}">
-                                <span class="sidebar-link-icon">
-                                    <i class="ti ti-users"></i>
-                                </span>
-                                <span>Manajemen User</span>
-                            </a>
+                            @if ($user->hasAnyRole(['Superadmin', 'Admin']))
+                                <a class="sidebar-sublink {{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-users"></i>
+                                    </span>
+                                    <span>Manajemen User</span>
+                                </a>
+                            @endif
+
+                            @can('assign roles')
+                                <a class="sidebar-sublink {{ request()->routeIs('admin.roles') ? 'active' : '' }}" href="{{ route('admin.roles') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-user-shield"></i>
+                                    </span>
+                                    <span>Manajemen Role</span>
+                                </a>
+                            @endcan
+
+                            @can('manage system settings')
+                                <a class="sidebar-sublink {{ request()->routeIs('admin.permissions') ? 'active' : '' }}" href="{{ route('admin.permissions') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-key"></i>
+                                    </span>
+                                    <span>Permission Management</span>
+                                </a>
+                            @endcan
+
+                            @can('view activity logs')
+                                <a class="sidebar-sublink {{ request()->routeIs('admin.activity-logs') ? 'active' : '' }}" href="{{ route('admin.activity-logs') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-history"></i>
+                                    </span>
+                                    <span>Log Activity</span>
+                                </a>
+                            @endcan
                         </div>
                     </details>
                 @endif
@@ -86,6 +115,26 @@
                             <i class="ti ti-report-money"></i>
                         </span>
                         <span>Laporan Keuangan</span>
+                    </a>
+                @endif
+
+                @if ($user->hasRole('Musyrif/Ustadz'))
+                    <div class="sidebar-section-title">Modul Musyrif</div>
+                    <a class="sidebar-link {{ request()->routeIs('musyrif.dashboard') ? 'active' : '' }}" href="{{ route('musyrif.dashboard') }}">
+                        <span class="sidebar-link-icon">
+                            <i class="ti ti-book-2"></i>
+                        </span>
+                        <span>Tahfidz & Absensi</span>
+                    </a>
+                @endif
+
+                @if ($user->hasRole('Wali Santri'))
+                    <div class="sidebar-section-title">Portal Wali</div>
+                    <a class="sidebar-link {{ request()->routeIs('wali-santri.dashboard') ? 'active' : '' }}" href="{{ route('wali-santri.dashboard') }}">
+                        <span class="sidebar-link-icon">
+                            <i class="ti ti-users-group"></i>
+                        </span>
+                        <span>Portal Orang Tua</span>
                     </a>
                 @endif
             </div>

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Auth\Actions\AttemptLoginAction;
 use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
 use App\Modules\Auth\Requests\LoginRequest;
+use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -97,6 +98,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        app(ActivityLogger::class)->log(
+            action: 'logout',
+            actor: $request->user(),
+            target: $request->user(),
+            description: 'Logout dari aplikasi.',
+            ipAddress: $request->ip()
+        );
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

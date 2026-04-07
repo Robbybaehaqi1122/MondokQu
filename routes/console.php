@@ -22,7 +22,7 @@ Artisan::command('app:create-admin', function () {
         return 1;
     }
 
-    Role::findOrCreate('Admin', 'web');
+    Role::findOrCreate('Superadmin', 'web');
 
     $user = User::updateOrCreate(
         ['email' => $email],
@@ -30,15 +30,16 @@ Artisan::command('app:create-admin', function () {
             'name' => $name,
             'username' => $username,
             'email' => $email,
+            'status' => User::STATUS_ACTIVE,
             'password' => Hash::make($password),
         ]
     );
 
-    $user->syncRoles(['Admin']);
+    $user->syncRoles(['Superadmin']);
 
-    $this->info('Akun admin berhasil dibuat atau diperbarui.');
+    $this->info('Akun superadmin berhasil dibuat atau diperbarui.');
     $this->line('Login dengan username: '.$user->username);
     $this->line('atau email: '.$user->email);
 
     return 0;
-})->purpose('Membuat akun admin/superadmin internal');
+})->purpose('Membuat akun superadmin internal');

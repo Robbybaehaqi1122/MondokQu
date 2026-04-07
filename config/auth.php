@@ -114,4 +114,6 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'default_user_password' => env('AUTH_DEFAULT_USER_PASSWORD', 'Password123!'),
+
 ];

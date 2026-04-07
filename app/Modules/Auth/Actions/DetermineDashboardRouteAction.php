@@ -15,7 +15,11 @@ class DetermineDashboardRouteAction
             return route('login');
         }
 
-        if ($user->hasRole('Admin')) {
+        if ($user->password_change_required) {
+            return route('profile.edit');
+        }
+
+        if ($user->hasAnyRole(['Superadmin', 'Admin'])) {
             return route('admin.dashboard');
         }
 

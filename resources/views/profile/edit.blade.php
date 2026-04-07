@@ -7,6 +7,17 @@
     </x-slot>
 
     <div class="row row-cards">
+        @if (auth()->user()?->password_change_required)
+            <div class="col-12">
+                <div class="alert alert-warning" role="alert">
+                    <div class="fw-semibold mb-1">Ganti password wajib</div>
+                    <div class="text-secondary">
+                        Akun Anda baru saja direset oleh admin. Sebelum melanjutkan menggunakan aplikasi, silakan ganti password default Anda.
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="col-12">
             @include('profile.partials.update-profile-information-form')
         </div>

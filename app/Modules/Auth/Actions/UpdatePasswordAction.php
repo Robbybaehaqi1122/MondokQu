@@ -14,6 +14,7 @@ class UpdatePasswordAction
     {
         $user->update([
             'password' => Hash::make($password),
+            'password_change_required' => false,
         ]);
     }
 }

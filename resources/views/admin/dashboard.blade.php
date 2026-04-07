@@ -30,7 +30,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="text-secondary">Catatan</div>
-                    <p class="mb-0 mt-2">Admin dapat mengelola semua data, user, role, dan permission.</p>
+                    <p class="mb-0 mt-2">Superadmin mengelola user, role, permission, dan pengaturan sistem. Admin fokus pada data operasional harian.</p>
                 </div>
             </div>
         </div>

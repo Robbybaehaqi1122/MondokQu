@@ -35,19 +35,19 @@
 
                 <div class="page-body">
                     <div class="container-xl">
-                        @if (session('success'))
+                        @if (session('success') || session('error'))
                             <div class="toast-container position-fixed top-0 end-0 p-3 auth-toast-container" style="z-index: 1080;">
-                                <div class="toast auth-toast auth-toast-success show" role="alert" aria-live="assertive" aria-atomic="true" data-login-toast>
+                                <div class="toast auth-toast {{ session('error') ? 'auth-toast-danger' : 'auth-toast-success' }}" role="alert" aria-live="assertive" aria-atomic="true" data-login-toast>
                                     <div class="toast-header border-0">
-                                        <span class="auth-toast-icon bg-success-lt text-success">
-                                            <i class="ti ti-circle-check"></i>
+                                        <span class="auth-toast-icon {{ session('error') ? 'bg-danger-lt text-danger' : 'bg-success-lt text-success' }}">
+                                            <i class="ti {{ session('error') ? 'ti-alert-circle' : 'ti-circle-check' }}"></i>
                                         </span>
                                         <strong class="me-auto">Mondok Qu</strong>
                                         <small>Baru saja</small>
                                         <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                                     </div>
                                     <div class="toast-body">
-                                        {{ session('success') }}
+                                        {{ session('error') ?? session('success') }}
                                     </div>
                                 </div>
                             </div>
@@ -64,8 +64,15 @@
                 const toastElement = document.querySelector('[data-login-toast]');
 
                 if (toastElement) {
-                    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-                    toast.show();
+                    toastElement.classList.add('show');
+
+                    window.setTimeout(() => {
+                        toastElement.classList.remove('show');
+
+                        window.setTimeout(() => {
+                            toastElement.remove();
+                        }, 300);
+                    }, 7000);
                 }
             });
         </script>

@@ -37,7 +37,29 @@ class StoreUserRequest extends FormRequest
             'username' => ['required', 'string', 'max:255', Rule::unique(User::class)],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)],
             'role' => ['required', 'string', Rule::exists(Role::class, 'name')],
-            'password' => ['required', Password::defaults(), 'confirmed'],
+            'status' => ['required', 'string', Rule::in(User::availableStatuses())],
+            'password' => ['required', Password::min(8), 'confirmed'],
+        ];
+    }
+
+    /**
+     * Get the validation messages that apply to the request.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'username.required' => 'Username wajib diisi.',
+            'username.unique' => 'Username sudah digunakan user lain.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah digunakan user lain.',
+            'role.required' => 'Role wajib dipilih.',
+            'status.required' => 'Status user wajib dipilih.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password harus sama.',
         ];
     }
 }
