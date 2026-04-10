@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -13,15 +15,27 @@ test('profile page is displayed', function () {
 });
 
 test('profile information can be updated', function () {
+    Storage::fake('public');
+
     $user = User::factory()->create();
+    $avatar = function_exists('imagecreatetruecolor')
+        ? UploadedFile::fake()->image('profile-avatar.png', 300, 300)->size(512)
+        : null;
+
+    $payload = [
+        'name' => 'Test User',
+        'username' => 'test-user',
+        'email' => 'test@example.com',
+        'phone_number' => '081234567890',
+    ];
+
+    if ($avatar) {
+        $payload['avatar'] = $avatar;
+    }
 
     $response = $this
         ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'username' => 'test-user',
-            'email' => 'test@example.com',
-        ]);
+        ->patch('/profile', $payload);
 
     $response
         ->assertSessionHasNoErrors()
@@ -32,6 +46,13 @@ test('profile information can be updated', function () {
     $this->assertSame('Test User', $user->name);
     $this->assertSame('test-user', $user->username);
     $this->assertSame('test@example.com', $user->email);
+    $this->assertSame('081234567890', $user->phone_number);
+    if ($avatar) {
+        expect($user->avatar_path)->toStartWith('avatars/');
+        Storage::disk('public')->assertExists($user->avatar_path);
+    } else {
+        expect($user->avatar_path)->toBeNull();
+    }
     $this->assertNull($user->email_verified_at);
 });
 

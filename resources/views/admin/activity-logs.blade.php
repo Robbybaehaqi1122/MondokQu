@@ -10,9 +10,22 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div>
-                        <h3 class="card-title">Riwayat Aktivitas</h3>
-                        <p class="text-secondary mb-0">Menampilkan siapa melakukan apa, targetnya siapa, kapan terjadi.</p>
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-3 w-100">
+                        <div>
+                            <h3 class="card-title">Riwayat Aktivitas</h3>
+                            <p class="text-secondary mb-0">Menampilkan siapa melakukan apa, targetnya siapa, kapan terjadi.</p>
+                        </div>
+
+                        @if (auth()->user()?->hasAnyRole(['Superadmin', 'Admin']))
+                            <form method="POST" action="{{ route('admin.activity-logs.destroy-all') }}" onsubmit="return confirm('Yakin ingin menghapus semua log activity? Tindakan ini tidak bisa dibatalkan.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="ti ti-trash me-1"></i>
+                                    Hapus Semua Log
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
                 <div class="table-responsive">

@@ -21,6 +21,11 @@
             'inactive' => 'bg-secondary-lt text-secondary',
             'suspended' => 'bg-danger-lt text-danger',
         ];
+
+        $primaryRole = $userDetail->roles->first()?->name;
+        $isVerified = $userDetail->hasVerifiedEmail();
+        $isActive = $userDetail->status === \App\Models\User::STATUS_ACTIVE;
+        $statusLabel = $statusLabels[$userDetail->status] ?? ucfirst($userDetail->status);
     @endphp
 
     <x-slot name="header">
@@ -46,10 +51,18 @@
                 <div class="card-body">
                     <div class="row g-4 align-items-start">
                         <div class="col-lg-8">
-                            <div class="d-flex flex-column flex-md-row gap-4 align-items-md-center">
-                                <div class="user-detail-avatar">
-                                    {{ strtoupper(substr($userDetail->name, 0, 1)) }}
-                                </div>
+                            <div class="d-flex flex-column flex-md-row gap-4 align-items-md-start">
+                                @if ($userDetail->avatarUrl())
+                                    <img
+                                        src="{{ $userDetail->avatarUrl() }}"
+                                        alt="Avatar {{ $userDetail->name }}"
+                                        class="user-detail-avatar user-detail-avatar-image"
+                                    >
+                                @else
+                                    <div class="user-detail-avatar">
+                                        {{ strtoupper(substr($userDetail->name, 0, 1)) }}
+                                    </div>
+                                @endif
 
                                 <div class="flex-fill">
                                     <div class="d-flex flex-wrap gap-2 mb-3">
@@ -62,10 +75,10 @@
                                         @endforelse
 
                                         <span class="badge {{ $statusBadgeClasses[$userDetail->status] ?? 'bg-secondary-lt text-secondary' }}">
-                                            {{ $statusLabels[$userDetail->status] ?? ucfirst($userDetail->status) }}
+                                            {{ $statusLabel }}
                                         </span>
 
-                                        @if ($userDetail->hasVerifiedEmail())
+                                        @if ($isVerified)
                                             <span class="badge bg-success-lt text-success">Email Terverifikasi</span>
                                         @else
                                             <span class="badge bg-warning-lt text-warning">Email Belum Terverifikasi</span>
@@ -73,28 +86,36 @@
                                     </div>
 
                                     <h3 class="mb-1">{{ $userDetail->name }}</h3>
-                                    <div class="text-secondary mb-3">{{ '@'.$userDetail->username }} • {{ $userDetail->email }}</div>
+                                    <div class="text-secondary mb-3 user-detail-subtitle">
+                                        <span>{{ '@'.$userDetail->username }}</span>
+                                        <span class="user-detail-separator"></span>
+                                        <span>{{ $userDetail->email }}</span>
+                                    </div>
 
                                     <div class="user-detail-meta-grid">
+                                        <div class="user-detail-meta-card">
+                                            <div class="text-secondary small text-uppercase fw-bold">Role</div>
+                                            <div class="fw-semibold mt-2">{{ $primaryRole ?: 'Tanpa role' }}</div>
+                                        </div>
+                                        <div class="user-detail-meta-card">
+                                            <div class="text-secondary small text-uppercase fw-bold">Status</div>
+                                            <div class="fw-semibold mt-2">{{ $statusLabel }}</div>
+                                        </div>
+                                        <div class="user-detail-meta-card">
+                                            <div class="text-secondary small text-uppercase fw-bold">Login Terakhir</div>
+                                            <div class="fw-semibold mt-2">{{ $userDetail->last_login_at ? $userDetail->last_login_at->translatedFormat('d M Y H:i') : 'Belum pernah login' }}</div>
+                                        </div>
                                         <div class="user-detail-meta-card">
                                             <div class="text-secondary small text-uppercase fw-bold">Dibuat Oleh</div>
                                             <div class="fw-semibold mt-2">{{ $userDetail->creator?->name ?? 'System / Seeder' }}</div>
                                         </div>
                                         <div class="user-detail-meta-card">
-                                            <div class="text-secondary small text-uppercase fw-bold">Last Login</div>
-                                            <div class="fw-semibold mt-2">
-                                                {{ $userDetail->last_login_at ? $userDetail->last_login_at->translatedFormat('d M Y H:i') : 'Belum pernah login' }}
-                                            </div>
+                                            <div class="text-secondary small text-uppercase fw-bold">Verifikasi</div>
+                                            <div class="fw-semibold mt-2">{{ $isVerified ? 'Terverifikasi' : 'Belum verifikasi' }}</div>
                                         </div>
                                         <div class="user-detail-meta-card">
-                                            <div class="text-secondary small text-uppercase fw-bold">Wajib Ganti Password</div>
-                                            <div class="fw-semibold mt-2">{{ $userDetail->password_change_required ? 'Ya' : 'Tidak' }}</div>
-                                        </div>
-                                        <div class="user-detail-meta-card">
-                                            <div class="text-secondary small text-uppercase fw-bold">Verifikasi Email</div>
-                                            <div class="fw-semibold mt-2">
-                                                {{ $userDetail->email_verified_at ? $userDetail->email_verified_at->translatedFormat('d M Y H:i') : 'Belum diverifikasi' }}
-                                            </div>
+                                            <div class="text-secondary small text-uppercase fw-bold">Terdaftar</div>
+                                            <div class="fw-semibold mt-2">{{ $userDetail->created_at->translatedFormat('d M Y H:i') }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -103,14 +124,13 @@
 
                         <div class="col-lg-4">
                             <div class="user-detail-actions">
-                                <div>
+                                <div class="user-detail-actions-head">
                                     <div class="text-secondary small text-uppercase fw-bold">Aksi Cepat</div>
                                     <h3 class="card-title mt-2 mb-1">Kontrol Akun</h3>
-                                    <p class="text-secondary small mb-0">Reset password, ubah role, atur status, dan tindak lanjuti verifikasi email dari satu tempat.</p>
                                 </div>
 
                                 @if ($canManageRoles)
-                                    <form method="POST" action="{{ route('admin.users.update-role', $userDetail) }}" class="user-detail-inline-form" onsubmit="return confirm('Yakin ingin mengubah role user ini?')">
+                                    <form method="POST" action="{{ route('admin.users.update-role', $userDetail) }}" class="user-detail-inline-form user-detail-action-block" onsubmit="return confirm('Yakin ingin mengubah role user ini?')">
                                         @csrf
                                         @method('PATCH')
                                         <label for="detail_role" class="form-label mb-2">Role Aktif</label>
@@ -126,59 +146,63 @@
                                         </div>
                                     </form>
                                 @else
-                                    <div class="alert alert-secondary mb-0">
+                                    <div class="alert alert-secondary mb-0 user-detail-action-block">
                                         Role aktif hanya dapat diubah oleh Superadmin.
                                     </div>
                                 @endif
 
                                 @if ($canManageTargetUser)
-                                    <form method="POST" action="{{ route('admin.users.update-password', $userDetail) }}" onsubmit="return confirm('Reset password user ini ke password default? User akan diwajibkan ganti password saat login berikutnya.')">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-primary w-100">
-                                            <i class="ti ti-key me-1"></i>
-                                            Reset Password Default
-                                        </button>
-                                    </form>
+                                    <div class="user-detail-action-stack">
+                                        <div class="user-detail-action-title">Tindakan sensitif</div>
 
-                                    <form method="POST" action="{{ route('admin.users.update-status', $userDetail) }}" onsubmit="return confirm('Yakin ingin memperbarui status akun ini?')">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input
-                                            type="hidden"
-                                            name="status"
-                                            value="{{ $userDetail->status === \App\Models\User::STATUS_ACTIVE ? \App\Models\User::STATUS_INACTIVE : \App\Models\User::STATUS_ACTIVE }}"
-                                        >
-                                        <button
-                                            type="submit"
-                                            class="btn {{ $userDetail->status === \App\Models\User::STATUS_ACTIVE ? 'btn-outline-danger' : 'btn-outline-success' }} w-100"
-                                            @disabled($currentUser?->id === $userDetail->id && $userDetail->status === \App\Models\User::STATUS_ACTIVE)
-                                        >
-                                            <i class="ti {{ $userDetail->status === \App\Models\User::STATUS_ACTIVE ? 'ti-user-off' : 'ti-user-check' }} me-1"></i>
-                                            {{ $userDetail->status === \App\Models\User::STATUS_ACTIVE ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}
-                                        </button>
-                                    </form>
-
-                                    @unless ($userDetail->hasVerifiedEmail())
-                                        <form method="POST" action="{{ route('admin.users.resend-verification', $userDetail) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-outline-primary w-100">
-                                                <i class="ti ti-mail-forward me-1"></i>
-                                                Kirim Ulang Verifikasi
-                                            </button>
-                                        </form>
-
-                                        <form method="POST" action="{{ route('admin.users.verify-email', $userDetail) }}" onsubmit="return confirm('Tandai email user ini sebagai terverifikasi?')">
+                                        <form method="POST" action="{{ route('admin.users.update-password', $userDetail) }}" onsubmit="return confirm('Reset password user ini ke password default? User akan diwajibkan ganti password saat login berikutnya.')">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="btn btn-outline-success w-100">
-                                                <i class="ti ti-circle-check me-1"></i>
-                                                Verifikasi Manual
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="ti ti-key me-1"></i>
+                                                Reset Password Default
                                             </button>
                                         </form>
-                                    @endunless
+
+                                        <form method="POST" action="{{ route('admin.users.update-status', $userDetail) }}" onsubmit="return confirm('Yakin ingin memperbarui status akun ini?')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input
+                                                type="hidden"
+                                                name="status"
+                                                value="{{ $isActive ? \App\Models\User::STATUS_INACTIVE : \App\Models\User::STATUS_ACTIVE }}"
+                                            >
+                                            <button
+                                                type="submit"
+                                                class="btn {{ $isActive ? 'btn-outline-danger' : 'btn-outline-success' }} w-100"
+                                                @disabled($currentUser?->id === $userDetail->id && $isActive)
+                                            >
+                                                <i class="ti {{ $isActive ? 'ti-user-off' : 'ti-user-check' }} me-1"></i>
+                                                {{ $isActive ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}
+                                            </button>
+                                        </form>
+
+                                        @unless ($isVerified)
+                                            <form method="POST" action="{{ route('admin.users.resend-verification', $userDetail) }}">
+                                                @csrf
+                                                <button type="submit" class="btn btn-outline-primary w-100">
+                                                    <i class="ti ti-mail-forward me-1"></i>
+                                                    Kirim Ulang Verifikasi
+                                                </button>
+                                            </form>
+
+                                            <form method="POST" action="{{ route('admin.users.verify-email', $userDetail) }}" onsubmit="return confirm('Tandai email user ini sebagai terverifikasi?')">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-outline-success w-100">
+                                                    <i class="ti ti-circle-check me-1"></i>
+                                                    Verifikasi Manual
+                                                </button>
+                                            </form>
+                                        @endunless
+                                    </div>
                                 @else
-                                    <div class="alert alert-warning mb-0">
+                                    <div class="alert alert-warning mb-0 user-detail-action-block">
                                         Aksi sensitif untuk akun Superadmin hanya tersedia bagi Superadmin.
                                     </div>
                                 @endif
@@ -205,50 +229,57 @@
                 <div class="card-header">
                     <div>
                         <h3 class="card-title">Profil User</h3>
-                        <div class="text-secondary small">Snapshot identitas, otorisasi, dan status akun saat ini.</div>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="user-detail-info-list">
                         <div class="user-detail-info-row">
                             <span>Nama lengkap</span>
-                            <strong>{{ $userDetail->name }}</strong>
+                            <strong class="user-detail-info-value">{{ $userDetail->name }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Username</span>
-                            <strong>{{ '@'.$userDetail->username }}</strong>
+                            <strong class="user-detail-info-value">{{ '@'.$userDetail->username }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Email</span>
-                            <strong>{{ $userDetail->email }}</strong>
+                            <strong class="user-detail-info-value">{{ $userDetail->email }}</strong>
+                        </div>
+                        <div class="user-detail-info-row">
+                            <span>No. HP</span>
+                            <strong class="user-detail-info-value">{{ $userDetail->phone_number ?: 'Belum diisi' }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Role aktif</span>
-                            <strong>{{ $userDetail->getRoleNames()->implode(', ') ?: 'Tanpa role' }}</strong>
+                            <strong class="user-detail-info-value">{{ $userDetail->getRoleNames()->implode(', ') ?: 'Tanpa role' }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Status akun</span>
-                            <strong>{{ $statusLabels[$userDetail->status] ?? ucfirst($userDetail->status) }}</strong>
+                            <strong class="user-detail-info-value">{{ $statusLabel }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Email verification</span>
-                            <strong>{{ $userDetail->hasVerifiedEmail() ? 'Terverifikasi' : 'Belum terverifikasi' }}</strong>
+                            <strong class="user-detail-info-value">{{ $isVerified ? 'Terverifikasi' : 'Belum terverifikasi' }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Terakhir login</span>
-                            <strong>{{ $userDetail->last_login_at ? $userDetail->last_login_at->translatedFormat('d M Y H:i') : 'Belum pernah login' }}</strong>
+                            <strong class="user-detail-info-value">{{ $userDetail->last_login_at ? $userDetail->last_login_at->translatedFormat('d M Y H:i') : 'Belum pernah login' }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Password change required</span>
-                            <strong>{{ $userDetail->password_change_required ? 'Ya' : 'Tidak' }}</strong>
+                            <strong class="user-detail-info-value">{{ $userDetail->password_change_required ? 'Ya' : 'Tidak' }}</strong>
+                        </div>
+                        <div class="user-detail-info-row">
+                            <span>Avatar</span>
+                            <strong class="user-detail-info-value">{{ $userDetail->avatar_path ? 'Sudah diupload' : 'Belum ada avatar' }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Dibuat oleh</span>
-                            <strong>{{ $userDetail->creator?->name ?? 'System / Seeder' }}</strong>
+                            <strong class="user-detail-info-value">{{ $userDetail->creator?->name ?? 'System / Seeder' }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Terdaftar</span>
-                            <strong>{{ $userDetail->created_at->translatedFormat('d M Y H:i') }}</strong>
+                            <strong class="user-detail-info-value">{{ $userDetail->created_at->translatedFormat('d M Y H:i') }}</strong>
                         </div>
                     </div>
                 </div>
@@ -260,7 +291,6 @@
                 <div class="card-header">
                     <div>
                         <h3 class="card-title">Riwayat Perubahan Role</h3>
-                        <div class="text-secondary small">Jejak perubahan akses user dari waktu ke waktu.</div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -304,7 +334,6 @@
                 <div class="card-header">
                     <div>
                         <h3 class="card-title">Riwayat Aktivitas</h3>
-                        <div class="text-secondary small">Gabungan aktivitas akun ini sebagai pelaku maupun sebagai target perubahan.</div>
                     </div>
                 </div>
                 <div class="table-responsive">

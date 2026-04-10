@@ -319,7 +319,7 @@
                                             <div class="modal modal-blur fade" id="editUserModal{{ $managedUser->id }}" tabindex="-1" aria-hidden="true">
                                                 <div class="modal-dialog modal-dialog-centered">
                                                     <div class="modal-content">
-                                                        <form method="POST" action="{{ route('admin.users.update', $managedUser) }}">
+                                                        <form method="POST" action="{{ route('admin.users.update', $managedUser) }}" enctype="multipart/form-data">
                                                             @csrf
                                                             @method('PATCH')
 
@@ -357,7 +357,7 @@
                                                                     >
                                                                 </div>
 
-                                                                <div>
+                                                                <div class="mb-3">
                                                                     <label for="edit_email_{{ $managedUser->id }}" class="form-label">Email</label>
                                                                     <input
                                                                         id="edit_email_{{ $managedUser->id }}"
@@ -368,6 +368,36 @@
                                                                         required
                                                                     >
                                                                     <div class="form-hint mt-2">Jika email diubah, status verifikasi email akan direset.</div>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label for="edit_phone_number_{{ $managedUser->id }}" class="form-label">No. HP</label>
+                                                                    <input
+                                                                        id="edit_phone_number_{{ $managedUser->id }}"
+                                                                        name="phone_number"
+                                                                        type="text"
+                                                                        class="form-control"
+                                                                        value="{{ $managedUser->phone_number }}"
+                                                                        placeholder="Contoh: 081234567890"
+                                                                    >
+                                                                </div>
+
+                                                                <div>
+                                                                    <label for="edit_avatar_{{ $managedUser->id }}" class="form-label">Upload Avatar</label>
+                                                                    @if ($managedUser->avatarUrl())
+                                                                        <div class="d-flex align-items-center gap-3 mb-3">
+                                                                            <img src="{{ $managedUser->avatarUrl() }}" alt="Avatar {{ $managedUser->name }}" class="user-inline-avatar">
+                                                                            <div class="text-secondary small">Avatar saat ini</div>
+                                                                        </div>
+                                                                    @endif
+                                                                    <input
+                                                                        id="edit_avatar_{{ $managedUser->id }}"
+                                                                        name="avatar"
+                                                                        type="file"
+                                                                        class="form-control"
+                                                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                                                    >
+                                                                    <div class="form-hint mt-2">Hanya file gambar JPG, JPEG, PNG, atau WEBP. Dimensi minimal 200x200 px, maksimal 2000x2000 px, ukuran file maksimal 2 MB.</div>
                                                                 </div>
                                                             </div>
 
@@ -407,7 +437,7 @@
     <div class="modal modal-blur fade" id="createUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <form method="POST" action="{{ route('admin.users.store') }}">
+                <form method="POST" action="{{ route('admin.users.store') }}" enctype="multipart/form-data">
                     @csrf
 
                     <div class="modal-header">
@@ -507,6 +537,41 @@
                                     <div class="invalid-feedback">{{ $errors->createUser->first('email') }}</div>
                                 @else
                                     <div class="form-hint mt-2">Pastikan email belum terdaftar </div>
+                                @endif
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="phone_number" class="form-label">No. HP</label>
+                                <input
+                                    id="phone_number"
+                                    name="phone_number"
+                                    type="text"
+                                    class="form-control @if($errors->createUser->has('phone_number')) is-invalid @endif"
+                                    value="{{ old('phone_number') }}"
+                                    placeholder="Contoh: 081234567890"
+                                >
+                                @if ($errors->createUser->has('phone_number'))
+                                    <div class="invalid-feedback">{{ $errors->createUser->first('phone_number') }}</div>
+                                @else
+                                    <div class="form-hint mt-2">Opsional. Dipakai untuk kontak user jika diperlukan.</div>
+                                @endif
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="avatar" class="form-label">Upload Avatar</label>
+                                <input
+                                    id="avatar"
+                                    name="avatar"
+                                    type="file"
+                                    class="form-control @if($errors->createUser->has('avatar')) is-invalid @endif"
+                                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                >
+                                @if ($errors->createUser->has('avatar'))
+                                    <div class="invalid-feedback">{{ $errors->createUser->first('avatar') }}</div>
+                                @else
+                                    <div class="form-hint mt-2">
+                                        Opsional. Hanya file gambar JPG, JPEG, PNG, atau WEBP. Dimensi minimal 200x200 px, maksimal 2000x2000 px, ukuran file maksimal 2 MB.
+                                    </div>
                                 @endif
                             </div>
 

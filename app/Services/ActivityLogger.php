@@ -17,7 +17,8 @@ class ActivityLogger
         ?Model $target = null,
         ?string $description = null,
         array $properties = [],
-        ?string $ipAddress = null
+        ?string $ipAddress = null,
+        ?string $userAgent = null
     ): ActivityLog {
         return ActivityLog::query()->create([
             'actor_id' => $actor?->id,
@@ -28,6 +29,7 @@ class ActivityLogger
             'target_id' => $target?->getKey(),
             'target_name' => $this->resolveTargetName($target, $properties),
             'ip_address' => $ipAddress ?? request()?->ip(),
+            'user_agent' => $userAgent ?? request()?->userAgent(),
             'properties' => $properties ?: null,
         ]);
     }

@@ -10,16 +10,19 @@ use App\Http\Requests\Admin\UpdateUserStatusRequest;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\UserAvatarUploader;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
     public function __construct(
-        protected ActivityLogger $activityLogger
+        protected ActivityLogger $activityLogger,
+        protected UserAvatarUploader $userAvatarUploader
     ) {
     }
 
@@ -28,12 +31,14 @@ class UserManagementController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', User::class);
+
         $currentUser = $request->user();
         $roles = Role::query()
             ->orderBy('name')
             ->get();
         $assignableRoles = $roles->filter(function (Role $role) use ($currentUser) {
-            return $this->canAssignRole($currentUser, $role->name);
+            return $currentUser?->can('createWithRole', [User::class, $role->name]) ?? false;
         })->values();
 
         $allUsersCount = User::query()->count();
@@ -49,7 +54,8 @@ class UserManagementController extends Controller
                     $userQuery
                         ->where('name', 'like', "%{$query}%")
                         ->orWhere('username', 'like', "%{$query}%")
-                        ->orWhere('email', 'like', "%{$query}%");
+                        ->orWhere('email', 'like', "%{$query}%")
+                        ->orWhere('phone_number', 'like', "%{$query}%");
                 });
             })
             ->when($selectedRole !== '', function ($builder) use ($selectedRole) {
@@ -91,6 +97,8 @@ class UserManagementController extends Controller
      */
     public function show(Request $request, User $user): View
     {
+        $this->authorize('view', $user);
+
         $currentUser = $request->user();
         $user->load(['roles', 'creator']);
 
@@ -120,9 +128,9 @@ class UserManagementController extends Controller
 
         return view('admin.user-detail', [
             'activityLogs' => $activityLogs,
-            'canManageTargetUser' => $currentUser?->isSuperAdmin() || ! $user->isSuperAdmin(),
-            'canDeleteUser' => $currentUser?->isSuperAdmin() && $currentUser->id !== $user->id,
-            'canManageRoles' => $currentUser?->isSuperAdmin() ?? false,
+            'canManageTargetUser' => $currentUser?->can('update', $user) ?? false,
+            'canDeleteUser' => $currentUser?->can('delete', $user) ?? false,
+            'canManageRoles' => $currentUser?->can('updateRole', $user) ?? false,
             'roleHistory' => $roleHistory,
             'roles' => Role::query()->orderBy('name')->get(),
             'statuses' => User::availableStatuses(),
@@ -135,13 +143,16 @@ class UserManagementController extends Controller
      */
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        $this->authorize('create', User::class);
+
         $validated = $request->validated();
 
-        if (! $this->canAssignRole($request->user(), $validated['role'])) {
+        $roleAuthorization = Gate::inspect('createWithRole', [User::class, $validated['role']]);
+        if ($roleAuthorization->denied()) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'role' => 'Hanya Superadmin yang dapat membuat user dengan role Admin atau Superadmin.',
+                    'role' => $roleAuthorization->message(),
                 ], 'createUser');
         }
 
@@ -149,8 +160,10 @@ class UserManagementController extends Controller
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'] ?? null,
             'status' => $validated['status'],
             'created_by' => $request->user()?->id,
+            'avatar_path' => $this->userAvatarUploader->store($request->file('avatar')),
             'password' => $validated['password'],
         ]);
 
@@ -164,6 +177,7 @@ class UserManagementController extends Controller
             properties: [
                 'role' => $validated['role'],
                 'status' => $validated['status'],
+                'phone_number' => $validated['phone_number'] ?? null,
             ],
             ipAddress: $request->ip()
         );
@@ -178,10 +192,11 @@ class UserManagementController extends Controller
      */
     public function updateRole(UpdateUserRoleRequest $request, User $user): RedirectResponse
     {
-        if (! $request->user()?->isSuperAdmin()) {
+        $authorization = Gate::inspect('assignRole', [$user, $request->validated('role')]);
+        if ($authorization->denied()) {
             return redirect()
                 ->route('admin.users')
-                ->with('error', 'Perubahan role hanya dapat dilakukan oleh Superadmin.');
+                ->with('error', $authorization->message());
         }
 
         $previousRoles = $user->getRoleNames()->implode(', ');
@@ -193,10 +208,13 @@ class UserManagementController extends Controller
             target: $user,
             description: 'Role user diperbarui.',
             properties: [
-                'from' => $previousRoles ?: null,
-                'to' => $request->validated('role'),
+                'roles' => [
+                    'before' => $previousRoles ?: null,
+                    'after' => $request->validated('role'),
+                ],
             ],
-            ipAddress: $request->ip()
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
         );
 
         return redirect()
@@ -209,18 +227,15 @@ class UserManagementController extends Controller
      */
     public function updateStatus(UpdateUserStatusRequest $request, User $user): RedirectResponse
     {
-        if ($response = $this->denyIfProtectedTarget($request->user(), $user, 'Akun Superadmin hanya dapat diubah oleh Superadmin.')) {
-            return $response;
-        }
-
         $status = $request->validated('status');
-        $previousStatus = $user->status;
-
-        if (auth()->id() === $user->id && $status !== User::STATUS_ACTIVE) {
+        $authorization = Gate::inspect('changeStatus', [$user, $status]);
+        if ($authorization->denied()) {
             return redirect()
                 ->route('admin.users')
-                ->with('error', 'Akun yang sedang Anda gunakan harus tetap aktif.');
+                ->with('error', $authorization->message());
         }
+
+        $previousStatus = $user->status;
 
         $user->update([
             'status' => $status,
@@ -232,10 +247,13 @@ class UserManagementController extends Controller
             target: $user,
             description: 'Status user diperbarui.',
             properties: [
-                'from' => $previousStatus,
-                'to' => $status,
+                'status' => [
+                    'before' => $previousStatus,
+                    'after' => $status,
+                ],
             ],
-            ipAddress: $request->ip()
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
         );
 
         return redirect()
@@ -248,21 +266,29 @@ class UserManagementController extends Controller
      */
     public function updateProfile(UpdateUserProfileRequest $request, User $user): RedirectResponse
     {
-        if ($response = $this->denyIfProtectedTarget($request->user(), $user, 'Akun Superadmin hanya dapat diubah oleh Superadmin.')) {
-            return $response;
+        $authorization = Gate::inspect('update', $user);
+        if ($authorization->denied()) {
+            return redirect()
+                ->route('admin.users')
+                ->with('error', $authorization->message());
         }
 
         $validated = $request->validated();
 
         $emailChanged = $user->email !== $validated['email'];
         $previousEmail = $user->email;
+        $previousPhoneNumber = $user->phone_number;
         $previousUsername = $user->username;
         $previousName = $user->name;
+        $previousAvatarPath = $user->avatar_path;
+        $avatarPath = $this->userAvatarUploader->store($request->file('avatar'), $user->avatar_path);
 
         $user->forceFill([
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'] ?? null,
+            'avatar_path' => $avatarPath,
             'email_verified_at' => $emailChanged ? null : $user->email_verified_at,
         ])->save();
 
@@ -275,10 +301,47 @@ class UserManagementController extends Controller
                 'name' => ['from' => $previousName, 'to' => $validated['name']],
                 'username' => ['from' => $previousUsername, 'to' => $validated['username']],
                 'email' => ['from' => $previousEmail, 'to' => $validated['email']],
+                'phone_number' => ['from' => $previousPhoneNumber, 'to' => $validated['phone_number'] ?? null],
+                'avatar_path' => ['from' => $previousAvatarPath, 'to' => $avatarPath],
                 'email_verification_reset' => $emailChanged,
             ],
-            ipAddress: $request->ip()
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
         );
+
+        if ($previousEmail !== $validated['email']) {
+            $this->activityLogger->log(
+                action: 'user_email_updated',
+                actor: $request->user(),
+                target: $user,
+                description: 'Email user diperbarui.',
+                properties: [
+                    'email' => [
+                        'before' => $previousEmail,
+                        'after' => $validated['email'],
+                    ],
+                ],
+                ipAddress: $request->ip(),
+                userAgent: $request->userAgent()
+            );
+        }
+
+        if ($previousPhoneNumber !== ($validated['phone_number'] ?? null)) {
+            $this->activityLogger->log(
+                action: 'user_phone_updated',
+                actor: $request->user(),
+                target: $user,
+                description: 'Nomor HP user diperbarui.',
+                properties: [
+                    'phone_number' => [
+                        'before' => $previousPhoneNumber,
+                        'after' => $validated['phone_number'] ?? null,
+                    ],
+                ],
+                ipAddress: $request->ip(),
+                userAgent: $request->userAgent()
+            );
+        }
 
         return redirect()
             ->route('admin.users')
@@ -290,8 +353,11 @@ class UserManagementController extends Controller
      */
     public function resendVerification(User $user): RedirectResponse
     {
-        if ($response = $this->denyIfProtectedTarget(auth()->user(), $user, 'Akun Superadmin hanya dapat diubah oleh Superadmin.')) {
-            return $response;
+        $authorization = Gate::inspect('resendVerification', $user);
+        if ($authorization->denied()) {
+            return redirect()
+                ->route('admin.users')
+                ->with('error', $authorization->message());
         }
 
         if ($user->hasVerifiedEmail()) {
@@ -307,7 +373,8 @@ class UserManagementController extends Controller
             actor: auth()->user(),
             target: $user,
             description: 'Mengirim ulang email verifikasi.',
-            ipAddress: request()?->ip()
+            ipAddress: request()?->ip(),
+            userAgent: request()?->userAgent()
         );
 
         return redirect()
@@ -320,8 +387,11 @@ class UserManagementController extends Controller
      */
     public function verifyEmail(User $user): RedirectResponse
     {
-        if ($response = $this->denyIfProtectedTarget(auth()->user(), $user, 'Akun Superadmin hanya dapat diubah oleh Superadmin.')) {
-            return $response;
+        $authorization = Gate::inspect('verifyEmail', $user);
+        if ($authorization->denied()) {
+            return redirect()
+                ->route('admin.users')
+                ->with('error', $authorization->message());
         }
 
         if ($user->hasVerifiedEmail()) {
@@ -339,7 +409,8 @@ class UserManagementController extends Controller
             actor: auth()->user(),
             target: $user,
             description: 'Email user ditandai terverifikasi secara manual.',
-            ipAddress: request()?->ip()
+            ipAddress: request()?->ip(),
+            userAgent: request()?->userAgent()
         );
 
         return redirect()
@@ -352,8 +423,11 @@ class UserManagementController extends Controller
      */
     public function updatePassword(Request $request, User $user): RedirectResponse
     {
-        if ($response = $this->denyIfProtectedTarget($request->user(), $user, 'Password Superadmin hanya dapat direset oleh Superadmin.')) {
-            return $response;
+        $authorization = Gate::inspect('resetPassword', $user);
+        if ($authorization->denied()) {
+            return redirect()
+                ->route('admin.users')
+                ->with('error', $authorization->message());
         }
 
         $defaultPassword = config('auth.default_user_password');
@@ -371,7 +445,8 @@ class UserManagementController extends Controller
             properties: [
                 'password_change_required' => true,
             ],
-            ipAddress: $request->ip()
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
         );
 
         return redirect()
@@ -384,16 +459,11 @@ class UserManagementController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
-        if (! auth()->user()?->isSuperAdmin()) {
+        $authorization = Gate::inspect('delete', $user);
+        if ($authorization->denied()) {
             return redirect()
                 ->route('admin.users')
-                ->with('error', 'Hanya Superadmin yang dapat menghapus user.');
-        }
-
-        if (auth()->id() === $user->id) {
-            return redirect()
-                ->route('admin.users')
-                ->with('error', 'Akun yang sedang Anda gunakan tidak dapat dihapus.');
+                ->with('error', $authorization->message());
         }
 
         $this->activityLogger->log(
@@ -401,7 +471,8 @@ class UserManagementController extends Controller
             actor: auth()->user(),
             target: $user,
             description: 'User dihapus dari panel admin.',
-            ipAddress: request()?->ip()
+            ipAddress: request()?->ip(),
+            userAgent: request()?->userAgent()
         );
 
         $user->delete();
@@ -409,29 +480,5 @@ class UserManagementController extends Controller
         return redirect()
             ->route('admin.users')
             ->with('success', 'User berhasil dihapus.');
-    }
-
-    protected function canAssignRole(?User $actor, string $roleName): bool
-    {
-        if (! $actor) {
-            return false;
-        }
-
-        if ($actor->isSuperAdmin()) {
-            return true;
-        }
-
-        return ! in_array($roleName, ['Superadmin', 'Admin'], true);
-    }
-
-    protected function denyIfProtectedTarget(?User $actor, User $target, string $message): ?RedirectResponse
-    {
-        if ($target->isSuperAdmin() && ! $actor?->isSuperAdmin()) {
-            return redirect()
-                ->route('admin.users')
-                ->with('error', $message);
-        }
-
-        return null;
     }
 }

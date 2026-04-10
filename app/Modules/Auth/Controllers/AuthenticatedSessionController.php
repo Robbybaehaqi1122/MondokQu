@@ -103,7 +103,8 @@ class AuthenticatedSessionController extends Controller
             actor: $request->user(),
             target: $request->user(),
             description: 'Logout dari aplikasi.',
-            ipAddress: $request->ip()
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
         );
 
         Auth::guard('web')->logout();

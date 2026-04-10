@@ -18,12 +18,17 @@ class PermissionSeeder extends Seeder
 
         $permissions = [
             'view users',
+            'view user details',
             'create users',
             'update users',
+            'update user status',
+            'reset user passwords',
+            'verify user emails',
             'delete users',
             'assign roles',
             'manage system settings',
             'view activity logs',
+            'manage activity logs',
             'view santri',
             'create santri',
             'update santri',
@@ -56,9 +61,14 @@ class PermissionSeeder extends Seeder
         $superadmin->syncPermissions(Permission::whereIn('name', $permissions)->get());
         $admin->syncPermissions(Permission::whereIn('name', [
             'view users',
+            'view user details',
             'create users',
             'update users',
+            'update user status',
+            'reset user passwords',
+            'verify user emails',
             'view activity logs',
+            'manage activity logs',
             'view santri',
             'create santri',
             'update santri',

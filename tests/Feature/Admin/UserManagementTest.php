@@ -3,14 +3,16 @@
 use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     $superadmin = Role::findOrCreate('Superadmin', 'web');
-    Role::findOrCreate('Admin', 'web');
+    $adminRole = Role::findOrCreate('Admin', 'web');
     Role::findOrCreate('Pengurus', 'web');
     Role::findOrCreate('Bendahara', 'web');
     Role::findOrCreate('Musyrif/Ustadz', 'web');
@@ -18,8 +20,37 @@ beforeEach(function () {
 
     $assignRoles = Permission::findOrCreate('assign roles', 'web');
     $manageSystemSettings = Permission::findOrCreate('manage system settings', 'web');
+    $viewUsers = Permission::findOrCreate('view users', 'web');
+    $viewUserDetails = Permission::findOrCreate('view user details', 'web');
+    $createUsers = Permission::findOrCreate('create users', 'web');
+    $updateUsers = Permission::findOrCreate('update users', 'web');
+    $updateUserStatus = Permission::findOrCreate('update user status', 'web');
+    $resetUserPasswords = Permission::findOrCreate('reset user passwords', 'web');
+    $verifyUserEmails = Permission::findOrCreate('verify user emails', 'web');
+    $deleteUsers = Permission::findOrCreate('delete users', 'web');
 
-    $superadmin->syncPermissions([$assignRoles, $manageSystemSettings]);
+    $superadmin->syncPermissions([
+        $assignRoles,
+        $manageSystemSettings,
+        $viewUsers,
+        $viewUserDetails,
+        $createUsers,
+        $updateUsers,
+        $updateUserStatus,
+        $resetUserPasswords,
+        $verifyUserEmails,
+        $deleteUsers,
+    ]);
+
+    $adminRole->syncPermissions([
+        $viewUsers,
+        $viewUserDetails,
+        $createUsers,
+        $updateUsers,
+        $updateUserStatus,
+        $resetUserPasswords,
+        $verifyUserEmails,
+    ]);
 });
 
 test('admin can view the user management page', function () {
@@ -153,21 +184,32 @@ test('user management page is paginated', function () {
 
 test('admin can create a user and assign a role from the panel', function () {
     Notification::fake();
+    Storage::fake('public');
 
     $admin = User::factory()->create();
     $admin->assignRole('Admin');
+    $avatar = function_exists('imagecreatetruecolor')
+        ? UploadedFile::fake()->image('avatar-userbaru.png', 400, 400)->size(512)
+        : null;
+
+    $payload = [
+        'name' => 'User Baru',
+        'username' => 'userbaru',
+        'email' => 'userbaru@example.com',
+        'phone_number' => '081234567890',
+        'role' => 'Pengurus',
+        'status' => User::STATUS_ACTIVE,
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ];
+
+    if ($avatar) {
+        $payload['avatar'] = $avatar;
+    }
 
     $response = $this
         ->actingAs($admin)
-        ->post(route('admin.users.store'), [
-            'name' => 'User Baru',
-            'username' => 'userbaru',
-            'email' => 'userbaru@example.com',
-            'role' => 'Pengurus',
-            'status' => User::STATUS_ACTIVE,
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ]);
+        ->post(route('admin.users.store'), $payload);
 
     $response->assertRedirect(route('admin.users', absolute: false));
 
@@ -176,6 +218,13 @@ test('admin can create a user and assign a role from the panel', function () {
     expect($user)->not->toBeNull();
     expect($user->username)->toBe('userbaru');
     expect($user->status)->toBe(User::STATUS_ACTIVE);
+    expect($user->phone_number)->toBe('081234567890');
+    if ($avatar) {
+        expect($user->avatar_path)->toStartWith('avatars/');
+        Storage::disk('public')->assertExists($user->avatar_path);
+    } else {
+        expect($user->avatar_path)->toBeNull();
+    }
     expect($user->created_by)->toBe($admin->id);
     expect($user->hasRole('Pengurus'))->toBeTrue();
     Notification::assertSentTo($user, VerifyEmail::class);
@@ -306,23 +355,37 @@ test('admin can not update superadmin status from the panel', function () {
 });
 
 test('admin can update a user profile from the panel', function () {
+    Storage::fake('public');
+
     $admin = User::factory()->create();
     $admin->assignRole('Admin');
+    $avatar = function_exists('imagecreatetruecolor')
+        ? UploadedFile::fake()->image('avatar-baru.png', 500, 500)->size(768)
+        : null;
 
     $user = User::factory()->create([
         'name' => 'Nama Lama',
         'username' => 'namalama',
         'email' => 'lama@example.com',
+        'phone_number' => '081111111111',
+        'avatar_path' => null,
         'email_verified_at' => now(),
     ]);
 
+    $payload = [
+        'name' => 'Nama Baru',
+        'username' => 'namabaru',
+        'email' => 'baru@example.com',
+        'phone_number' => '082222222222',
+    ];
+
+    if ($avatar) {
+        $payload['avatar'] = $avatar;
+    }
+
     $response = $this
         ->actingAs($admin)
-        ->patch(route('admin.users.update', $user), [
-            'name' => 'Nama Baru',
-            'username' => 'namabaru',
-            'email' => 'baru@example.com',
-        ]);
+        ->patch(route('admin.users.update', $user), $payload);
 
     $response->assertRedirect(route('admin.users', absolute: false));
 
@@ -331,7 +394,23 @@ test('admin can update a user profile from the panel', function () {
     expect($user->name)->toBe('Nama Baru');
     expect($user->username)->toBe('namabaru');
     expect($user->email)->toBe('baru@example.com');
+    expect($user->phone_number)->toBe('082222222222');
+    if ($avatar) {
+        expect($user->avatar_path)->toStartWith('avatars/');
+        Storage::disk('public')->assertExists($user->avatar_path);
+    } else {
+        expect($user->avatar_path)->toBeNull();
+    }
     expect($user->email_verified_at)->toBeNull();
+
+    $actions = ActivityLog::query()
+        ->where('target_id', $user->id)
+        ->pluck('action')
+        ->all();
+
+    expect($actions)->toContain('user_profile_updated');
+    expect($actions)->toContain('user_email_updated');
+    expect($actions)->toContain('user_phone_updated');
 });
 
 test('admin can not update a superadmin profile from the panel', function () {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -71,6 +72,12 @@ test('users can not authenticate with invalid password', function () {
     ]);
 
     $this->assertGuest();
+    $log = ActivityLog::query()->latest()->first();
+
+    expect($log)->not->toBeNull();
+    expect($log->action)->toBe('login_failed');
+    expect($log->properties['reason'])->toBe('wrong_password');
+    expect($log->user_agent)->not->toBeNull();
 });
 
 test('inactive users can not authenticate', function () {
@@ -86,6 +93,7 @@ test('inactive users can not authenticate', function () {
     $this->assertGuest();
     $response->assertRedirect('/login');
     $response->assertSessionHasErrors('login');
+    expect(ActivityLog::query()->latest()->first()->properties['reason'])->toBe('account_inactive');
 });
 
 test('suspended users can not authenticate', function () {
@@ -101,6 +109,7 @@ test('suspended users can not authenticate', function () {
     $this->assertGuest();
     $response->assertRedirect('/login');
     $response->assertSessionHasErrors('login');
+    expect(ActivityLog::query()->latest()->first()->properties['reason'])->toBe('account_suspended');
 });
 
 test('users can logout', function () {

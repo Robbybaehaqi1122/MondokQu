@@ -29,6 +29,7 @@ class AttemptLoginAction
         $password = (string) ($credentials['password'] ?? '');
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         $user = User::query()->where($field, $login)->first();
+        $userAgent = $request->userAgent();
 
         $this->ensureIsNotRateLimited($request, $login);
 
@@ -37,13 +38,19 @@ class AttemptLoginAction
                 action: 'login_failed',
                 actor: null,
                 target: $user,
-                description: 'Percobaan login gagal karena status akun tidak aktif.',
+                description: 'Percobaan login gagal karena status akun tidak mengizinkan akses.',
                 properties: [
                     'login' => $login,
-                    'reason' => $user->status,
+                    'reason' => match ($user->status) {
+                        User::STATUS_INACTIVE => 'account_inactive',
+                        User::STATUS_SUSPENDED => 'account_suspended',
+                        default => 'account_unavailable',
+                    },
+                    'status' => $user->status,
                     'actor_name' => 'Guest',
                 ],
-                ipAddress: $request->ip()
+                ipAddress: $request->ip(),
+                userAgent: $userAgent
             );
 
             throw ValidationException::withMessages([
@@ -62,14 +69,17 @@ class AttemptLoginAction
                 action: 'login_failed',
                 actor: null,
                 target: $user,
-                description: 'Percobaan login gagal karena kredensial tidak cocok.',
+                description: $user
+                    ? 'Percobaan login gagal karena password salah.'
+                    : 'Percobaan login gagal karena akun tidak ditemukan.',
                 properties: [
                     'login' => $login,
-                    'reason' => 'invalid_credentials',
+                    'reason' => $user ? 'wrong_password' : 'user_not_found',
                     'actor_name' => 'Guest',
                     'target_name' => $user?->name ? $user->name.' (@'.$user->username.')' : $login,
                 ],
-                ipAddress: $request->ip()
+                ipAddress: $request->ip(),
+                userAgent: $userAgent
             );
 
             throw ValidationException::withMessages([
@@ -95,8 +105,10 @@ class AttemptLoginAction
                 description: 'Login berhasil ke aplikasi.',
                 properties: [
                     'login' => $login,
+                    'remember' => $remember,
                 ],
-                ipAddress: $request->ip()
+                ipAddress: $request->ip(),
+                userAgent: $userAgent
             );
         }
     }
@@ -115,6 +127,26 @@ class AttemptLoginAction
         event(new Lockout($request));
 
         $seconds = RateLimiter::availableIn($this->throttleKey($request, $login));
+
+        $user = User::query()
+            ->where(filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username', $login)
+            ->first();
+
+        $this->activityLogger->log(
+            action: 'login_blocked',
+            actor: null,
+            target: $user,
+            description: 'Percobaan login diblokir sementara karena terlalu banyak percobaan.',
+            properties: [
+                'login' => $login,
+                'reason' => 'rate_limited',
+                'seconds' => $seconds,
+                'actor_name' => 'Guest',
+                'target_name' => $user?->name ? $user->name.' (@'.$user->username.')' : $login,
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
 
         throw ValidationException::withMessages([
             'login' => trans('auth.throttle', [

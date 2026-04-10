@@ -92,6 +92,12 @@ class PermissionManagementController extends Controller
      */
     public function updateRoles(UpdatePermissionRolesRequest $request, Permission $permission): RedirectResponse
     {
+        $previousRoles = $permission->roles()
+            ->orderBy('name')
+            ->pluck('name')
+            ->values()
+            ->all();
+
         $roleIds = collect($request->validated('roles', []))
             ->map(fn (mixed $roleId): int => (int) $roleId);
 
@@ -107,9 +113,13 @@ class PermissionManagementController extends Controller
             target: $permission,
             description: 'Mapping role untuk permission diperbarui.',
             properties: [
-                'roles' => $roles->pluck('name')->values()->all(),
+                'roles' => [
+                    'before' => $previousRoles,
+                    'after' => $roles->pluck('name')->values()->all(),
+                ],
             ],
-            ipAddress: $request->ip()
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
         );
 
         return redirect()

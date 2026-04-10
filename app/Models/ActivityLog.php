@@ -21,6 +21,7 @@ class ActivityLog extends Model
         'target_id',
         'target_name',
         'ip_address',
+        'user_agent',
         'properties',
     ];
 

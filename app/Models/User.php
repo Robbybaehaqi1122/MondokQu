@@ -28,9 +28,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'name',
         'username',
         'email',
+        'phone_number',
         'status',
         'created_by',
         'password_change_required',
+        'avatar_path',
         'password',
     ];
 
@@ -95,5 +97,23 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function isSuperAdmin(): bool
     {
         return $this->hasRole('Superadmin');
+    }
+
+    /**
+     * Resolve the avatar URL for presentation.
+     */
+    public function avatarUrl(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        if (filter_var($this->avatar_path, FILTER_VALIDATE_URL)) {
+            return $this->avatar_path;
+        }
+
+        return str_starts_with($this->avatar_path, '/')
+            ? $this->avatar_path
+            : asset('storage/'.$this->avatar_path);
     }
 }

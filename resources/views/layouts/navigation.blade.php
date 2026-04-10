@@ -24,7 +24,11 @@
         <div class="navbar-nav flex-row d-lg-none">
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
-                    <span class="avatar avatar-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    @if ($user->avatarUrl())
+                        <span class="avatar avatar-sm" style="background-image: url('{{ $user->avatarUrl() }}')"></span>
+                    @else
+                        <span class="avatar avatar-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    @endif
                 </a>
                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <a href="{{ route('profile.edit') }}" class="dropdown-item">Profil</a>
@@ -153,7 +157,11 @@
         <div class="navbar-nav flex-row order-md-last">
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
-                    <span class="avatar avatar-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    @if ($user->avatarUrl())
+                        <span class="avatar avatar-sm" style="background-image: url('{{ $user->avatarUrl() }}')"></span>
+                    @else
+                        <span class="avatar avatar-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    @endif
                     <div class="d-none d-xl-block ps-2">
                         <div>{{ $user->name }}</div>
                         <div class="mt-1 small text-secondary">{{ $roleLabel }}</div>

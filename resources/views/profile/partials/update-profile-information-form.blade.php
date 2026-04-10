@@ -2,7 +2,7 @@
     <div class="card-header">
         <div>
             <h3 class="card-title">Informasi Profil</h3>
-            <p class="text-secondary mb-0">Perbarui nama, username, dan email akun Anda.</p>
+            <p class="text-secondary mb-0">Perbarui nama, username, email, nomor HP, dan avatar akun Anda.</p>
         </div>
     </div>
     <div class="card-body">
@@ -10,7 +10,7 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data">
         @csrf
         @method('patch')
 
@@ -79,6 +79,46 @@
                     @endif
                 </div>
             @endif
+        </div>
+
+        <div class="row g-3 mt-1">
+            <div class="col-md-6">
+                <label for="phone_number" class="form-label">No. HP</label>
+                <input
+                    id="phone_number"
+                    name="phone_number"
+                    type="text"
+                    class="form-control @error('phone_number') is-invalid @enderror"
+                    value="{{ old('phone_number', $user->phone_number) }}"
+                    placeholder="Contoh: 081234567890"
+                    autocomplete="tel"
+                >
+                @error('phone_number')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-6">
+                <label for="avatar" class="form-label">Upload Avatar</label>
+                @if ($user->avatarUrl())
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img src="{{ $user->avatarUrl() }}" alt="Avatar {{ $user->name }}" class="user-inline-avatar">
+                        <div class="text-secondary small">Avatar saat ini</div>
+                    </div>
+                @endif
+                <input
+                    id="avatar"
+                    name="avatar"
+                    type="file"
+                    class="form-control @error('avatar') is-invalid @enderror"
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                >
+                @error('avatar')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @else
+                    <div class="form-hint mt-2">Hanya file gambar JPG, JPEG, PNG, atau WEBP. Dimensi minimal 200x200 px, maksimal 2000x2000 px, ukuran file maksimal 2 MB.</div>
+                @enderror
+            </div>
         </div>
 
         <div class="mt-4 d-flex align-items-center gap-3">

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\PermissionManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
@@ -28,7 +29,7 @@ Route::middleware('auth')->group(function () {
 
 // Role-based access routes
 Route::middleware(['auth', 'password_change_required', 'role:Superadmin|Admin'])->group(function () {
-    Route::get('/admin', fn () => view('admin.dashboard'))->name('admin.dashboard');
+    Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::get('/admin/users/{user}', [UserManagementController::class, 'show'])->name('admin.users.show');
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
@@ -56,6 +57,10 @@ Route::middleware(['auth', 'password_change_required', 'permission:manage system
 
 Route::middleware(['auth', 'password_change_required', 'permission:view activity logs'])->group(function () {
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity-logs');
+});
+
+Route::middleware(['auth', 'password_change_required', 'permission:manage activity logs'])->group(function () {
+    Route::delete('/admin/activity-logs', [ActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
 });
 
 Route::middleware(['auth', 'password_change_required', 'role:Pengurus'])->group(function () {
