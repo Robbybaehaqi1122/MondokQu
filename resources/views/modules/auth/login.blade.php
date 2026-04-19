@@ -114,7 +114,6 @@
             const submitSpinner = document.getElementById('login-submit-spinner');
             const submitLabel = document.getElementById('login-submit-label');
             let identityTimeout;
-            let passwordTimeout;
 
             const setLoginState = (state, text = '') => {
                 loginInput.classList.remove('is-valid', 'is-invalid');
@@ -135,14 +134,12 @@
             };
 
             const setPasswordState = (state, text = '') => {
-                passwordInput.classList.remove('is-valid', 'is-invalid');
-                passwordStatusIcon.hidden = true;
+                passwordInput.classList.remove('is-invalid');
+                passwordStatusIcon.hidden = false;
                 passwordStatusText.textContent = text;
                 passwordStatusText.className = 'form-hint mt-1';
 
                 if (state === 'valid') {
-                    passwordInput.classList.add('is-valid');
-                    passwordStatusIcon.hidden = false;
                     passwordStatusText.className = 'form-hint mt-1 text-success';
                 }
 
@@ -179,10 +176,10 @@
                         const response = await fetch(`{{ route('login.check-identity') }}?login=${encodeURIComponent(value)}`);
                         const data = await response.json();
 
-                        if (data.exists) {
-                            setLoginState('valid', 'User ditemukan.');
+                        if (data.state === 'ready') {
+                            setLoginState('valid', data.message || 'Lanjutkan dengan memasukkan password Anda.');
                         } else {
-                            setLoginState('invalid', 'User belum terdaftar.');
+                            setLoginState('', data.message || '');
                         }
                     } catch (error) {
                         setLoginState('', '');
@@ -191,8 +188,6 @@
             });
 
             passwordInput?.addEventListener('input', () => {
-                clearTimeout(passwordTimeout);
-
                 const login = loginInput.value.trim();
                 const password = passwordInput.value;
 
@@ -206,34 +201,7 @@
                     return;
                 }
 
-                setPasswordState('', 'Memeriksa password...');
-
-                passwordTimeout = setTimeout(async () => {
-                    try {
-                        const response = await fetch(`{{ route('login.check-password') }}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                login,
-                                password,
-                            }),
-                        });
-
-                        const data = await response.json();
-
-                        if (data.valid) {
-                            setPasswordState('valid', data.message);
-                        } else {
-                            setPasswordState('invalid', data.message || 'Password salah.');
-                        }
-                    } catch (error) {
-                        setPasswordState('', '');
-                    }
-                }, 350);
+                setPasswordState('valid', 'Password siap dikirim untuk proses login aman.');
             });
 
             loginForm?.addEventListener('submit', () => {

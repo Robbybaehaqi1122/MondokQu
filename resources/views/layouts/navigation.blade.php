@@ -49,8 +49,34 @@
                     <span>Dashboard</span>
                 </a>
 
-                @if ($user->hasAnyRole(['Superadmin', 'Admin']) || $user->canAny(['assign roles', 'manage system settings', 'view activity logs']))
+                @if ($user->can('view santri'))
                     <div class="sidebar-section-title">Modul</div>
+                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-school"></i>
+                            </span>
+                            <span class="flex-grow-1">SantriQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') ? 'active' : '' }}" href="{{ route('santri.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-users"></i>
+                                </span>
+                                <span>Manajemen Santri</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($user->hasAnyRole(['Superadmin', 'Admin']) || $user->canAny(['assign roles', 'manage system settings', 'view activity logs']))
+                    @unless ($user->can('view santri'))
+                        <div class="sidebar-section-title">Modul</div>
+                    @endunless
                     <details class="sidebar-dropdown" @if (request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs')) open @endif>
                         <summary class="sidebar-link {{ request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
@@ -100,16 +126,6 @@
                             @endcan
                         </div>
                     </details>
-                @endif
-
-                @if ($user->hasRole('Pengurus'))
-                    <div class="sidebar-section-title">Modul Pengurus</div>
-                    <a class="sidebar-link {{ request()->routeIs('pengurus.santri') ? 'active' : '' }}" href="{{ route('pengurus.santri') }}">
-                        <span class="sidebar-link-icon">
-                            <i class="ti ti-school"></i>
-                        </span>
-                        <span>Data Santri</span>
-                    </a>
                 @endif
 
                 @if ($user->hasRole('Bendahara'))

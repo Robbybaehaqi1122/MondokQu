@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ActivityLog;
+use App\Models\Santri;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -49,6 +50,10 @@ class ActivityLogger
 
         if ($target instanceof User) {
             return $target->name.' (@'.$target->username.')';
+        }
+
+        if ($target instanceof Santri) {
+            return $target->full_name.' (NIS '.$target->nis.')';
         }
 
         return $target->getAttribute('name')

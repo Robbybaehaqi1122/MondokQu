@@ -35,6 +35,43 @@ test('users can authenticate using email on the login screen', function () {
     $response->assertRedirect(route('dashboard.home', absolute: false));
 });
 
+test('identity check does not reveal whether a user exists', function () {
+    $user = User::factory()->create([
+        'username' => 'santriadmin',
+        'email' => 'santriadmin@example.com',
+    ]);
+
+    $existingResponse = $this->get(route('login.check-identity', [
+        'login' => $user->username,
+    ]));
+    $missingResponse = $this->get(route('login.check-identity', [
+        'login' => 'unknown-user',
+    ]));
+
+    $existingResponse
+        ->assertOk()
+        ->assertJson([
+            'state' => 'ready',
+            'message' => 'Lanjutkan dengan memasukkan password Anda.',
+        ]);
+
+    $missingResponse
+        ->assertOk()
+        ->assertJson([
+            'state' => 'ready',
+            'message' => 'Lanjutkan dengan memasukkan password Anda.',
+        ]);
+});
+
+test('password check endpoint is not available', function () {
+    $response = $this->post('/login/check-password', [
+        'login' => 'user@example.com',
+        'password' => 'secret',
+    ]);
+
+    $response->assertNotFound();
+});
+
 test('admin users are redirected to the admin dashboard after login', function () {
     Role::findOrCreate('Admin', 'web');
     $user = User::factory()->create();

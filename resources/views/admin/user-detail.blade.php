@@ -52,17 +52,23 @@
                     <div class="row g-4 align-items-start">
                         <div class="col-lg-8">
                             <div class="d-flex flex-column flex-md-row gap-4 align-items-md-start">
-                                @if ($userDetail->avatarUrl())
-                                    <img
-                                        src="{{ $userDetail->avatarUrl() }}"
-                                        alt="Avatar {{ $userDetail->name }}"
-                                        class="user-detail-avatar user-detail-avatar-image"
-                                    >
-                                @else
-                                    <div class="user-detail-avatar">
-                                        {{ strtoupper(substr($userDetail->name, 0, 1)) }}
-                                    </div>
-                                @endif
+                                <div class="user-detail-avatar-frame">
+                                    @if ($userDetail->avatarUrl())
+                                        <img
+                                            src="{{ $userDetail->avatarUrl() }}"
+                                            alt="Avatar {{ $userDetail->name }}"
+                                            class="user-detail-avatar-image"
+                                            onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');"
+                                        >
+                                        <div class="user-detail-avatar d-none">
+                                            {{ strtoupper(substr($userDetail->name, 0, 1)) }}
+                                        </div>
+                                    @else
+                                        <div class="user-detail-avatar">
+                                            {{ strtoupper(substr($userDetail->name, 0, 1)) }}
+                                        </div>
+                                    @endif
+                                </div>
 
                                 <div class="flex-fill">
                                     <div class="d-flex flex-wrap gap-2 mb-3">

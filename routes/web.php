@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SantriManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -63,9 +64,26 @@ Route::middleware(['auth', 'password_change_required', 'permission:manage activi
     Route::delete('/admin/activity-logs', [ActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
 });
 
+Route::middleware(['auth', 'password_change_required', 'permission:view santri'])->group(function () {
+    Route::get('/santri', [SantriManagementController::class, 'index'])->name('santri.index');
+    Route::get('/santri/{santri}', [SantriManagementController::class, 'show'])->name('santri.show');
+});
+
+Route::middleware(['auth', 'password_change_required', 'permission:create santri'])->group(function () {
+    Route::post('/santri', [SantriManagementController::class, 'store'])->name('santri.store');
+});
+
+Route::middleware(['auth', 'password_change_required', 'permission:update santri'])->group(function () {
+    Route::patch('/santri/{santri}', [SantriManagementController::class, 'update'])->name('santri.update');
+});
+
+Route::middleware(['auth', 'password_change_required', 'permission:delete santri'])->group(function () {
+    Route::delete('/santri/{santri}', [SantriManagementController::class, 'destroy'])->name('santri.destroy');
+});
+
 Route::middleware(['auth', 'password_change_required', 'role:Pengurus'])->group(function () {
     Route::get('/pengurus', fn () => view('pengurus.dashboard'))->name('pengurus.dashboard');
-    Route::get('/pengurus/santri', fn () => view('pengurus.santri'))->name('pengurus.santri');
+    Route::redirect('/pengurus/santri', '/santri')->name('pengurus.santri');
 });
 
 Route::middleware(['auth', 'password_change_required', 'role:Musyrif/Ustadz'])->group(function () {
@@ -82,4 +100,3 @@ Route::middleware(['auth', 'password_change_required', 'role:Wali Santri'])->gro
 });
 
 require base_path('app/Modules/Auth/Routes/web.php');
-require __DIR__.'/auth.php';

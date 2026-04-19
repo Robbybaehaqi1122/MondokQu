@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Santri;
 use App\Models\User;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
@@ -27,6 +28,9 @@ class AdminDashboardController extends Controller
                 ->where('action', 'login_success')
                 ->whereDate('created_at', today())
                 ->count(),
+            'newSantriThisMonth' => Santri::query()
+                ->where('created_at', '>=', now()->startOfMonth())
+                ->count(),
             'newUsersThisWeek' => User::query()
                 ->where('created_at', '>=', now()->startOfWeek())
                 ->count(),
@@ -43,6 +47,12 @@ class AdminDashboardController extends Controller
                 'inactive_users' => User::query()->where('status', User::STATUS_INACTIVE)->count(),
                 'suspended_users' => User::query()->where('status', User::STATUS_SUSPENDED)->count(),
                 'never_logged_in_users' => User::query()->whereNull('last_login_at')->count(),
+            ],
+            'santriStats' => [
+                'total_santri' => Santri::query()->count(),
+                'active_santri' => Santri::query()->where('status', Santri::STATUS_ACTIVE)->count(),
+                'alumni_santri' => Santri::query()->where('status', Santri::STATUS_ALUMNI)->count(),
+                'exited_santri' => Santri::query()->where('status', Santri::STATUS_EXITED)->count(),
             ],
         ]);
     }

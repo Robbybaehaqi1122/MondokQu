@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Santri;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -39,6 +40,21 @@ test('admin dashboard shows monitoring statistics', function () {
     ]);
     $suspendedUser->assignRole('Bendahara');
 
+    Santri::factory()->create([
+        'status' => Santri::STATUS_ACTIVE,
+        'created_at' => now()->startOfMonth()->addDay(),
+    ]);
+
+    Santri::factory()->create([
+        'status' => Santri::STATUS_ALUMNI,
+        'created_at' => now()->subMonths(2),
+    ]);
+
+    Santri::factory()->create([
+        'status' => Santri::STATUS_EXITED,
+        'created_at' => now()->subMonths(1),
+    ]);
+
     ActivityLog::query()->create([
         'actor_id' => $admin->id,
         'actor_name' => $admin->name,
@@ -72,9 +88,11 @@ test('admin dashboard shows monitoring statistics', function () {
     $response->assertOk();
     $response->assertSee('System Monitoring Dashboard');
     $response->assertSee('Total User');
+    $response->assertSee('Total Santri');
     $response->assertSee('User per Role');
     $response->assertSee('Login Hari Ini');
     $response->assertSee('User Baru Minggu Ini');
+    $response->assertSee('Santri Baru Bulan Ini');
 
     expect($response->viewData('stats')['total_users'])->toBe(4);
     expect($response->viewData('stats')['active_users'])->toBe(2);
@@ -83,4 +101,9 @@ test('admin dashboard shows monitoring statistics', function () {
     expect($response->viewData('stats')['never_logged_in_users'])->toBe(2);
     expect($response->viewData('loginCountToday'))->toBe(2);
     expect($response->viewData('newUsersThisWeek'))->toBe(3);
+    expect($response->viewData('newSantriThisMonth'))->toBe(1);
+    expect($response->viewData('santriStats')['total_santri'])->toBe(3);
+    expect($response->viewData('santriStats')['active_santri'])->toBe(1);
+    expect($response->viewData('santriStats')['alumni_santri'])->toBe(1);
+    expect($response->viewData('santriStats')['exited_santri'])->toBe(1);
 });

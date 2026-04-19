@@ -2,7 +2,6 @@
 
 namespace App\Modules\Auth\Controllers;
 
-use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Modules\Auth\Actions\AttemptLoginAction;
 use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
@@ -12,7 +11,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -49,47 +47,16 @@ class AuthenticatedSessionController extends Controller
 
         if ($login === '') {
             return response()->json([
-                'exists' => false,
-            ]);
-        }
-
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-        return response()->json([
-            'exists' => User::query()->where($field, $login)->exists(),
-        ]);
-    }
-
-    /**
-     * Check whether the provided password matches the selected identity.
-     */
-    public function checkPassword(Request $request): JsonResponse
-    {
-        $login = trim((string) $request->input('login', ''));
-        $password = (string) $request->input('password', '');
-
-        if ($login === '' || $password === '') {
-            return response()->json([
-                'valid' => false,
+                'state' => 'idle',
                 'message' => '',
             ]);
         }
 
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        $user = User::query()->where($field, $login)->first();
-
-        if (! $user) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'User belum terdaftar.',
-            ]);
-        }
-
-        $valid = Hash::check($password, $user->password);
-
         return response()->json([
-            'valid' => $valid,
-            'message' => $valid ? 'Password benar.' : 'Password salah.',
+            'state' => strlen($login) >= 3 ? 'ready' : 'idle',
+            'message' => strlen($login) >= 3
+                ? 'Lanjutkan dengan memasukkan password Anda.'
+                : '',
         ]);
     }
 

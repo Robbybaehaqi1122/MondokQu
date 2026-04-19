@@ -80,6 +80,78 @@
             </div>
         </div>
 
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar bg-blue-lt text-blue">
+                                    <i class="ti ti-school fs-2"></i>
+                                </span>
+                                <div>
+                                    <div class="text-secondary small text-uppercase fw-bold">Total Santri</div>
+                                    <div class="h1 mb-1">{{ $santriStats['total_santri'] }}</div>
+                                    <div class="text-secondary small">Seluruh data santri terdaftar.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar bg-success-lt text-success">
+                                    <i class="ti ti-user-heart fs-2"></i>
+                                </span>
+                                <div>
+                                    <div class="text-secondary small text-uppercase fw-bold">Santri Aktif</div>
+                                    <div class="h1 mb-1">{{ $santriStats['active_santri'] }}</div>
+                                    <div class="text-secondary small">Santri yang masih aktif mondok.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar bg-azure-lt text-azure">
+                                    <i class="ti ti-school-off fs-2"></i>
+                                </span>
+                                <div>
+                                    <div class="text-secondary small text-uppercase fw-bold">Santri Alumni</div>
+                                    <div class="h1 mb-1">{{ $santriStats['alumni_santri'] }}</div>
+                                    <div class="text-secondary small">Santri yang sudah lulus/alumni.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar bg-warning-lt text-warning">
+                                    <i class="ti ti-user-x fs-2"></i>
+                                </span>
+                                <div>
+                                    <div class="text-secondary small text-uppercase fw-bold">Santri Keluar</div>
+                                    <div class="h1 mb-1">{{ $santriStats['exited_santri'] }}</div>
+                                    <div class="text-secondary small">Santri yang sudah keluar.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="col-xl-8">
             <div class="card h-100">
                 <div class="card-header">
@@ -126,6 +198,13 @@
                 <div class="list-group list-group-flush">
                     <div class="list-group-item d-flex align-items-center justify-content-between">
                         <div>
+                            <div class="fw-semibold">Santri Baru Bulan Ini</div>
+                            <div class="text-secondary small">Penambahan data santri sejak awal bulan.</div>
+                        </div>
+                        <span class="badge bg-blue-lt text-blue">{{ $newSantriThisMonth }}</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center justify-content-between">
+                        <div>
                             <div class="fw-semibold">User Belum Login</div>
                             <div class="text-secondary small">Akun dibuat tetapi belum pernah masuk ke sistem.</div>
                         </div>
@@ -148,12 +227,13 @@
                     <div class="list-group-item d-flex align-items-center justify-content-between">
                         <div>
                             <div class="fw-semibold">Fokus Operasional</div>
-                            <div class="text-secondary small">Prioritaskan akun inactive, suspended, dan belum login.</div>
+                            <div class="text-secondary small">Pantau user bermasalah dan pertumbuhan data santri dari satu halaman.</div>
                         </div>
                         <span class="badge bg-azure-lt text-azure">Actionable</span>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </x-app-layout>
