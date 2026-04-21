@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Santri;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,6 +19,7 @@ class SantriFactory extends Factory
     public function definition(): array
     {
         return [
+            'tenant_id' => null,
             'nis' => fake()->unique()->numerify('NIS#######'),
             'full_name' => fake()->name(),
             'gender' => fake()->randomElement(Santri::availableGenders()),
@@ -37,5 +39,15 @@ class SantriFactory extends Factory
             'photo_path' => null,
             'created_by' => null,
         ];
+    }
+
+    /**
+     * Attach the santri to a tenant.
+     */
+    public function forTenant(?Tenant $tenant = null): static
+    {
+        return $this->state(fn () => [
+            'tenant_id' => $tenant?->id ?? Tenant::factory(),
+        ]);
     }
 }

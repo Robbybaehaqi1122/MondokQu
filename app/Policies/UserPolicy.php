@@ -227,6 +227,10 @@ class UserPolicy
             return Response::deny($message);
         }
 
+        if ($actor->tenant_id && $target->tenant_id && $actor->tenant_id !== $target->tenant_id) {
+            return Response::deny('Anda tidak dapat mengelola user dari tenant pondok lain.');
+        }
+
         return Response::allow();
     }
 }

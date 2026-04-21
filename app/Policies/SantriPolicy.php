@@ -23,9 +23,15 @@ class SantriPolicy
      */
     public function view(User $user, Santri $santri): Response
     {
-        return $user->can('view santri')
-            ? Response::allow()
-            : Response::deny('Anda tidak memiliki akses ke detail santri.');
+        if (! $user->can('view santri')) {
+            return Response::deny('Anda tidak memiliki akses ke detail santri.');
+        }
+
+        if ($user->tenant_id && $santri->tenant_id && $user->tenant_id !== $santri->tenant_id) {
+            return Response::deny('Anda tidak dapat mengakses data santri dari tenant pondok lain.');
+        }
+
+        return Response::allow();
     }
 
     /**
@@ -43,9 +49,15 @@ class SantriPolicy
      */
     public function update(User $user, Santri $santri): Response
     {
-        return $user->can('update santri')
-            ? Response::allow()
-            : Response::deny('Anda tidak memiliki akses untuk mengubah data santri.');
+        if (! $user->can('update santri')) {
+            return Response::deny('Anda tidak memiliki akses untuk mengubah data santri.');
+        }
+
+        if ($user->tenant_id && $santri->tenant_id && $user->tenant_id !== $santri->tenant_id) {
+            return Response::deny('Anda tidak dapat mengubah data santri dari tenant pondok lain.');
+        }
+
+        return Response::allow();
     }
 
     /**
@@ -53,8 +65,14 @@ class SantriPolicy
      */
     public function delete(User $user, Santri $santri): Response
     {
-        return $user->can('delete santri')
-            ? Response::allow()
-            : Response::deny('Anda tidak memiliki akses untuk menghapus data santri.');
+        if (! $user->can('delete santri')) {
+            return Response::deny('Anda tidak memiliki akses untuk menghapus data santri.');
+        }
+
+        if ($user->tenant_id && $santri->tenant_id && $user->tenant_id !== $santri->tenant_id) {
+            return Response::deny('Anda tidak dapat menghapus data santri dari tenant pondok lain.');
+        }
+
+        return Response::allow();
     }
 }

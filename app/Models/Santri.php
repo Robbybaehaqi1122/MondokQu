@@ -24,6 +24,7 @@ class Santri extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'tenant_id',
         'nis',
         'full_name',
         'gender',
@@ -63,6 +64,14 @@ class Santri extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the tenant that owns this santri record.
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     /**

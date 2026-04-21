@@ -112,6 +112,10 @@
                                             <div class="fw-semibold mt-2">{{ $userDetail->last_login_at ? $userDetail->last_login_at->translatedFormat('d M Y H:i') : 'Belum pernah login' }}</div>
                                         </div>
                                         <div class="user-detail-meta-card">
+                                            <div class="text-secondary small text-uppercase fw-bold">Tenant</div>
+                                            <div class="fw-semibold mt-2">{{ $userDetail->tenant?->name ?? 'Platform Internal' }}</div>
+                                        </div>
+                                        <div class="user-detail-meta-card">
                                             <div class="text-secondary small text-uppercase fw-bold">Dibuat Oleh</div>
                                             <div class="fw-semibold mt-2">{{ $userDetail->creator?->name ?? 'System / Seeder' }}</div>
                                         </div>
@@ -258,6 +262,10 @@
                         <div class="user-detail-info-row">
                             <span>Role aktif</span>
                             <strong class="user-detail-info-value">{{ $userDetail->getRoleNames()->implode(', ') ?: 'Tanpa role' }}</strong>
+                        </div>
+                        <div class="user-detail-info-row">
+                            <span>Asal pondok / tenant</span>
+                            <strong class="user-detail-info-value">{{ $userDetail->tenant?->name ?? 'Platform Internal' }}</strong>
                         </div>
                         <div class="user-detail-info-row">
                             <span>Status akun</span>

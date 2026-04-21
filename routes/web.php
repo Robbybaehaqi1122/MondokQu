@@ -20,16 +20,17 @@ Route::get('/dashboard', function (DetermineDashboardRouteAction $determineDashb
 
 Route::get('/dashboard/home', function () {
     return view('dashboard');
-})->middleware(['auth', 'password_change_required'])->name('dashboard.home');
+})->middleware(['auth', 'password_change_required', 'subscription_active'])->name('dashboard.home');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::view('/subscription/expired', 'subscription.expired')->name('subscription.expired');
 });
 
 // Role-based access routes
-Route::middleware(['auth', 'password_change_required', 'role:Superadmin|Admin'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'role:Superadmin|Admin'])->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::get('/admin/users/{user}', [UserManagementController::class, 'show'])->name('admin.users.show');
@@ -43,60 +44,61 @@ Route::middleware(['auth', 'password_change_required', 'role:Superadmin|Admin'])
     Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 });
 
-Route::middleware(['auth', 'password_change_required', 'permission:assign roles'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:assign roles'])->group(function () {
     Route::get('/admin/roles', [RoleManagementController::class, 'index'])->name('admin.roles');
     Route::post('/admin/roles', [RoleManagementController::class, 'store'])->name('admin.roles.store');
     Route::patch('/admin/roles/{role}/permissions', [RoleManagementController::class, 'updatePermissions'])->name('admin.roles.update-permissions');
 });
 
-Route::middleware(['auth', 'password_change_required', 'permission:manage system settings'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:manage system settings'])->group(function () {
     Route::get('/admin/permissions', [PermissionManagementController::class, 'index'])->name('admin.permissions');
     Route::post('/admin/permissions', [PermissionManagementController::class, 'store'])->name('admin.permissions.store');
     Route::patch('/admin/permissions/{permission}', [PermissionManagementController::class, 'update'])->name('admin.permissions.update');
     Route::patch('/admin/permissions/{permission}/roles', [PermissionManagementController::class, 'updateRoles'])->name('admin.permissions.update-roles');
 });
 
-Route::middleware(['auth', 'password_change_required', 'permission:view activity logs'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:view activity logs'])->group(function () {
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity-logs');
 });
 
-Route::middleware(['auth', 'password_change_required', 'permission:manage activity logs'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:manage activity logs'])->group(function () {
     Route::delete('/admin/activity-logs', [ActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
 });
 
-Route::middleware(['auth', 'password_change_required', 'permission:view santri'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:view santri'])->group(function () {
     Route::get('/santri', [SantriManagementController::class, 'index'])->name('santri.index');
     Route::get('/santri/{santri}', [SantriManagementController::class, 'show'])->name('santri.show');
 });
 
-Route::middleware(['auth', 'password_change_required', 'permission:create santri'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:create santri'])->group(function () {
     Route::post('/santri', [SantriManagementController::class, 'store'])->name('santri.store');
 });
 
-Route::middleware(['auth', 'password_change_required', 'permission:update santri'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:update santri'])->group(function () {
     Route::patch('/santri/{santri}', [SantriManagementController::class, 'update'])->name('santri.update');
 });
 
-Route::middleware(['auth', 'password_change_required', 'permission:delete santri'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:delete santri'])->group(function () {
     Route::delete('/santri/{santri}', [SantriManagementController::class, 'destroy'])->name('santri.destroy');
 });
 
-Route::middleware(['auth', 'password_change_required', 'role:Pengurus'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'role:Pengurus'])->group(function () {
     Route::get('/pengurus', fn () => view('pengurus.dashboard'))->name('pengurus.dashboard');
     Route::redirect('/pengurus/santri', '/santri')->name('pengurus.santri');
 });
 
-Route::middleware(['auth', 'password_change_required', 'role:Musyrif/Ustadz'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'role:Musyrif/Ustadz'])->group(function () {
     Route::get('/musyrif', fn () => view('dashboard'))->name('musyrif.dashboard');
 });
 
-Route::middleware(['auth', 'password_change_required', 'role:Bendahara'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'role:Bendahara'])->group(function () {
     Route::get('/bendahara', fn () => view('bendahara.dashboard'))->name('bendahara.dashboard');
     Route::get('/bendahara/laporan', fn () => view('bendahara.laporan'))->name('bendahara.laporan');
 });
 
-Route::middleware(['auth', 'password_change_required', 'role:Wali Santri'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'role:Wali Santri'])->group(function () {
     Route::get('/wali-santri', fn () => view('dashboard'))->name('wali-santri.dashboard');
 });
 
 require base_path('app/Modules/Auth/Routes/web.php');
+require base_path('app/Modules/Saas/Routes/web.php');

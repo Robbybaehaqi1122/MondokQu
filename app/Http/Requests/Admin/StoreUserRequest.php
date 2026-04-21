@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -37,6 +38,7 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', Rule::unique(User::class)],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)],
+            'tenant_id' => ['nullable', 'integer', Rule::exists(Tenant::class, 'id')],
             'phone_number' => ['nullable', 'string', 'max:30'],
             'avatar' => [
                 'nullable',
@@ -62,18 +64,23 @@ class StoreUserRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.required' => 'Nama user wajib diisi.',
+            'name.max' => 'Nama user maksimal 255 karakter.',
             'username.required' => 'Username wajib diisi.',
             'username.unique' => 'Username sudah digunakan user lain.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan user lain.',
+            'tenant_id.exists' => 'Tenant yang dipilih tidak ditemukan.',
             'phone_number.max' => 'Nomor HP maksimal 30 karakter.',
             'avatar.image' => 'Avatar harus berupa file gambar.',
             'avatar.mimes' => 'Avatar hanya boleh berformat JPG, JPEG, PNG, atau WEBP.',
             'avatar.max' => 'Ukuran avatar maksimal 2 MB.',
             'avatar.dimensions' => 'Dimensi avatar minimal 200x200 px dan maksimal 2000x2000 px.',
             'role.required' => 'Role wajib dipilih.',
+            'role.exists' => 'Role yang dipilih tidak valid.',
             'status.required' => 'Status user wajib dipilih.',
+            'status.in' => 'Status user yang dipilih tidak valid.',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi password harus sama.',

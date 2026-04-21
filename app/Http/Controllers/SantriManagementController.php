@@ -27,11 +27,18 @@ class SantriManagementController extends Controller
     {
         $this->authorize('viewAny', Santri::class);
 
+        $currentUser = $request->user();
         $query = trim((string) $request->string('q'));
         $selectedStatus = trim((string) $request->string('status'));
         $selectedGender = trim((string) $request->string('gender'));
 
-        $santris = Santri::query()
+        $baseQuery = Santri::query()
+            ->when(
+                $currentUser && ! $currentUser->isSuperAdmin() && $currentUser->tenant_id,
+                fn ($builder) => $builder->where('tenant_id', $currentUser->tenant_id)
+            );
+
+        $santris = (clone $baseQuery)
             ->with('creator')
             ->when($query !== '', function ($builder) use ($query) {
                 $builder->where(function ($santriQuery) use ($query) {
@@ -52,15 +59,15 @@ class SantriManagementController extends Controller
             ->withQueryString();
 
         return view('santri.index', [
-            'allSantriCount' => Santri::query()->count(),
+            'allSantriCount' => (clone $baseQuery)->count(),
             'filters' => [
                 'q' => $query,
                 'status' => $selectedStatus,
                 'gender' => $selectedGender,
             ],
             'genders' => $this->genderOptions(),
-            'canCreateSantri' => $request->user()?->can('create', Santri::class) ?? false,
-            'canUpdateSantri' => $request->user()?->can('update', new Santri()) ?? false,
+            'canCreateSantri' => $currentUser?->can('create', Santri::class) ?? false,
+            'canUpdateSantri' => $currentUser?->can('update', new Santri()) ?? false,
             'statuses' => $this->statusOptions(),
             'santris' => $santris,
         ]);
@@ -91,6 +98,7 @@ class SantriManagementController extends Controller
         $validated = $request->validated();
 
         $santri = Santri::query()->create([
+            'tenant_id' => $request->user()?->tenant_id,
             'nis' => $validated['nis'],
             'full_name' => $validated['full_name'],
             'gender' => $validated['gender'],

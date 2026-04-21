@@ -22,6 +22,7 @@ class ActivityLogger
         ?string $userAgent = null
     ): ActivityLog {
         return ActivityLog::query()->create([
+            'tenant_id' => $actor?->tenant_id ?? request()?->user()?->tenant_id,
             'actor_id' => $actor?->id,
             'actor_name' => $actor?->name ?? ($properties['actor_name'] ?? 'System'),
             'action' => $action,

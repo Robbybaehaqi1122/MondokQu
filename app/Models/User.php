@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -25,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
      * @var list<string>
      */
     protected $fillable = [
+        'tenant_id',
         'name',
         'username',
         'email',
@@ -70,6 +72,22 @@ class User extends Authenticatable implements MustVerifyEmailContract
     }
 
     /**
+     * Get the tenant that owns this user.
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Get the tenant records created by this user.
+     */
+    public function ownedTenants(): HasMany
+    {
+        return $this->hasMany(Tenant::class, 'owner_id');
+    }
+
+    /**
      * Get the available user statuses.
      *
      * @return array<int, string>
@@ -97,6 +115,18 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function isSuperAdmin(): bool
     {
         return $this->hasRole('Superadmin');
+    }
+
+    /**
+     * Determine whether the user belongs to the selected tenant.
+     */
+    public function belongsToTenant(?Tenant $tenant): bool
+    {
+        if (! $tenant || ! $this->tenant_id) {
+            return false;
+        }
+
+        return $this->tenant_id === $tenant->id;
     }
 
     /**

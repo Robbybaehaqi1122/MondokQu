@@ -128,6 +128,41 @@
                     </details>
                 @endif
 
+                @if ($user->hasRole('Superadmin'))
+                    <details class="sidebar-dropdown" @if (request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-building-bank"></i>
+                            </span>
+                            <span class="flex-grow-1">SaaS</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('saas.dashboard') ? 'active' : '' }}" href="{{ route('saas.dashboard') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-chart-dots-3"></i>
+                                </span>
+                                <span>Dashboard SaaS</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('saas.tenants.*') ? 'active' : '' }}" href="{{ route('saas.tenants.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-building-community"></i>
+                                </span>
+                                <span>Tenant Management</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('saas.subscription-histories.*') ? 'active' : '' }}" href="{{ route('saas.subscription-histories.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-history-toggle"></i>
+                                </span>
+                                <span>Riwayat Subscription</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
                 @if ($user->hasRole('Bendahara'))
                     <div class="sidebar-section-title">Modul Bendahara</div>
                     <a class="sidebar-link {{ request()->routeIs('bendahara.laporan') ? 'active' : '' }}" href="{{ route('bendahara.laporan') }}">

@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateUserProfileRequest;
 use App\Http\Requests\Admin\UpdateUserRoleRequest;
 use App\Http\Requests\Admin\UpdateUserStatusRequest;
 use App\Models\ActivityLog;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\UserAvatarUploader;
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 class UserManagementController extends Controller
 {
@@ -34,6 +36,7 @@ class UserManagementController extends Controller
         $this->authorize('viewAny', User::class);
 
         $currentUser = $request->user();
+        $tenantId = $currentUser && ! $currentUser->isSuperAdmin() ? $currentUser->tenant_id : null;
         $roles = Role::query()
             ->orderBy('name')
             ->get();
@@ -41,14 +44,18 @@ class UserManagementController extends Controller
             return $currentUser?->can('createWithRole', [User::class, $role->name]) ?? false;
         })->values();
 
-        $allUsersCount = User::query()->count();
+        $baseUsersQuery = User::query()
+            ->when($tenantId, fn ($builder) => $builder->where('tenant_id', $tenantId));
+
+        $allUsersCount = (clone $baseUsersQuery)->count();
         $query = trim((string) $request->string('q'));
         $selectedRole = trim((string) $request->string('role'));
         $selectedStatus = trim((string) $request->string('status'));
         $selectedVerification = trim((string) $request->string('verification'));
+        $selectedTenant = trim((string) $request->string('tenant'));
 
-        $users = User::query()
-            ->with(['roles', 'creator'])
+        $users = (clone $baseUsersQuery)
+            ->with(['roles', 'creator', 'tenant'])
             ->when($query !== '', function ($builder) use ($query) {
                 $builder->where(function ($userQuery) use ($query) {
                     $userQuery
@@ -72,6 +79,10 @@ class UserManagementController extends Controller
             ->when($selectedVerification === 'unverified', function ($builder) {
                 $builder->whereNull('email_verified_at');
             })
+            ->when(
+                $selectedTenant !== '' && ($currentUser?->isSuperAdmin() ?? false),
+                fn ($builder) => $builder->whereHas('tenant', fn ($tenantQuery) => $tenantQuery->where('slug', $selectedTenant))
+            )
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
@@ -79,12 +90,16 @@ class UserManagementController extends Controller
         return view('admin.users', [
             'assignableRoles' => $assignableRoles,
             'canManageRoles' => $currentUser?->isSuperAdmin() ?? false,
+            'availableTenants' => $currentUser?->isSuperAdmin()
+                ? Tenant::query()->orderBy('name')->get(['id', 'name', 'slug'])
+                : collect(),
             'allUsersCount' => $allUsersCount,
             'filters' => [
                 'q' => $query,
                 'role' => $selectedRole,
                 'status' => $selectedStatus,
                 'verification' => $selectedVerification,
+                'tenant' => $selectedTenant,
             ],
             'statuses' => User::availableStatuses(),
             'roles' => $roles,
@@ -100,10 +115,12 @@ class UserManagementController extends Controller
         $this->authorize('view', $user);
 
         $currentUser = $request->user();
-        $user->load(['roles', 'creator']);
+        $tenantId = $currentUser && ! $currentUser->isSuperAdmin() ? $currentUser->tenant_id : null;
+        $user->load(['roles', 'creator', 'tenant']);
 
         $activityLogs = ActivityLog::query()
             ->with('actor')
+            ->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))
             ->where(function ($query) use ($user) {
                 $query
                     ->where(function ($targetQuery) use ($user) {
@@ -119,6 +136,7 @@ class UserManagementController extends Controller
 
         $roleHistory = ActivityLog::query()
             ->with('actor')
+            ->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))
             ->where('target_type', User::class)
             ->where('target_id', $user->id)
             ->whereIn('action', ['user_created', 'user_role_updated'])
@@ -146,6 +164,10 @@ class UserManagementController extends Controller
         $this->authorize('create', User::class);
 
         $validated = $request->validated();
+        $currentUser = $request->user();
+        $resolvedTenantId = $currentUser?->isSuperAdmin()
+            ? ($validated['tenant_id'] ?? null)
+            : $currentUser?->tenant_id;
 
         $roleAuthorization = Gate::inspect('createWithRole', [User::class, $validated['role']]);
         if ($roleAuthorization->denied()) {
@@ -157,6 +179,7 @@ class UserManagementController extends Controller
         }
 
         $user = User::query()->create([
+            'tenant_id' => $resolvedTenantId,
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
@@ -168,7 +191,7 @@ class UserManagementController extends Controller
         ]);
 
         $user->syncRoles([$validated['role']]);
-        $user->sendEmailVerificationNotification();
+        $verificationSent = $this->sendVerificationNotificationSafely($user);
         $this->activityLogger->log(
             action: 'user_created',
             actor: $request->user(),
@@ -177,6 +200,8 @@ class UserManagementController extends Controller
             properties: [
                 'role' => $validated['role'],
                 'status' => $validated['status'],
+                'tenant_id' => $resolvedTenantId,
+                'tenant_name' => $user->tenant?->name,
                 'phone_number' => $validated['phone_number'] ?? null,
             ],
             ipAddress: $request->ip()
@@ -184,7 +209,12 @@ class UserManagementController extends Controller
 
         return redirect()
             ->route('admin.users')
-            ->with('success', 'User baru berhasil dibuat dan email verifikasi sudah dikirim.');
+            ->with(
+                'success',
+                $verificationSent
+                    ? 'User baru berhasil dibuat dan email verifikasi sudah dikirim.'
+                    : 'User baru berhasil dibuat, tetapi email verifikasi belum bisa dikirim. Periksa konfigurasi mailer atau kirim ulang nanti.'
+            );
     }
 
     /**
@@ -366,7 +396,11 @@ class UserManagementController extends Controller
                 ->with('error', 'Email user ini sudah terverifikasi.');
         }
 
-        $user->sendEmailVerificationNotification();
+        if (! $this->sendVerificationNotificationSafely($user)) {
+            return redirect()
+                ->route('admin.users')
+                ->with('error', 'Email verifikasi gagal dikirim. Periksa konfigurasi mailer lalu coba lagi.');
+        }
 
         $this->activityLogger->log(
             action: 'verification_email_resent',
@@ -380,6 +414,22 @@ class UserManagementController extends Controller
         return redirect()
             ->route('admin.users')
             ->with('success', 'Email verifikasi berhasil dikirim ulang.');
+    }
+
+    /**
+     * Attempt to send the verification email without breaking the whole request.
+     */
+    protected function sendVerificationNotificationSafely(User $user): bool
+    {
+        try {
+            $user->sendEmailVerificationNotification();
+
+            return true;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return false;
+        }
     }
 
     /**

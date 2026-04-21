@@ -43,6 +43,9 @@
                             @unless ($canManageRoles)
                                 <div class="text-secondary small mt-2">Pengaturan role dipisahkan ke menu khusus dan perubahan role dibatasi untuk Superadmin.</div>
                             @endunless
+                            @if ($currentUser?->isSuperAdmin())
+                                <div class="text-secondary small mt-2">Sebagai Superadmin, Anda dapat melihat dan membuat user lintas tenant pondok.</div>
+                            @endif
                         </div>
 
                         <div class="d-flex align-items-center">
@@ -59,9 +62,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body border-bottom">
-                    <form method="GET" action="{{ route('admin.users') }}" class="row g-3 align-items-end">
-                        <div class="col-lg-4">
+                <div class="card-body border-bottom user-filter-panel">
+                    <form method="GET" action="{{ route('admin.users') }}" class="row g-3 align-items-end user-filter-form">
+                        <div class="col-lg-4 col-xl-4">
                             <label for="q" class="form-label">Cari User</label>
                             <input
                                 id="q"
@@ -73,7 +76,7 @@
                             >
                         </div>
 
-                        <div class="col-md-4 col-lg-2">
+                        <div class="col-md-6 col-lg-2 col-xl-2">
                             <label for="role_filter" class="form-label">Role</label>
                             <select id="role_filter" name="role" class="form-select form-select-pretty">
                                 <option value="">Semua Role</option>
@@ -85,7 +88,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4 col-lg-2">
+                        <div class="col-md-6 col-lg-2 col-xl-2">
                             <label for="status_filter" class="form-label">Status</label>
                             <select id="status_filter" name="status" class="form-select form-select-pretty">
                                 <option value="">Semua Status</option>
@@ -97,7 +100,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4 col-lg-2">
+                        <div class="col-md-6 col-lg-2 col-xl-2">
                             <label for="verification_filter" class="form-label">Verifikasi</label>
                             <select id="verification_filter" name="verification" class="form-select form-select-pretty">
                                 <option value="">Semua</option>
@@ -106,9 +109,23 @@
                             </select>
                         </div>
 
-                        <div class="col-lg-2">
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        @if ($currentUser?->isSuperAdmin())
+                            <div class="col-md-6 col-lg-2 col-xl-2">
+                                <label for="tenant_filter" class="form-label">Tenant</label>
+                                <select id="tenant_filter" name="tenant" class="form-select form-select-pretty">
+                                    <option value="">Semua Tenant</option>
+                                    @foreach ($availableTenants as $tenant)
+                                        <option value="{{ $tenant->slug }}" @selected($filters['tenant'] === $tenant->slug)>
+                                            {{ $tenant->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
+                        <div class="col-12 col-xl-auto">
+                            <div class="d-flex gap-2 user-filter-actions">
+                                <button type="submit" class="btn btn-primary">Filter</button>
                                 <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary">Reset</a>
                             </div>
                         </div>
@@ -119,6 +136,7 @@
                         <thead>
                             <tr>
                                 <th>Nama</th>
+                                <th>Tenant</th>
                                 <th>Role</th>
                                 <th>Status</th>
                                 <th>Email Verification</th>
@@ -141,6 +159,10 @@
                                                 {{ $managedUser->creator?->name ?? 'System / Seeder' }}
                                             </span>
                                         </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-medium">{{ $managedUser->tenant?->name ?? 'Platform Internal' }}</div>
+                                        <div class="text-secondary small mt-1">{{ $managedUser->tenant?->slug ?? '-' }}</div>
                                     </td>
                                     <td class="user-role-cell">
                                         <div class="user-control-card user-control-card-role">
@@ -419,7 +441,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-secondary">Belum ada user selain seed/factory yang tersimpan.</td>
+                                    <td colspan="7" class="text-secondary">Belum ada user selain seed/factory yang tersimpan.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -449,6 +471,17 @@
                     </div>
 
                     <div class="modal-body">
+                        @if ($errors->createUser->any())
+                            <div class="alert alert-danger" role="alert">
+                                <div class="fw-semibold mb-2">Form tambah user belum bisa disimpan.</div>
+                                <ul class="mb-0 ps-3">
+                                    @foreach ($errors->createUser->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="row g-3">
                             <div class="col-12">
                                 <label for="name" class="form-label">Nama</label>
@@ -520,6 +553,38 @@
                                 </select>
                                 @if ($errors->createUser->has('status'))
                                     <div class="invalid-feedback">{{ $errors->createUser->first('status') }}</div>
+                                @endif
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="tenant_id" class="form-label">Asal Pondok / Tenant</label>
+                                @if ($currentUser?->isSuperAdmin())
+                                    <select
+                                        id="tenant_id"
+                                        name="tenant_id"
+                                        class="form-select form-select-pretty @if($errors->createUser->has('tenant_id')) is-invalid @endif"
+                                    >
+                                        <option value="">Platform Internal / Tanpa Tenant</option>
+                                        @foreach ($availableTenants as $tenant)
+                                            <option value="{{ $tenant->id }}" @selected((string) old('tenant_id') === (string) $tenant->id)>
+                                                {{ $tenant->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @if ($errors->createUser->has('tenant_id'))
+                                        <div class="invalid-feedback">{{ $errors->createUser->first('tenant_id') }}</div>
+                                    @else
+                                        <div class="form-hint mt-2">Superadmin dapat memilih tenant tempat user ini akan ditempatkan.</div>
+                                    @endif
+                                @else
+                                    <input
+                                        id="tenant_id"
+                                        type="text"
+                                        class="form-control"
+                                        value="{{ $currentUser?->tenant?->name ?? 'Tenant belum terhubung' }}"
+                                        readonly
+                                    >
+                                    <div class="form-hint mt-2">Tenant user akan otomatis mengikuti tenant akun Anda.</div>
                                 @endif
                             </div>
 
@@ -606,7 +671,7 @@
                                     </button>
                                 </div>
                                 @if ($errors->createUser->has('password'))
-                                    <div class="invalid-feedback">{{ $errors->createUser->first('password') }}</div>
+                                    <div class="invalid-feedback d-block">{{ $errors->createUser->first('password') }}</div>
                                 @else
                                     <div class="form-hint mt-2">Minimal 8 karakter.</div>
                                 @endif
@@ -634,7 +699,7 @@
                                     </button>
                                 </div>
                                 @if ($errors->createUser->has('password_confirmation'))
-                                    <div class="invalid-feedback">{{ $errors->createUser->first('password_confirmation') }}</div>
+                                    <div class="invalid-feedback d-block">{{ $errors->createUser->first('password_confirmation') }}</div>
                                 @else
                                     <div class="form-hint mt-2">Harus sama dengan password awal.</div>
                                 @endif

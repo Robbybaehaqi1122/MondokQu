@@ -13,6 +13,7 @@ class ActivityLog extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'tenant_id',
         'actor_id',
         'actor_name',
         'action',
@@ -43,5 +44,13 @@ class ActivityLog extends Model
     public function actor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actor_id');
+    }
+
+    /**
+     * Get the tenant that owns this activity log.
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 }

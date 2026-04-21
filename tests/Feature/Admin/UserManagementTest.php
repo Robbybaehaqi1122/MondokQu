@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Http\UploadedFile;
@@ -186,7 +187,11 @@ test('admin can create a user and assign a role from the panel', function () {
     Notification::fake();
     Storage::fake('public');
 
-    $admin = User::factory()->create();
+    $tenant = Tenant::factory()->create([
+        'name' => 'Pondok Admin',
+        'slug' => 'pondok-admin',
+    ]);
+    $admin = User::factory()->forTenant($tenant)->create();
     $admin->assignRole('Admin');
     $avatar = function_exists('imagecreatetruecolor')
         ? UploadedFile::fake()->image('avatar-userbaru.png', 400, 400)->size(512)
@@ -219,6 +224,7 @@ test('admin can create a user and assign a role from the panel', function () {
     expect($user->username)->toBe('userbaru');
     expect($user->status)->toBe(User::STATUS_ACTIVE);
     expect($user->phone_number)->toBe('081234567890');
+    expect($user->tenant_id)->toBe($tenant->id);
     if ($avatar) {
         expect($user->avatar_path)->toStartWith('avatars/');
         Storage::disk('public')->assertExists($user->avatar_path);
@@ -228,6 +234,75 @@ test('admin can create a user and assign a role from the panel', function () {
     expect($user->created_by)->toBe($admin->id);
     expect($user->hasRole('Pengurus'))->toBeTrue();
     Notification::assertSentTo($user, VerifyEmail::class);
+});
+
+test('superadmin can assign a tenant when creating a user from the panel', function () {
+    Notification::fake();
+
+    $superadmin = User::factory()->create();
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->create([
+        'name' => 'Pondok Al Amanah',
+        'slug' => 'pondok-al-amanah',
+    ]);
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->post(route('admin.users.store'), [
+            'name' => 'User Tenant',
+            'username' => 'usertenant',
+            'email' => 'usertenant@example.com',
+            'tenant_id' => $tenant->id,
+            'role' => 'Pengurus',
+            'status' => User::STATUS_ACTIVE,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+    $response->assertRedirect(route('admin.users', absolute: false));
+
+    $user = User::query()->where('email', 'usertenant@example.com')->first();
+
+    expect($user)->not->toBeNull();
+    expect($user->tenant_id)->toBe($tenant->id);
+});
+
+test('admin tenant can not override tenant assignment when creating a user', function () {
+    Notification::fake();
+
+    $adminTenant = Tenant::factory()->create([
+        'name' => 'Pondok Admin Tenant',
+        'slug' => 'pondok-admin-tenant',
+    ]);
+    $otherTenant = Tenant::factory()->create([
+        'name' => 'Pondok Lain',
+        'slug' => 'pondok-lain',
+    ]);
+
+    $admin = User::factory()->forTenant($adminTenant)->create();
+    $admin->assignRole('Admin');
+
+    $response = $this
+        ->actingAs($admin)
+        ->post(route('admin.users.store'), [
+            'name' => 'User Tenant Aman',
+            'username' => 'usertenantaman',
+            'email' => 'usertenantaman@example.com',
+            'tenant_id' => $otherTenant->id,
+            'role' => 'Pengurus',
+            'status' => User::STATUS_ACTIVE,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+    $response->assertRedirect(route('admin.users', absolute: false));
+
+    $user = User::query()->where('email', 'usertenantaman@example.com')->first();
+
+    expect($user)->not->toBeNull();
+    expect($user->tenant_id)->toBe($adminTenant->id);
+    expect($user->tenant_id)->not->toBe($otherTenant->id);
 });
 
 test('admin can not create a user with admin role from the panel', function () {
