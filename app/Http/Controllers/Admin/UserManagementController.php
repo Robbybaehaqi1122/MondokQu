@@ -16,6 +16,7 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 use Throwable;
@@ -482,10 +483,11 @@ class UserManagementController extends Controller
 
         $defaultPassword = config('auth.default_user_password');
 
-        $user->update([
+        $user->forceFill([
             'password' => $defaultPassword,
             'password_change_required' => true,
-        ]);
+            'remember_token' => Str::random(60),
+        ])->save();
 
         $this->activityLogger->log(
             action: 'user_password_reset',

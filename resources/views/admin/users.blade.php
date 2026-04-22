@@ -132,7 +132,7 @@
                     </form>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-vcenter card-table">
+                    <table class="table table-vcenter card-table user-management-table">
                         <thead>
                             <tr>
                                 <th>Nama</th>
@@ -160,9 +160,13 @@
                                             </span>
                                         </div>
                                     </td>
-                                    <td>
-                                        <div class="fw-medium">{{ $managedUser->tenant?->name ?? 'Platform Internal' }}</div>
-                                        <div class="text-secondary small mt-1">{{ $managedUser->tenant?->slug ?? '-' }}</div>
+                                    <td class="user-tenant-cell">
+                                        <div class="user-tenant-name" title="{{ $managedUser->tenant?->name ?? 'Platform Internal' }}">
+                                            {{ $managedUser->tenant?->name ?? 'Platform Internal' }}
+                                        </div>
+                                        <div class="user-tenant-slug" title="{{ $managedUser->tenant?->slug ?? '-' }}">
+                                            {{ $managedUser->tenant?->slug ?? '-' }}
+                                        </div>
                                     </td>
                                     <td class="user-role-cell">
                                         <div class="user-control-card user-control-card-role">

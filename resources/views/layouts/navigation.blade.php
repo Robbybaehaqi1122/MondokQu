@@ -129,8 +129,8 @@
                 @endif
 
                 @if ($user->hasRole('Superadmin'))
-                    <details class="sidebar-dropdown" @if (request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-building-bank"></i>
                             </span>
@@ -158,6 +158,12 @@
                                     <i class="ti ti-history-toggle"></i>
                                 </span>
                                 <span>Riwayat Subscription</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('saas.billing-notes.*') ? 'active' : '' }}" href="{{ route('saas.billing-notes.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-receipt-2"></i>
+                                </span>
+                                <span>Billing Notes</span>
                             </a>
                         </div>
                     </details>

@@ -540,6 +540,7 @@ test('admin can reset a user password from the panel', function () {
     $user = User::factory()->create([
         'password' => 'password',
     ]);
+    $previousRememberToken = $user->remember_token;
 
     $response = $this
         ->actingAs($admin)
@@ -548,6 +549,7 @@ test('admin can reset a user password from the panel', function () {
     $response->assertRedirect(route('admin.users', absolute: false));
     expect(Hash::check(config('auth.default_user_password'), $user->fresh()->password))->toBeTrue();
     expect($user->fresh()->password_change_required)->toBeTrue();
+    expect($user->fresh()->remember_token)->not->toBe($previousRememberToken);
 });
 
 test('admin can not reset superadmin password from the panel', function () {

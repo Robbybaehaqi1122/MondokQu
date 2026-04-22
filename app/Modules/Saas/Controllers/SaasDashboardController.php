@@ -14,6 +14,8 @@ class SaasDashboardController extends Controller
      */
     public function index(): View
     {
+        abort_unless(request()->user()?->isSuperAdmin(), 403);
+
         $tenants = Tenant::query()
             ->with('owner')
             ->latest()

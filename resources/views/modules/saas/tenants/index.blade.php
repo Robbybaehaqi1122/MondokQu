@@ -12,7 +12,6 @@
         <div>
             <div class="text-secondary text-uppercase small fw-bold">SaaS</div>
             <h2 class="page-title mt-1">Tenant Management</h2>
-            <div class="text-secondary mt-2">Kelola pondok yang memakai platform, status trial awal, dan data kontak tenant.</div>
         </div>
     </x-slot>
 
@@ -23,7 +22,6 @@
                     <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-3 w-100">
                         <div>
                             <h3 class="card-title">Daftar Tenant</h3>
-                            <div class="text-secondary small mt-2">Setiap tenant mewakili satu pondok atau organisasi yang memakai aplikasi ini.</div>
                         </div>
 
                         <div class="d-flex align-items-center">
@@ -39,6 +37,38 @@
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <div class="card-body border-bottom user-filter-panel">
+                    <form method="GET" action="{{ route('saas.tenants.index') }}" class="row g-3 align-items-end user-filter-form">
+                            <div class="col-lg-4 col-xl-4">
+                                <label for="tenant-search" class="form-label">Cari Tenant</label>
+                                <input
+                                    id="tenant-search"
+                                    name="search"
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ $filters['search'] ?? '' }}"
+                                    placeholder="Cari nama pondok, slug, email, atau nomor kontak"
+                                >
+                            </div>
+                            <div class="col-md-6 col-lg-2 col-xl-2">
+                                <label for="tenant-status" class="form-label">Status</label>
+                                <select id="tenant-status" name="status" class="form-select form-select-pretty">
+                                    <option value="">Semua status</option>
+                                    <option value="trial" @selected(($filters['status'] ?? '') === 'trial')>Trial</option>
+                                    <option value="active" @selected(($filters['status'] ?? '') === 'active')>Active</option>
+                                    <option value="grace" @selected(($filters['status'] ?? '') === 'grace')>Grace</option>
+                                    <option value="expired" @selected(($filters['status'] ?? '') === 'expired')>Expired</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 col-xl-2">
+                                <div class="d-flex gap-2 user-filter-actions">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                    <a href="{{ route('saas.tenants.index') }}" class="btn btn-outline-secondary">Reset</a>
+                                </div>
+                            </div>
+                    </form>
                 </div>
 
                 <div class="table-responsive">

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Hash;
 
 test('password can be updated', function () {
     $user = User::factory()->create();
+    $previousRememberToken = $user->remember_token;
 
     $response = $this
         ->actingAs($user)
@@ -20,6 +21,7 @@ test('password can be updated', function () {
         ->assertRedirect('/profile');
 
     $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+    expect($user->remember_token)->not->toBe($previousRememberToken);
 });
 
 test('correct password must be provided to update password', function () {

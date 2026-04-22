@@ -3,7 +3,6 @@
         <div>
             <div class="text-secondary text-uppercase small fw-bold">Platform</div>
             <h2 class="page-title mt-1">SaaS Dashboard</h2>
-            <div class="text-secondary mt-2">Pantau tenant pondok, status trial, dan kesiapan billing dari satu modul terpisah.</div>
         </div>
     </x-slot>
 

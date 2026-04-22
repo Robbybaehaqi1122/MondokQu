@@ -91,6 +91,14 @@ class Tenant extends Model
     }
 
     /**
+     * Get the billing notes that belong to the tenant.
+     */
+    public function billingNotes(): HasMany
+    {
+        return $this->hasMany(TenantBillingNote::class);
+    }
+
+    /**
      * Determine whether the tenant is still in the trial period.
      */
     public function onTrial(): bool

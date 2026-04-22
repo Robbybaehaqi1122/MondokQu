@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Saas\Controllers\SaasDashboardController;
+use App\Modules\Saas\Controllers\BillingNoteController;
 use App\Modules\Saas\Controllers\SubscriptionHistoryController;
 use App\Modules\Saas\Controllers\TenantManagementController;
 use Illuminate\Support\Facades\Route;
@@ -12,6 +13,10 @@ Route::middleware(['auth', 'password_change_required', 'role:Superadmin'])->grou
         ->name('saas.tenants.index');
     Route::get('/saas/subscription-histories', [SubscriptionHistoryController::class, 'index'])
         ->name('saas.subscription-histories.index');
+    Route::get('/saas/billing-notes', [BillingNoteController::class, 'index'])
+        ->name('saas.billing-notes.index');
+    Route::post('/saas/billing-notes', [BillingNoteController::class, 'store'])
+        ->name('saas.billing-notes.store');
     Route::post('/saas/tenants', [TenantManagementController::class, 'store'])
         ->name('saas.tenants.store');
     Route::get('/saas/tenants/{tenant}', [TenantManagementController::class, 'show'])

@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Event;
@@ -62,4 +63,27 @@ test('email verification link can be opened while authenticated as another user'
     Event::assertDispatched(Verified::class);
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
     $response->assertRedirect(route('login', absolute: false));
+});
+
+test('resend verification shows a friendly error when mail delivery fails', function () {
+    $user = User::factory()->unverified()->create();
+
+    $this->app->instance(
+        SendEmailVerificationNotificationAction::class,
+        new class extends SendEmailVerificationNotificationAction
+        {
+            public function handle(User $user): bool
+            {
+                return false;
+            }
+        }
+    );
+
+    $response = $this
+        ->actingAs($user)
+        ->post(route('verification.send'));
+
+    $response
+        ->assertSessionHasErrors('email')
+        ->assertRedirect();
 });

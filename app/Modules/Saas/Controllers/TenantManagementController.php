@@ -4,31 +4,63 @@ namespace App\Modules\Saas\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
-use App\Models\TenantSubscriptionHistory;
 use App\Models\User;
+use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
+use App\Modules\Saas\Actions\UpdateTenantSubscriptionAction;
 use App\Modules\Saas\Requests\StoreTenantRequest;
+use App\Modules\Saas\Requests\UpdateTenantSubscriptionRequest;
+use App\Services\ActivityLogger;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Validator;
-use Throwable;
 
 class TenantManagementController extends Controller
 {
+    public function __construct(
+        protected ActivityLogger $activityLogger,
+        protected SendEmailVerificationNotificationAction $sendVerificationNotification
+    ) {
+    }
+
     /**
      * Display the tenant management page.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        abort_unless($request->user()?->isSuperAdmin(), 403);
+
+        $search = trim((string) $request->string('search'));
+        $status = $request->string('status')->toString();
+
         return view('modules.saas.tenants.index', [
             'tenants' => Tenant::query()
                 ->with(['owner'])
                 ->withCount(['users', 'santris'])
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($tenantQuery) use ($search) {
+                        $tenantQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('slug', 'like', "%{$search}%")
+                            ->orWhere('contact_email', 'like', "%{$search}%")
+                            ->orWhere('contact_phone_number', 'like', "%{$search}%");
+                    });
+                })
+                ->when(in_array($status, [
+                    Tenant::SUBSCRIPTION_TRIAL,
+                    Tenant::SUBSCRIPTION_ACTIVE,
+                    Tenant::SUBSCRIPTION_GRACE,
+                    Tenant::SUBSCRIPTION_EXPIRED,
+                ], true), fn ($query) => $query->where('subscription_status', $status))
                 ->orderBy('name')
-                ->paginate(10),
+                ->paginate(10)
+                ->withQueryString(),
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+            ],
         ]);
     }
 
@@ -38,6 +70,7 @@ class TenantManagementController extends Controller
     public function store(StoreTenantRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $actor = $request->user();
 
         $tenant = DB::transaction(function () use ($validated, $request): Tenant {
             $tenant = Tenant::query()->create([
@@ -63,7 +96,7 @@ class TenantManagementController extends Controller
                     'phone_number' => ($validated['owner_phone_number'] ?? null) ?: null,
                     'status' => User::STATUS_ACTIVE,
                     'created_by' => $request->user()?->id,
-                    'password_change_required' => false,
+                    'password_change_required' => true,
                     'password' => $validated['owner_password'],
                 ]);
 
@@ -77,13 +110,45 @@ class TenantManagementController extends Controller
             return $tenant;
         });
 
+        $this->activityLogger->log(
+            action: 'tenant_created',
+            actor: $actor,
+            target: $tenant,
+            description: 'Tenant baru dibuat dari panel SaaS.',
+            properties: [
+                'tenant_slug' => $tenant->slug,
+                'subscription_status' => $tenant->subscription_status,
+                'trial_ends_at' => $tenant->trial_ends_at?->toDateTimeString(),
+                'owner_requested' => $request->boolean('create_owner_account'),
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
         if ($request->boolean('create_owner_account')) {
             $owner = User::query()
                 ->where('tenant_id', $tenant->id)
                 ->where('email', $validated['owner_email'])
                 ->first();
 
-            $verificationSent = $owner ? $this->sendVerificationNotificationSafely($owner) : false;
+            if ($owner) {
+                $this->activityLogger->log(
+                    action: 'tenant_owner_created',
+                    actor: $actor,
+                    target: $owner,
+                    description: 'Akun owner/admin tenant dibuat saat provisioning tenant.',
+                    properties: [
+                        'tenant_id' => $tenant->id,
+                        'tenant_name' => $tenant->name,
+                        'tenant_slug' => $tenant->slug,
+                        'password_change_required' => true,
+                    ],
+                    ipAddress: $request->ip(),
+                    userAgent: $request->userAgent()
+                );
+            }
+
+            $verificationSent = $owner ? $this->sendVerificationNotification->handle($owner) : false;
         }
 
         return redirect()
@@ -93,7 +158,7 @@ class TenantManagementController extends Controller
                 $request->boolean('create_owner_account')
                     ? (($verificationSent ?? false)
                         ? 'Tenant baru berhasil dibuat, masa trial aktif, dan akun admin tenant sudah disiapkan.'
-                        : 'Tenant baru berhasil dibuat dan akun admin tenant sudah disiapkan, tetapi email verifikasinya belum bisa dikirim.')
+                        : 'Tenant baru berhasil dibuat dan akun admin tenant sudah disiapkan. Password awal tetap bisa dipakai, tetapi email verifikasi belum berhasil dikirim saat ini.')
                     : 'Tenant baru berhasil dibuat dan masa trial sudah diaktifkan.'
             );
     }
@@ -101,8 +166,10 @@ class TenantManagementController extends Controller
     /**
      * Display the selected tenant detail page.
      */
-    public function show(Tenant $tenant): View
+    public function show(Request $request, Tenant $tenant): View
     {
+        abort_unless($request->user()?->isSuperAdmin(), 403);
+
         $tenant->load(['owner', 'users.roles']);
         $tenant->loadCount(['users', 'santris', 'activityLogs']);
 
@@ -130,147 +197,48 @@ class TenantManagementController extends Controller
     /**
      * Update the subscription state for the selected tenant.
      */
-    public function updateSubscription(Request $request, Tenant $tenant): RedirectResponse
+    public function updateSubscription(
+        UpdateTenantSubscriptionRequest $request,
+        Tenant $tenant,
+        UpdateTenantSubscriptionAction $updateTenantSubscription
+    ): RedirectResponse
     {
-        $validated = Validator::make($request->all(), [
-            'action' => ['required', 'string', 'in:activate_trial,extend_trial,activate_subscription,mark_grace,mark_expired'],
-            'trial_ends_at' => ['nullable', 'date', 'after:now'],
-            'grace_ends_at' => ['nullable', 'date', 'after:now'],
-            'subscription_duration' => ['nullable', 'string', 'in:1_month,3_months,6_months,12_months'],
-            'admin_note' => ['nullable', 'string', 'max:1000'],
-        ], [
-            'action.required' => 'Aksi subscription wajib dipilih.',
-            'action.in' => 'Aksi subscription yang dipilih tidak valid.',
-            'trial_ends_at.date' => 'Tanggal akhir trial harus berupa tanggal yang valid.',
-            'trial_ends_at.after' => 'Tanggal akhir trial harus lebih besar dari waktu sekarang.',
-            'grace_ends_at.date' => 'Tanggal akhir grace period harus berupa tanggal yang valid.',
-            'grace_ends_at.after' => 'Tanggal akhir grace period harus lebih besar dari waktu sekarang.',
-            'subscription_duration.in' => 'Durasi subscription yang dipilih tidak valid.',
-            'admin_note.max' => 'Catatan admin maksimal 1000 karakter.',
-        ])->validateWithBag('subscriptionControl');
+        $validated = $request->validated();
+        $previousSnapshot = $tenant->only([
+            'subscription_plan',
+            'subscription_status',
+            'trial_ends_at',
+            'subscription_starts_at',
+            'subscription_ends_at',
+            'grace_ends_at',
+        ]);
+        $result = $updateTenantSubscription->handle($tenant, $validated, $request->user());
+        $tenant->refresh();
 
-        $action = $validated['action'];
-
-        if (in_array($action, ['activate_trial', 'extend_trial'], true) && empty($validated['trial_ends_at'])) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'trial_ends_at' => 'Silakan pilih tanggal akhir trial terlebih dahulu.',
-                ], 'subscriptionControl');
-        }
-
-        if ($action === 'mark_grace' && empty($validated['grace_ends_at'])) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'grace_ends_at' => 'Silakan pilih tanggal akhir grace period terlebih dahulu.',
-                ], 'subscriptionControl');
-        }
-
-        if ($action === 'activate_subscription' && empty($validated['subscription_duration'])) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'subscription_duration' => 'Silakan pilih durasi subscription terlebih dahulu.',
-                ], 'subscriptionControl');
-        }
-
-        $actionedAt = now();
-        $trialEndsAt = ! empty($validated['trial_ends_at']) ? Carbon::parse($validated['trial_ends_at']) : null;
-        $graceEndsAt = ! empty($validated['grace_ends_at']) ? Carbon::parse($validated['grace_ends_at']) : null;
-        $subscriptionEndAt = match ($validated['subscription_duration'] ?? null) {
-            '1_month' => $actionedAt->copy()->addMonth(),
-            '3_months' => $actionedAt->copy()->addMonths(3),
-            '6_months' => $actionedAt->copy()->addMonths(6),
-            '12_months' => $actionedAt->copy()->addYear(),
-            default => null,
-        };
-
-        [$periodStartsAt, $periodEndsAt] = DB::transaction(function () use ($action, $actionedAt, $graceEndsAt, $request, $subscriptionEndAt, $tenant, $trialEndsAt, $validated): array {
-            $periodStartsAt = null;
-            $periodEndsAt = null;
-
-            match ($action) {
-                'activate_trial' => $tenant->forceFill([
-                    'subscription_plan' => config('saas.default_plan', 'trial'),
-                    'subscription_status' => Tenant::SUBSCRIPTION_TRIAL,
-                    'trial_ends_at' => $trialEndsAt,
-                    'subscription_starts_at' => null,
-                    'subscription_ends_at' => null,
-                    'grace_ends_at' => null,
-                ])->save(),
-                'extend_trial' => $tenant->forceFill([
-                    'subscription_plan' => config('saas.default_plan', 'trial'),
-                    'subscription_status' => Tenant::SUBSCRIPTION_TRIAL,
-                    'trial_ends_at' => $trialEndsAt,
-                    'subscription_starts_at' => null,
-                    'subscription_ends_at' => null,
-                    'grace_ends_at' => null,
-                ])->save(),
-                'activate_subscription' => $tenant->forceFill([
-                    'subscription_plan' => 'basic',
-                    'subscription_status' => Tenant::SUBSCRIPTION_ACTIVE,
-                    'subscription_starts_at' => $actionedAt,
-                    'subscription_ends_at' => $subscriptionEndAt,
-                    'grace_ends_at' => null,
-                ])->save(),
-                'mark_grace' => $tenant->forceFill([
-                    'subscription_plan' => $tenant->subscription_plan ?: 'basic',
-                    'subscription_status' => Tenant::SUBSCRIPTION_GRACE,
-                    'subscription_ends_at' => $tenant->subscription_ends_at ?: $actionedAt,
-                    'grace_ends_at' => $graceEndsAt,
-                ])->save(),
-                'mark_expired' => $tenant->forceFill([
-                    'subscription_plan' => $tenant->subscription_plan ?: 'basic',
-                    'subscription_status' => Tenant::SUBSCRIPTION_EXPIRED,
-                    'grace_ends_at' => $actionedAt->copy()->subSecond(),
-                ])->save(),
-            };
-
-            [$periodStartsAt, $periodEndsAt] = match ($action) {
-                'activate_trial', 'extend_trial' => [$actionedAt, $trialEndsAt],
-                'activate_subscription' => [$actionedAt, $subscriptionEndAt],
-                'mark_grace' => [$actionedAt, $graceEndsAt],
-                'mark_expired' => [$actionedAt, $actionedAt],
-            };
-
-            TenantSubscriptionHistory::query()->create([
-                'tenant_id' => $tenant->id,
-                'action' => $action,
-                'period_starts_at' => $periodStartsAt,
-                'period_ends_at' => $periodEndsAt,
-                'admin_note' => filled($validated['admin_note'] ?? null) ? $validated['admin_note'] : null,
-                'changed_by' => $request->user()?->id,
-            ]);
-
-            return [$periodStartsAt, $periodEndsAt];
-        });
-
-        $message = match ($action) {
-            'activate_trial' => 'Trial tenant berhasil diaktifkan dengan tanggal akhir yang dipilih.',
-            'extend_trial' => 'Masa trial tenant berhasil diatur ulang sesuai tanggal yang dipilih.',
-            'activate_subscription' => 'Subscription tenant berhasil diaktifkan sesuai durasi yang dipilih.',
-            'mark_grace' => 'Tenant berhasil dipindahkan ke masa grace period sesuai tanggal yang dipilih.',
-            'mark_expired' => 'Tenant berhasil ditandai sebagai expired.',
-        };
+        $this->activityLogger->log(
+            action: 'subscription_updated',
+            actor: $request->user(),
+            target: $tenant,
+            description: 'Status subscription tenant diperbarui dari panel SaaS.',
+            properties: [
+                'action' => $validated['action'],
+                'admin_note' => $validated['admin_note'] ?? null,
+                'before' => $previousSnapshot,
+                'after' => $tenant->only([
+                    'subscription_plan',
+                    'subscription_status',
+                    'trial_ends_at',
+                    'subscription_starts_at',
+                    'subscription_ends_at',
+                    'grace_ends_at',
+                ]),
+                'history_id' => $result['history']->id,
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
 
         return back()
-            ->with('success', $message);
-    }
-
-    /**
-     * Attempt to send the verification email without aborting tenant provisioning.
-     */
-    protected function sendVerificationNotificationSafely(User $user): bool
-    {
-        try {
-            $user->sendEmailVerificationNotification();
-
-            return true;
-        } catch (Throwable $exception) {
-            report($exception);
-
-            return false;
-        }
+            ->with('success', $result['message']);
     }
 }

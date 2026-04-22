@@ -349,6 +349,38 @@ body {
     min-width: 210px;
 }
 
+.user-management-table {
+    --tblr-table-cell-padding-y: 0.85rem;
+}
+
+.user-management-table td {
+    vertical-align: top;
+}
+
+.user-tenant-cell {
+    width: 1%;
+    min-width: 180px;
+    max-width: 240px;
+}
+
+.user-tenant-name {
+    max-width: 13rem;
+    font-weight: 600;
+    line-height: 1.45;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.user-tenant-slug {
+    max-width: 13rem;
+    margin-top: 0.35rem;
+    color: #64748b;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
 .form-select-pretty {
     appearance: none;
     -webkit-appearance: none;
@@ -860,6 +892,16 @@ body {
     .user-role-cell,
     .user-status-cell {
         min-width: 220px;
+    }
+
+    .user-tenant-cell {
+        min-width: 160px;
+        max-width: 200px;
+    }
+
+    .user-tenant-name,
+    .user-tenant-slug {
+        max-width: 11rem;
     }
 }
 
