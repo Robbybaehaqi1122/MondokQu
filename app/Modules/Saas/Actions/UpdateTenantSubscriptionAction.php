@@ -22,16 +22,21 @@ class UpdateTenantSubscriptionAction
         $actionedAt = now();
         $trialEndsAt = ! empty($validated['trial_ends_at']) ? Carbon::parse((string) $validated['trial_ends_at']) : null;
         $graceEndsAt = ! empty($validated['grace_ends_at']) ? Carbon::parse((string) $validated['grace_ends_at']) : null;
-        $subscriptionEndAt = match ($validated['subscription_duration'] ?? null) {
-            '1_month' => $actionedAt->copy()->addMonth(),
-            '3_months' => $actionedAt->copy()->addMonths(3),
-            '6_months' => $actionedAt->copy()->addMonths(6),
-            '12_months' => $actionedAt->copy()->addYear(),
-            default => null,
-        };
+        $subscriptionStartsAt = $this->parseSubscriptionDate($validated['subscription_starts_at'] ?? null)
+            ?? $actionedAt;
+        $subscriptionEndAt = $this->parseSubscriptionDate($validated['subscription_ends_at'] ?? null, endOfDay: true)
+            ?? match ($validated['subscription_duration'] ?? null) {
+                '1_month' => $actionedAt->copy()->addMonth(),
+                '3_months' => $actionedAt->copy()->addMonths(3),
+                '6_months' => $actionedAt->copy()->addMonths(6),
+                '12_months' => $actionedAt->copy()->addYear(),
+                default => null,
+            };
+        $usesExplicitSubscriptionPeriod = ! empty($validated['subscription_starts_at'])
+            || ! empty($validated['subscription_ends_at']);
 
         /** @var array{message: string, history: TenantSubscriptionHistory} $result */
-        $result = DB::transaction(function () use ($action, $actionedAt, $actor, $graceEndsAt, $subscriptionEndAt, $tenant, $trialEndsAt, $validated): array {
+        $result = DB::transaction(function () use ($action, $actionedAt, $actor, $graceEndsAt, $subscriptionEndAt, $subscriptionStartsAt, $tenant, $trialEndsAt, $usesExplicitSubscriptionPeriod, $validated): array {
             match ($action) {
                 'activate_trial', 'extend_trial' => $tenant->forceFill([
                     'subscription_plan' => config('saas.default_plan', 'trial'),
@@ -44,7 +49,7 @@ class UpdateTenantSubscriptionAction
                 'activate_subscription' => $tenant->forceFill([
                     'subscription_plan' => 'basic',
                     'subscription_status' => Tenant::SUBSCRIPTION_ACTIVE,
-                    'subscription_starts_at' => $actionedAt,
+                    'subscription_starts_at' => $subscriptionStartsAt,
                     'subscription_ends_at' => $subscriptionEndAt,
                     'grace_ends_at' => null,
                 ])->save(),
@@ -63,7 +68,7 @@ class UpdateTenantSubscriptionAction
 
             [$periodStartsAt, $periodEndsAt] = match ($action) {
                 'activate_trial', 'extend_trial' => [$actionedAt, $trialEndsAt],
-                'activate_subscription' => [$actionedAt, $subscriptionEndAt],
+                'activate_subscription' => [$subscriptionStartsAt, $subscriptionEndAt],
                 'mark_grace' => [$actionedAt, $graceEndsAt],
                 'mark_expired' => [$actionedAt, $actionedAt],
                 default => [null, null],
@@ -81,7 +86,9 @@ class UpdateTenantSubscriptionAction
             $message = match ($action) {
                 'activate_trial' => 'Trial tenant berhasil diaktifkan dengan tanggal akhir yang dipilih.',
                 'extend_trial' => 'Masa trial tenant berhasil diatur ulang sesuai tanggal yang dipilih.',
-                'activate_subscription' => 'Subscription tenant berhasil diaktifkan sesuai durasi yang dipilih.',
+                'activate_subscription' => $usesExplicitSubscriptionPeriod
+                    ? 'Subscription tenant berhasil diaktifkan sesuai periode billing yang dipilih.'
+                    : 'Subscription tenant berhasil diaktifkan sesuai durasi yang dipilih.',
                 'mark_grace' => 'Tenant berhasil dipindahkan ke masa grace period sesuai tanggal yang dipilih.',
                 'mark_expired' => 'Tenant berhasil ditandai sebagai expired.',
                 default => 'Subscription tenant berhasil diperbarui.',
@@ -94,5 +101,24 @@ class UpdateTenantSubscriptionAction
         });
 
         return $result;
+    }
+
+    /**
+     * Parse subscription period dates from date or datetime inputs.
+     */
+    protected function parseSubscriptionDate(mixed $value, bool $endOfDay = false): ?Carbon
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        $rawValue = (string) $value;
+        $date = Carbon::parse($rawValue);
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue) === 1) {
+            return $endOfDay ? $date->endOfDay() : $date->startOfDay();
+        }
+
+        return $date;
     }
 }

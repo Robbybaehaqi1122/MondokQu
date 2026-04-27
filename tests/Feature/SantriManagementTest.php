@@ -2,6 +2,7 @@
 
 use App\Models\Santri;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
@@ -29,6 +30,116 @@ test('user with santri permission can view the santri management page', function
 
     $response->assertOk();
     $response->assertSee('Manajemen Santri');
+});
+
+test('superadmin can view santri across tenants', function () {
+    $superadmin = User::factory()->create();
+    $superadmin->assignRole('Superadmin');
+    $superadmin->givePermissionTo('view santri');
+
+    $tenantA = Tenant::factory()->activeSubscription()->create();
+    $tenantB = Tenant::factory()->activeSubscription()->create();
+
+    Santri::factory()->forTenant($tenantA)->create([
+        'full_name' => 'Santri Tenant A',
+    ]);
+
+    Santri::factory()->forTenant($tenantB)->create([
+        'full_name' => 'Santri Tenant B',
+    ]);
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->get(route('santri.index'));
+
+    $response->assertOk();
+    $response->assertSee('Santri Tenant A');
+    $response->assertSee('Santri Tenant B');
+});
+
+test('superadmin without tenant can not create tenantless santri', function () {
+    $superadmin = User::factory()->create();
+    $superadmin->assignRole('Superadmin');
+    $superadmin->givePermissionTo('create santri');
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->post(route('santri.store'), [
+            'nis' => 'NIS-SUPERADMIN',
+            'full_name' => 'Santri Tenantless',
+            'gender' => Santri::GENDER_MALE,
+            'birth_place' => 'Bandung',
+            'birth_date' => '2012-01-10',
+            'address' => 'Alamat',
+            'guardian_name' => 'Bapak Tenantless',
+            'father_name' => 'Ayah Tenantless',
+            'mother_name' => 'Ibu Tenantless',
+            'guardian_phone_number' => '081234567890',
+            'emergency_contact' => '081234567891',
+            'entry_date' => '2024-01-01',
+            'entry_year' => 2024,
+            'room_name' => 'Asrama A1',
+            'status' => Santri::STATUS_ACTIVE,
+        ]);
+
+    $response->assertForbidden();
+    expect(Santri::query()->where('nis', 'NIS-SUPERADMIN')->exists())->toBeFalse();
+    expect(Santri::query()->whereNull('tenant_id')->exists())->toBeFalse();
+});
+
+test('superadmin can not update or delete santri from tenant operations', function () {
+    $superadmin = User::factory()->create();
+    $superadmin->assignRole('Superadmin');
+    $superadmin->givePermissionTo(['update santri', 'delete santri']);
+
+    $tenant = Tenant::factory()->activeSubscription()->create();
+    $santri = Santri::factory()->forTenant($tenant)->create([
+        'nis' => 'NIS-READONLY',
+        'full_name' => 'Santri Read Only',
+        'gender' => Santri::GENDER_MALE,
+        'birth_place' => 'Bandung',
+        'birth_date' => '2012-01-10',
+        'address' => 'Alamat awal',
+        'guardian_name' => 'Bapak Readonly',
+        'father_name' => 'Ayah Readonly',
+        'mother_name' => 'Ibu Readonly',
+        'guardian_phone_number' => '081234567890',
+        'emergency_contact' => '081234567891',
+        'entry_date' => '2024-01-01',
+        'entry_year' => 2024,
+        'room_name' => 'Asrama A1',
+        'status' => Santri::STATUS_ACTIVE,
+    ]);
+
+    $this
+        ->actingAs($superadmin)
+        ->patch(route('santri.update', $santri), [
+            'nis' => 'NIS-READONLY-UPDATED',
+            'full_name' => 'Santri Updated By Superadmin',
+            'gender' => Santri::GENDER_FEMALE,
+            'birth_place' => 'Garut',
+            'birth_date' => '2012-01-10',
+            'address' => 'Alamat baru',
+            'guardian_name' => 'Ibu Readonly',
+            'father_name' => 'Ayah Baru',
+            'mother_name' => 'Ibu Baru',
+            'guardian_phone_number' => '081234567892',
+            'emergency_contact' => '081234567893',
+            'entry_date' => '2024-01-01',
+            'entry_year' => 2024,
+            'room_name' => 'Asrama B1',
+            'status' => Santri::STATUS_ALUMNI,
+        ])
+        ->assertForbidden();
+
+    expect($santri->fresh()->full_name)->toBe('Santri Read Only');
+
+    $this
+        ->actingAs($superadmin)
+        ->delete(route('santri.destroy', $santri))
+        ->assertForbidden();
+
+    expect($santri->fresh())->not->toBeNull();
 });
 
 test('user with view santri permission can search and filter santri', function () {

@@ -423,7 +423,7 @@ test('superadmin can store billing notes for a tenant', function () {
     $superadmin = User::factory()->create(['name' => 'Billing Recorder']);
     $superadmin->assignRole('Superadmin');
 
-    $tenant = Tenant::factory()->create();
+    $tenant = Tenant::factory()->expired()->create();
 
     $response = $this
         ->actingAs($superadmin)
@@ -447,7 +447,77 @@ test('superadmin can store billing notes for a tenant', function () {
     expect($billingNote->payment_method)->toBe('qris');
     expect($billingNote->admin_note)->toBe('Pembayaran paket 6 bulan via QRIS.');
     expect($billingNote->recorded_by)->toBe($superadmin->id);
+    expect($tenant->fresh()->subscription_status)->toBe(Tenant::SUBSCRIPTION_EXPIRED);
+    expect(TenantSubscriptionHistory::query()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
     expect(ActivityLog::query()->where('action', 'billing_note_created')->exists())->toBeTrue();
+});
+
+test('superadmin can store billing note and activate tenant subscription', function () {
+    $superadmin = User::factory()->create(['name' => 'Billing Activator']);
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->expired()->create();
+    $periodStart = now()->toDateString();
+    $periodEnd = now()->addMonths(3)->toDateString();
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->post(route('saas.billing-notes.store'), [
+            'tenant_id' => $tenant->id,
+            'paid_at' => now()->format('Y-m-d H:i:s'),
+            'amount' => '450000',
+            'payment_method' => 'transfer bank',
+            'period_starts_at' => $periodStart,
+            'period_ends_at' => $periodEnd,
+            'apply_subscription' => '1',
+            'admin_note' => 'Pembayaran paket 3 bulan via transfer.',
+        ]);
+
+    $response->assertRedirect(route('saas.billing-notes.index', absolute: false));
+    $response->assertSessionHas('success', 'Billing note berhasil disimpan dan subscription tenant sudah diperbarui.');
+
+    $tenant = $tenant->fresh();
+    $billingNote = TenantBillingNote::query()->latest()->first();
+    $history = TenantSubscriptionHistory::query()->where('tenant_id', $tenant->id)->latest()->first();
+
+    expect($billingNote)->not->toBeNull();
+    expect($billingNote->tenant_id)->toBe($tenant->id);
+    expect($tenant->subscription_status)->toBe(Tenant::SUBSCRIPTION_ACTIVE);
+    expect($tenant->subscription_starts_at?->toDateString())->toBe($periodStart);
+    expect($tenant->subscription_ends_at?->toDateString())->toBe($periodEnd);
+    expect($tenant->hasAccess())->toBeTrue();
+    expect($history)->not->toBeNull();
+    expect($history->action)->toBe('activate_subscription');
+    expect($history->period_starts_at?->toDateString())->toBe($periodStart);
+    expect($history->period_ends_at?->toDateString())->toBe($periodEnd);
+    expect($history->admin_note)->toContain('billing note #'.$billingNote->id);
+    expect(ActivityLog::query()->where('action', 'billing_note_created')->exists())->toBeTrue();
+    expect(ActivityLog::query()->where('action', 'subscription_updated')->where('description', 'Status subscription tenant diperbarui dari billing note.')->exists())->toBeTrue();
+});
+
+test('billing note can not activate subscription with an expired billing period', function () {
+    $superadmin = User::factory()->create(['name' => 'Billing Validator']);
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->expired()->create();
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->from(route('saas.billing-notes.index'))
+        ->post(route('saas.billing-notes.store'), [
+            'tenant_id' => $tenant->id,
+            'paid_at' => now()->format('Y-m-d H:i:s'),
+            'amount' => '150000',
+            'payment_method' => 'cash',
+            'period_starts_at' => now()->subMonths(2)->toDateString(),
+            'period_ends_at' => now()->subMonth()->toDateString(),
+            'apply_subscription' => '1',
+        ]);
+
+    $response->assertRedirect(route('saas.billing-notes.index', absolute: false));
+    $response->assertSessionHasErrors(['period_ends_at'], null, 'billingNote');
+    expect(TenantBillingNote::query()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
+    expect($tenant->fresh()->subscription_status)->toBe(Tenant::SUBSCRIPTION_EXPIRED);
 });
 
 test('non superadmin can not access tenant management page', function () {

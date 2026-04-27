@@ -238,6 +238,26 @@
                             </div>
 
                             <div class="col-12">
+                                <input type="hidden" name="apply_subscription" value="0">
+                                <label class="form-check form-switch">
+                                    <input
+                                        class="form-check-input @if($errors->billingNote->has('apply_subscription')) is-invalid @endif"
+                                        type="checkbox"
+                                        name="apply_subscription"
+                                        value="1"
+                                        @checked(old('apply_subscription') === '1')
+                                    >
+                                    <span class="form-check-label fw-semibold">Aktifkan/perpanjang subscription tenant</span>
+                                </label>
+                                <div class="form-hint mt-1">
+                                    Jika aktif, tenant akan diset ke status Active dan periode subscription mengikuti tanggal periode billing di atas.
+                                </div>
+                                @if ($errors->billingNote->has('apply_subscription'))
+                                    <div class="invalid-feedback d-block">{{ $errors->billingNote->first('apply_subscription') }}</div>
+                                @endif
+                            </div>
+
+                            <div class="col-12">
                                 <label for="admin_note" class="form-label">Catatan Billing</label>
                                 <textarea
                                     id="admin_note"

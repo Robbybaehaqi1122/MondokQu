@@ -4,6 +4,7 @@ namespace App\Modules\Saas\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class StoreBillingNoteRequest extends FormRequest
@@ -37,8 +38,28 @@ class StoreBillingNoteRequest extends FormRequest
             'payment_method' => ['required', 'string', 'max:50', Rule::in(['transfer bank', 'cash', 'e-wallet', 'qris', 'lainnya'])],
             'period_starts_at' => ['required', 'date'],
             'period_ends_at' => ['required', 'date', 'after_or_equal:period_starts_at'],
+            'apply_subscription' => ['nullable', 'boolean'],
             'admin_note' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            if (! $this->boolean('apply_subscription') || ! $this->filled('period_ends_at')) {
+                return;
+            }
+
+            if (Carbon::parse((string) $this->input('period_ends_at'))->endOfDay()->isPast()) {
+                $validator->errors()->add(
+                    'period_ends_at',
+                    'Tanggal akhir periode harus masih berlaku jika ingin sekaligus mengaktifkan subscription.'
+                );
+            }
+        });
     }
 
     /**
@@ -64,6 +85,7 @@ class StoreBillingNoteRequest extends FormRequest
             'period_ends_at.required' => 'Tanggal akhir periode wajib diisi.',
             'period_ends_at.date' => 'Tanggal akhir periode harus valid.',
             'period_ends_at.after_or_equal' => 'Tanggal akhir periode harus sama atau setelah tanggal mulai periode.',
+            'apply_subscription.boolean' => 'Pilihan aktivasi subscription tidak valid.',
             'admin_note.max' => 'Catatan billing maksimal 1000 karakter.',
         ];
     }

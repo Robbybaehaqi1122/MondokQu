@@ -1,59 +1,170 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Mondok Qu
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Mondok Qu adalah aplikasi SaaS operasional pondok berbasis Laravel. Aplikasi ini memakai model multi-tenant, role/permission, subscription gate, billing note, activity log, dan modul awal untuk manajemen santri.
 
-## About Laravel
+## Stack Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.2+
+- Laravel 12
+- SQLite/MySQL/PostgreSQL via konfigurasi Laravel
+- Spatie Laravel Permission
+- Blade, Tailwind CSS, Alpine.js, Tabler UI
+- Pest untuk test
+- Vite untuk asset frontend
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Setup Lokal
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. Install dependency PHP dan JavaScript.
 
-## Learning Laravel
+```bash
+composer install
+npm install
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+2. Siapkan file environment.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Laravel Sponsors
+Di Windows PowerShell, gunakan `Copy-Item .env.example .env` bila `cp` tidak tersedia.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. Jika memakai SQLite lokal, buat file database.
 
-### Premium Partners
+```bash
+mkdir -p database
+touch database/database.sqlite
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Di Windows PowerShell:
 
-## Contributing
+```powershell
+New-Item -ItemType File -Force database/database.sqlite
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+4. Jalankan migration dan seeder.
 
-## Code of Conduct
+```bash
+php artisan migrate --seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+5. Buat symbolic link storage agar avatar dan foto santri bisa diakses dari public path.
 
-## Security Vulnerabilities
+```bash
+php artisan storage:link
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+6. Jalankan aplikasi.
 
-## License
+```bash
+php artisan serve
+npm run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Jika PowerShell memblokir `npm`, gunakan:
+
+```powershell
+npm.cmd run dev
+```
+
+## Akun Demo Seeder
+
+Seeder membuat tenant demo dan dua akun utama:
+
+| Role | Email | Username | Password |
+| --- | --- | --- | --- |
+| Superadmin | `admin@example.com` | `superadmin` | `password` |
+| Admin Pondok Demo | `pondok-admin@example.com` | `adminpondok` | `password` |
+
+Superadmin mengelola panel SaaS, tenant, subscription, billing, user, role, permission, dan bisa melihat data lintas tenant. Admin Pondok Demo berada di tenant `Pondok Demo` dan dipakai untuk alur operasional pondok.
+
+## Seed Ulang Data
+
+Untuk reset database lokal dan mengisi ulang data demo:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+Seeder yang penting:
+
+- `RoleSeeder`: membuat role `Superadmin`, `Admin`, `Pengurus`, `Bendahara`, `Musyrif/Ustadz`, dan `Wali Santri`.
+- `PermissionSeeder`: membuat permission sistem dan mapping awal per role.
+- `DatabaseSeeder`: membuat tenant demo, akun Superadmin, dan akun Admin Pondok Demo.
+
+## Menjalankan Test
+
+Jalankan seluruh test:
+
+```bash
+composer test
+```
+
+Atau langsung lewat Artisan:
+
+```bash
+php artisan test
+```
+
+Jalankan file test tertentu:
+
+```bash
+php artisan test tests/Feature/Saas/TenantManagementTest.php
+```
+
+Test memakai SQLite in-memory sesuai `phpunit.xml`, jadi tidak menyentuh database lokal `.env`.
+
+## Catatan `.env` Penting
+
+Nilai lokal boleh berbeda, tapi beberapa key ini penting untuk Mondok Qu:
+
+```env
+APP_NAME="Mondok Qu"
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=sqlite
+# DB_DATABASE boleh dikosongkan/dikomentari untuk memakai database/database.sqlite
+# DB_DATABASE=/absolute/path/to/database.sqlite
+
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="noreply@mondokqu.test"
+MAIL_FROM_NAME="${APP_NAME}"
+
+FILESYSTEM_DISK=local
+
+AUTH_DEFAULT_USER_PASSWORD=Password123!
+SAAS_TRIAL_DAYS=14
+SAAS_GRACE_DAYS=5
+SAAS_DEFAULT_PLAN=trial
+```
+
+Penjelasan singkat:
+
+- `MAIL_MAILER=log` aman untuk lokal karena email verifikasi dan reset password masuk ke log, bukan dikirim sungguhan.
+- `AUTH_DEFAULT_USER_PASSWORD` dipakai saat admin mereset password user dari panel.
+- `SAAS_TRIAL_DAYS`, `SAAS_GRACE_DAYS`, dan `SAAS_DEFAULT_PLAN` mengatur default trial dan subscription tenant baru.
+- Upload avatar dan foto santri disimpan di disk `public`, jadi `php artisan storage:link` tetap diperlukan.
+- Jangan commit file `.env` karena bisa berisi password database, mail credential, atau secret production.
+
+## Alur Operasional Singkat
+
+1. Login sebagai Superadmin.
+2. Buat tenant baru dari menu SaaS.
+3. Opsional buat akun owner/admin tenant saat provisioning tenant.
+4. Catat billing note dari menu SaaS.
+5. Jika pembayaran harus langsung mengaktifkan akses, centang opsi aktivasi subscription pada billing note.
+6. Login sebagai Admin Pondok untuk mengelola user tenant dan data santri.
+
+## Command Harian
+
+```bash
+php artisan serve
+npm run dev
+composer test
+php artisan migrate:fresh --seed
+```

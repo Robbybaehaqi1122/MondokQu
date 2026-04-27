@@ -29,7 +29,7 @@ test('admin dashboard shows monitoring statistics', function () {
     $inactiveUser = User::factory()->forTenant($tenant)->create([
         'status' => User::STATUS_INACTIVE,
         'last_login_at' => null,
-        'created_at' => now()->subDays(1),
+        'created_at' => now(),
     ]);
     $inactiveUser->assignRole('Pengurus');
 
