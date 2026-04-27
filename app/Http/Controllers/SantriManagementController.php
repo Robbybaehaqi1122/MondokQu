@@ -17,8 +17,7 @@ class SantriManagementController extends Controller
     public function __construct(
         protected ActivityLogger $activityLogger,
         protected SantriPhotoUploader $santriPhotoUploader
-    ) {
-    }
+    ) {}
 
     /**
      * Display the santri management panel.
@@ -32,11 +31,7 @@ class SantriManagementController extends Controller
         $selectedStatus = trim((string) $request->string('status'));
         $selectedGender = trim((string) $request->string('gender'));
 
-        $baseQuery = Santri::query()
-            ->when(
-                $currentUser && ! $currentUser->isSuperAdmin() && $currentUser->tenant_id,
-                fn ($builder) => $builder->where('tenant_id', $currentUser->tenant_id)
-            );
+        $baseQuery = Santri::query()->visibleTo($currentUser);
 
         $santris = (clone $baseQuery)
             ->with('creator')
@@ -67,7 +62,7 @@ class SantriManagementController extends Controller
             ],
             'genders' => $this->genderOptions(),
             'canCreateSantri' => $currentUser?->can('create', Santri::class) ?? false,
-            'canUpdateSantri' => $currentUser?->can('update', new Santri()) ?? false,
+            'canUpdateSantri' => $currentUser?->can('update', new Santri) ?? false,
             'statuses' => $this->statusOptions(),
             'santris' => $santris,
         ]);

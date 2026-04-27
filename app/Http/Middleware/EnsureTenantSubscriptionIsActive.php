@@ -21,10 +21,20 @@ class EnsureTenantSubscriptionIsActive
 
         $tenant = $user->tenant;
 
-        // Keep the current single-tenant installation working while the SaaS
-        // migration is rolled out gradually.
         if (! $tenant) {
-            return $next($request);
+            if ($request->routeIs([
+                'profile.edit',
+                'profile.update',
+                'password.update',
+                'logout',
+                'subscription.expired',
+            ])) {
+                return $next($request);
+            }
+
+            return redirect()
+                ->route('subscription.expired')
+                ->with('error', 'Akun Anda belum terhubung ke tenant pondok. Silakan hubungi admin platform.');
         }
 
         if ($tenant->hasAccess() || $request->routeIs([

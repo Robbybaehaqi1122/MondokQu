@@ -21,8 +21,10 @@ class ActivityLogger
         ?string $ipAddress = null,
         ?string $userAgent = null
     ): ActivityLog {
+        $targetTenantId = $target?->getAttribute('tenant_id');
+
         return ActivityLog::query()->create([
-            'tenant_id' => $actor?->tenant_id ?? request()?->user()?->tenant_id,
+            'tenant_id' => $actor?->tenant_id ?? request()?->user()?->tenant_id ?? (is_numeric($targetTenantId) ? (int) $targetTenantId : null),
             'actor_id' => $actor?->id,
             'actor_name' => $actor?->name ?? ($properties['actor_name'] ?? 'System'),
             'action' => $action,

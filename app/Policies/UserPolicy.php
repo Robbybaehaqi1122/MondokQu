@@ -16,6 +16,10 @@ class UserPolicy
             return Response::allow();
         }
 
+        if (! $actor->tenant_id) {
+            return Response::deny('Akun Anda belum terhubung ke tenant pondok.');
+        }
+
         return $actor->can('view users')
             ? Response::allow()
             : Response::deny('Anda tidak memiliki akses ke manajemen user.');
@@ -30,9 +34,11 @@ class UserPolicy
             return Response::allow();
         }
 
-        return $actor->can('view user details')
-            ? Response::allow()
-            : Response::deny('Anda tidak memiliki akses ke detail user.');
+        if (! $actor->can('view user details')) {
+            return Response::deny('Anda tidak memiliki akses ke detail user.');
+        }
+
+        return $this->canManageTarget($actor, $target, 'Akun Superadmin hanya dapat dilihat oleh Superadmin.');
     }
 
     /**
@@ -42,6 +48,10 @@ class UserPolicy
     {
         if ($actor->isSuperAdmin()) {
             return Response::allow();
+        }
+
+        if (! $actor->tenant_id) {
+            return Response::deny('Akun Anda belum terhubung ke tenant pondok.');
         }
 
         return $actor->can('create users')
@@ -60,6 +70,10 @@ class UserPolicy
 
         if ($actor->isSuperAdmin()) {
             return Response::allow();
+        }
+
+        if (! $actor->tenant_id) {
+            return Response::deny('Akun Anda belum terhubung ke tenant pondok.');
         }
 
         return in_array($roleName, ['Superadmin', 'Admin'], true)
@@ -96,7 +110,7 @@ class UserPolicy
             return Response::deny('Anda tidak memiliki akses untuk mengubah role user.');
         }
 
-        return Response::allow();
+        return $this->canManageTarget($actor, $target, 'Role akun Superadmin hanya dapat diubah oleh Superadmin.');
     }
 
     /**
@@ -110,6 +124,16 @@ class UserPolicy
 
         if (! $actor->can('assign roles')) {
             return Response::deny('Anda tidak memiliki akses untuk mengubah role user.');
+        }
+
+        $authorization = $this->canManageTarget($actor, $target, 'Role akun Superadmin hanya dapat diubah oleh Superadmin.');
+
+        if ($authorization->denied()) {
+            return $authorization;
+        }
+
+        if (in_array($roleName, ['Superadmin', 'Admin'], true)) {
+            return Response::deny('Hanya Superadmin yang dapat memberikan role Admin atau Superadmin.');
         }
 
         return Response::allow();
@@ -214,7 +238,7 @@ class UserPolicy
             return Response::deny('Akun yang sedang Anda gunakan tidak dapat dihapus.');
         }
 
-        return Response::allow();
+        return $this->canManageTarget($actor, $target, 'Akun Superadmin hanya dapat dihapus oleh Superadmin.');
     }
 
     protected function canManageTarget(User $actor, User $target, string $message): Response
@@ -227,7 +251,11 @@ class UserPolicy
             return Response::deny($message);
         }
 
-        if ($actor->tenant_id && $target->tenant_id && $actor->tenant_id !== $target->tenant_id) {
+        if (! $actor->tenant_id) {
+            return Response::deny('Akun Anda belum terhubung ke tenant pondok.');
+        }
+
+        if (! $target->tenant_id || $actor->tenant_id !== $target->tenant_id) {
             return Response::deny('Anda tidak dapat mengelola user dari tenant pondok lain.');
         }
 

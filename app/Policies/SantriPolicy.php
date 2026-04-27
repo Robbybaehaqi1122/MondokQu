@@ -13,6 +13,10 @@ class SantriPolicy
      */
     public function viewAny(User $user): Response
     {
+        if (! $user->isSuperAdmin() && ! $user->tenant_id) {
+            return Response::deny('Akun Anda belum terhubung ke tenant pondok.');
+        }
+
         return $user->can('view santri')
             ? Response::allow()
             : Response::deny('Anda tidak memiliki akses untuk melihat data santri.');
@@ -27,7 +31,7 @@ class SantriPolicy
             return Response::deny('Anda tidak memiliki akses ke detail santri.');
         }
 
-        if ($user->tenant_id && $santri->tenant_id && $user->tenant_id !== $santri->tenant_id) {
+        if (! $user->isSuperAdmin() && (! $user->tenant_id || ! $santri->tenant_id || $user->tenant_id !== $santri->tenant_id)) {
             return Response::deny('Anda tidak dapat mengakses data santri dari tenant pondok lain.');
         }
 
@@ -39,6 +43,10 @@ class SantriPolicy
      */
     public function create(User $user): Response
     {
+        if (! $user->isSuperAdmin() && ! $user->tenant_id) {
+            return Response::deny('Akun Anda belum terhubung ke tenant pondok.');
+        }
+
         return $user->can('create santri')
             ? Response::allow()
             : Response::deny('Anda tidak memiliki akses untuk menambah santri.');
@@ -53,7 +61,7 @@ class SantriPolicy
             return Response::deny('Anda tidak memiliki akses untuk mengubah data santri.');
         }
 
-        if ($user->tenant_id && $santri->tenant_id && $user->tenant_id !== $santri->tenant_id) {
+        if (! $user->isSuperAdmin() && (! $user->tenant_id || ! $santri->tenant_id || $user->tenant_id !== $santri->tenant_id)) {
             return Response::deny('Anda tidak dapat mengubah data santri dari tenant pondok lain.');
         }
 
@@ -69,7 +77,7 @@ class SantriPolicy
             return Response::deny('Anda tidak memiliki akses untuk menghapus data santri.');
         }
 
-        if ($user->tenant_id && $santri->tenant_id && $user->tenant_id !== $santri->tenant_id) {
+        if (! $user->isSuperAdmin() && (! $user->tenant_id || ! $santri->tenant_id || $user->tenant_id !== $santri->tenant_id)) {
             return Response::deny('Anda tidak dapat menghapus data santri dari tenant pondok lain.');
         }
 

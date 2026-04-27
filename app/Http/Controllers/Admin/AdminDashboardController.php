@@ -17,10 +17,11 @@ class AdminDashboardController extends Controller
     public function index(): View
     {
         $currentUser = request()->user();
-        $tenantId = $currentUser && ! $currentUser->isSuperAdmin() ? $currentUser->tenant_id : null;
 
         $roles = Role::query()
-            ->withCount('users')
+            ->withCount([
+                'users' => fn ($query) => $query->visibleTo($currentUser),
+            ])
             ->orderBy('name')
             ->get();
 
@@ -28,16 +29,16 @@ class AdminDashboardController extends Controller
 
         return view('admin.dashboard', [
             'loginCountToday' => ActivityLog::query()
-                ->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))
+                ->visibleTo($currentUser)
                 ->where('action', 'login_success')
                 ->whereDate('created_at', today())
                 ->count(),
             'newSantriThisMonth' => Santri::query()
-                ->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))
+                ->visibleTo($currentUser)
                 ->where('created_at', '>=', now()->startOfMonth())
                 ->count(),
             'newUsersThisWeek' => User::query()
-                ->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))
+                ->visibleTo($currentUser)
                 ->where('created_at', '>=', now()->startOfWeek())
                 ->count(),
             'roleDistribution' => $roles->map(function (Role $role) use ($maxRoleUsers): array {
@@ -48,17 +49,17 @@ class AdminDashboardController extends Controller
                 ];
             }),
             'stats' => [
-                'total_users' => User::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->count(),
-                'active_users' => User::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->where('status', User::STATUS_ACTIVE)->count(),
-                'inactive_users' => User::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->where('status', User::STATUS_INACTIVE)->count(),
-                'suspended_users' => User::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->where('status', User::STATUS_SUSPENDED)->count(),
-                'never_logged_in_users' => User::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->whereNull('last_login_at')->count(),
+                'total_users' => User::query()->visibleTo($currentUser)->count(),
+                'active_users' => User::query()->visibleTo($currentUser)->where('status', User::STATUS_ACTIVE)->count(),
+                'inactive_users' => User::query()->visibleTo($currentUser)->where('status', User::STATUS_INACTIVE)->count(),
+                'suspended_users' => User::query()->visibleTo($currentUser)->where('status', User::STATUS_SUSPENDED)->count(),
+                'never_logged_in_users' => User::query()->visibleTo($currentUser)->whereNull('last_login_at')->count(),
             ],
             'santriStats' => [
-                'total_santri' => Santri::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->count(),
-                'active_santri' => Santri::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->where('status', Santri::STATUS_ACTIVE)->count(),
-                'alumni_santri' => Santri::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->where('status', Santri::STATUS_ALUMNI)->count(),
-                'exited_santri' => Santri::query()->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))->where('status', Santri::STATUS_EXITED)->count(),
+                'total_santri' => Santri::query()->visibleTo($currentUser)->count(),
+                'active_santri' => Santri::query()->visibleTo($currentUser)->where('status', Santri::STATUS_ACTIVE)->count(),
+                'alumni_santri' => Santri::query()->visibleTo($currentUser)->where('status', Santri::STATUS_ALUMNI)->count(),
+                'exited_santri' => Santri::query()->visibleTo($currentUser)->where('status', Santri::STATUS_EXITED)->count(),
             ],
         ]);
     }

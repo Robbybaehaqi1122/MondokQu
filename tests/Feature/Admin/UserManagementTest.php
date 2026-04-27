@@ -55,8 +55,7 @@ beforeEach(function () {
 });
 
 test('admin can view the user management page', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $response = $this
         ->actingAs($admin)
@@ -67,10 +66,10 @@ test('admin can view the user management page', function () {
 });
 
 test('admin can view a user detail page with activity history', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
+    $tenant = $admin->tenant;
 
-    $user = User::factory()->create([
+    $user = User::factory()->forTenant($tenant)->create([
         'name' => 'Detail User',
         'username' => 'detailuser',
         'last_login_at' => now()->subHour(),
@@ -78,6 +77,7 @@ test('admin can view a user detail page with activity history', function () {
     $user->assignRole('Pengurus');
 
     ActivityLog::query()->create([
+        'tenant_id' => $tenant->id,
         'actor_id' => $admin->id,
         'actor_name' => $admin->name,
         'action' => 'user_role_updated',
@@ -93,6 +93,7 @@ test('admin can view a user detail page with activity history', function () {
     ]);
 
     ActivityLog::query()->create([
+        'tenant_id' => $tenant->id,
         'actor_id' => $user->id,
         'actor_name' => $user->name,
         'action' => 'login_success',
@@ -114,17 +115,32 @@ test('admin can view a user detail page with activity history', function () {
     $response->assertSee('Login Success');
 });
 
-test('admin can search users by name username or email', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+test('admin can not view a user detail from another tenant', function () {
+    $admin = tenantUser('Admin');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+    $otherUser = User::factory()->forTenant($otherTenant)->create([
+        'name' => 'User Tenant Lain',
+    ]);
+    $otherUser->assignRole('Pengurus');
 
-    User::factory()->create([
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('admin.users.show', $otherUser));
+
+    $response->assertForbidden();
+});
+
+test('admin can search users by name username or email', function () {
+    $admin = tenantUser('Admin');
+    $tenant = $admin->tenant;
+
+    User::factory()->forTenant($tenant)->create([
         'name' => 'Ahmad Pencarian',
         'username' => 'ahmad-find',
         'email' => 'ahmad@example.com',
     ]);
 
-    User::factory()->create([
+    User::factory()->forTenant($tenant)->create([
         'name' => 'Budi Lain',
         'username' => 'budi-user',
         'email' => 'budi@example.com',
@@ -139,17 +155,41 @@ test('admin can search users by name username or email', function () {
     $response->assertDontSee('Budi Lain');
 });
 
-test('admin can filter users by role status and verification', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+test('admin user list is scoped to the current tenant', function () {
+    $admin = tenantUser('Admin');
+    $tenant = $admin->tenant;
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
 
-    $targetUser = User::factory()->unverified()->create([
+    User::factory()->forTenant($tenant)->create([
+        'name' => 'User Satu Tenant',
+        'username' => 'satutennant',
+    ]);
+
+    User::factory()->forTenant($otherTenant)->create([
+        'name' => 'User Tenant Lain',
+        'username' => 'tenantlain',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('admin.users'));
+
+    $response->assertOk();
+    $response->assertSee('User Satu Tenant');
+    $response->assertDontSee('User Tenant Lain');
+});
+
+test('admin can filter users by role status and verification', function () {
+    $admin = tenantUser('Admin');
+    $tenant = $admin->tenant;
+
+    $targetUser = User::factory()->forTenant($tenant)->unverified()->create([
         'name' => 'Target Filter',
         'status' => User::STATUS_INACTIVE,
     ]);
     $targetUser->assignRole('Pengurus');
 
-    $otherUser = User::factory()->create([
+    $otherUser = User::factory()->forTenant($tenant)->create([
         'name' => 'User Lain',
         'status' => User::STATUS_ACTIVE,
     ]);
@@ -169,10 +209,9 @@ test('admin can filter users by role status and verification', function () {
 });
 
 test('user management page is paginated', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
-    User::factory()->count(15)->create();
+    User::factory()->forTenant($admin->tenant)->count(15)->create();
 
     $response = $this
         ->actingAs($admin)
@@ -268,6 +307,30 @@ test('superadmin can assign a tenant when creating a user from the panel', funct
     expect($user->tenant_id)->toBe($tenant->id);
 });
 
+test('superadmin can not create operational users without a tenant', function () {
+    Notification::fake();
+
+    $superadmin = User::factory()->create();
+    $superadmin->assignRole('Superadmin');
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->from(route('admin.users'))
+        ->post(route('admin.users.store'), [
+            'name' => 'User Tanpa Tenant',
+            'username' => 'usertanpatenant',
+            'email' => 'usertanpatenant@example.com',
+            'role' => 'Pengurus',
+            'status' => User::STATUS_ACTIVE,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+    $response->assertRedirect(route('admin.users', absolute: false));
+    $response->assertSessionHasErrors(['tenant_id'], null, 'createUser');
+    expect(User::query()->where('email', 'usertanpatenant@example.com')->exists())->toBeFalse();
+});
+
 test('admin tenant can not override tenant assignment when creating a user', function () {
     Notification::fake();
 
@@ -308,8 +371,7 @@ test('admin tenant can not override tenant assignment when creating a user', fun
 test('admin can not create a user with admin role from the panel', function () {
     Notification::fake();
 
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $response = $this
         ->actingAs($admin)
@@ -332,8 +394,7 @@ test('admin can not create a user with admin role from the panel', function () {
 test('admin can not create a superadmin from the panel', function () {
     Notification::fake();
 
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $response = $this
         ->actingAs($admin)
@@ -372,10 +433,9 @@ test('admin can update a user role from the panel', function () {
 });
 
 test('non superadmin admin can not update a user role from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
-    $user = User::factory()->create();
+    $user = User::factory()->forTenant($admin->tenant)->create();
     $user->assignRole('Pengurus');
 
     $response = $this
@@ -390,11 +450,45 @@ test('non superadmin admin can not update a user role from the panel', function 
     expect($user->fresh()->hasRole('Pengurus'))->toBeTrue();
 });
 
-test('admin can update a user status from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+test('admin with assign roles permission still can not update roles across tenants', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('assign roles');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+    $user = User::factory()->forTenant($otherTenant)->create();
+    $user->assignRole('Pengurus');
 
-    $user = User::factory()->create([
+    $response = $this
+        ->actingAs($admin)
+        ->patch(route('admin.users.update-role', $user), [
+            'role' => 'Bendahara',
+        ]);
+
+    $response->assertRedirect(route('admin.users', absolute: false));
+    $response->assertSessionHas('error');
+    expect($user->fresh()->hasRole('Pengurus'))->toBeTrue();
+});
+
+test('admin with assign roles permission can not assign admin or superadmin roles', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('assign roles');
+    $user = User::factory()->forTenant($admin->tenant)->create();
+    $user->assignRole('Pengurus');
+
+    $response = $this
+        ->actingAs($admin)
+        ->patch(route('admin.users.update-role', $user), [
+            'role' => 'Admin',
+        ]);
+
+    $response->assertRedirect(route('admin.users', absolute: false));
+    $response->assertSessionHas('error');
+    expect($user->fresh()->hasRole('Pengurus'))->toBeTrue();
+});
+
+test('admin can update a user status from the panel', function () {
+    $admin = tenantUser('Admin');
+
+    $user = User::factory()->forTenant($admin->tenant)->create([
         'status' => User::STATUS_ACTIVE,
     ]);
 
@@ -410,8 +504,7 @@ test('admin can update a user status from the panel', function () {
 });
 
 test('admin can not update superadmin status from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $superadmin = User::factory()->create([
         'status' => User::STATUS_ACTIVE,
@@ -432,13 +525,12 @@ test('admin can not update superadmin status from the panel', function () {
 test('admin can update a user profile from the panel', function () {
     Storage::fake('public');
 
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
     $avatar = function_exists('imagecreatetruecolor')
         ? UploadedFile::fake()->image('avatar-baru.png', 500, 500)->size(768)
         : null;
 
-    $user = User::factory()->create([
+    $user = User::factory()->forTenant($admin->tenant)->create([
         'name' => 'Nama Lama',
         'username' => 'namalama',
         'email' => 'lama@example.com',
@@ -489,8 +581,7 @@ test('admin can update a user profile from the panel', function () {
 });
 
 test('admin can not update a superadmin profile from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $superadmin = User::factory()->create([
         'name' => 'Super Lama',
@@ -517,10 +608,9 @@ test('admin can not update a superadmin profile from the panel', function () {
 });
 
 test('admin can not deactivate their own account from the panel', function () {
-    $admin = User::factory()->create([
+    $admin = tenantUser('Admin', [
         'status' => User::STATUS_ACTIVE,
     ]);
-    $admin->assignRole('Admin');
 
     $response = $this
         ->actingAs($admin)
@@ -534,10 +624,9 @@ test('admin can not deactivate their own account from the panel', function () {
 });
 
 test('admin can reset a user password from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
-    $user = User::factory()->create([
+    $user = User::factory()->forTenant($admin->tenant)->create([
         'password' => 'password',
     ]);
     $previousRememberToken = $user->remember_token;
@@ -553,8 +642,7 @@ test('admin can reset a user password from the panel', function () {
 });
 
 test('admin can not reset superadmin password from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $superadmin = User::factory()->create([
         'password' => 'old-password',
@@ -575,10 +663,9 @@ test('admin can not reset superadmin password from the panel', function () {
 test('admin can resend a verification email from the panel', function () {
     Notification::fake();
 
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
-    $user = User::factory()->unverified()->create();
+    $user = User::factory()->forTenant($admin->tenant)->unverified()->create();
 
     $response = $this
         ->actingAs($admin)
@@ -591,8 +678,7 @@ test('admin can resend a verification email from the panel', function () {
 test('admin can not resend a superadmin verification email from the panel', function () {
     Notification::fake();
 
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $superadmin = User::factory()->unverified()->create();
     $superadmin->assignRole('Superadmin');
@@ -607,10 +693,9 @@ test('admin can not resend a superadmin verification email from the panel', func
 });
 
 test('admin can verify a user email manually from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
-    $user = User::factory()->unverified()->create();
+    $user = User::factory()->forTenant($admin->tenant)->unverified()->create();
 
     $response = $this
         ->actingAs($admin)
@@ -621,8 +706,7 @@ test('admin can verify a user email manually from the panel', function () {
 });
 
 test('admin can not verify a superadmin email manually from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $superadmin = User::factory()->unverified()->create();
     $superadmin->assignRole('Superadmin');
@@ -653,10 +737,9 @@ test('superadmin can delete another user from the panel', function () {
 });
 
 test('admin can not delete another user from the panel', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
-    $user = User::factory()->create();
+    $user = User::factory()->forTenant($admin->tenant)->create();
     $user->assignRole('Pengurus');
 
     $response = $this
@@ -683,8 +766,7 @@ test('superadmin can not delete their own account from the panel', function () {
 });
 
 test('non admin users can not access the user management page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Pengurus');
+    $user = tenantUser('Pengurus');
 
     $response = $this
         ->actingAs($user)
@@ -706,8 +788,7 @@ test('superadmin can view the role management page', function () {
 });
 
 test('admin without permission can not access the role management page', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     $response = $this
         ->actingAs($admin)

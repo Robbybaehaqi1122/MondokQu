@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +49,19 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function tenantUser(string $roleName, array $attributes = [], array $tenantAttributes = []): User
+{
+    $tenant = Tenant::factory()
+        ->activeSubscription()
+        ->create($tenantAttributes);
+
+    $user = User::factory()
+        ->forTenant($tenant)
+        ->create($attributes);
+
+    $user->assignRole($roleName);
+
+    return $user;
 }

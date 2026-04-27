@@ -35,9 +35,19 @@ class UpdateSantriRequest extends FormRequest
     {
         /** @var Santri $santri */
         $santri = $this->route('santri');
+        $tenantId = $this->user()?->isSuperAdmin()
+            ? $santri->tenant_id
+            : $this->user()?->tenant_id;
 
         return [
-            'nis' => ['required', 'string', 'max:50', Rule::unique(Santri::class)->ignore($santri)],
+            'nis' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique(Santri::class)
+                    ->where(fn ($query) => $query->where('tenant_id', $tenantId))
+                    ->ignore($santri),
+            ],
             'full_name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'string', Rule::in(Santri::availableGenders())],
             'birth_place' => ['required', 'string', 'max:255'],

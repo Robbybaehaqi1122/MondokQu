@@ -35,3 +35,16 @@ test('tenant user on trial can still access the application', function () {
 
     $response->assertOk();
 });
+
+test('non superadmin user without tenant is redirected away from tenant operations', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Pengurus');
+    $user->givePermissionTo('view santri');
+
+    $response = $this
+        ->actingAs($user)
+        ->get(route('santri.index'));
+
+    $response->assertRedirect(route('subscription.expired', absolute: false));
+    $response->assertSessionHas('error');
+});

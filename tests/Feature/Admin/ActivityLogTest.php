@@ -59,8 +59,7 @@ test('superadmin can view the activity log page', function () {
 });
 
 test('creating a user writes an activity log entry', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     Role::findOrCreate('Bendahara', 'web');
 
@@ -82,10 +81,10 @@ test('creating a user writes an activity log entry', function () {
 });
 
 test('admin can delete all activity logs', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Admin');
+    $admin = tenantUser('Admin');
 
     ActivityLog::query()->create([
+        'tenant_id' => $admin->tenant_id,
         'actor_id' => $admin->id,
         'actor_name' => $admin->name,
         'action' => 'login_success',
@@ -104,10 +103,10 @@ test('admin can delete all activity logs', function () {
 });
 
 test('non admin roles can not delete activity logs', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Pengurus');
+    $user = tenantUser('Pengurus');
 
     ActivityLog::query()->create([
+        'tenant_id' => $user->tenant_id,
         'actor_id' => $user->id,
         'actor_name' => $user->name,
         'action' => 'login_success',
@@ -136,4 +135,19 @@ test('failed login writes an activity log entry', function () {
 
     expect($log)->not->toBeNull();
     expect($log->action)->toBe('login_failed');
+});
+
+test('failed login for tenant user writes a tenant scoped activity log entry', function () {
+    $user = tenantUser('Pengurus');
+
+    $this->from('/login')->post('/login', [
+        'login' => $user->username,
+        'password' => 'salah-total',
+    ]);
+
+    $log = ActivityLog::query()->latest()->first();
+
+    expect($log)->not->toBeNull();
+    expect($log->action)->toBe('login_failed');
+    expect($log->tenant_id)->toBe($user->tenant_id);
 });

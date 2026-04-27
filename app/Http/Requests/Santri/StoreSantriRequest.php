@@ -33,8 +33,15 @@ class StoreSantriRequest extends FormRequest
      */
     public function rules(): array
     {
+        $tenantId = $this->user()?->tenant_id;
+
         return [
-            'nis' => ['required', 'string', 'max:50', Rule::unique(Santri::class)],
+            'nis' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique(Santri::class)->where(fn ($query) => $query->where('tenant_id', $tenantId)),
+            ],
             'full_name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'string', Rule::in(Santri::availableGenders())],
             'birth_place' => ['required', 'string', 'max:255'],

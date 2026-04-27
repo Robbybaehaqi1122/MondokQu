@@ -63,8 +63,7 @@ test('superadmin can update permissions assigned to a role', function () {
 });
 
 test('admin without assign roles permission can not access role management', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Admin');
+    $user = tenantUser('Admin');
 
     $response = $this->actingAs($user)->get(route('admin.roles'));
 

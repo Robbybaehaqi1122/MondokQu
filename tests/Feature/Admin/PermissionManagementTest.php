@@ -81,8 +81,7 @@ test('superadmin can map roles to a permission', function () {
 });
 
 test('admin without manage system settings permission can not access permission management', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Admin');
+    $user = tenantUser('Admin');
 
     $response = $this->actingAs($user)->get(route('admin.permissions'));
 

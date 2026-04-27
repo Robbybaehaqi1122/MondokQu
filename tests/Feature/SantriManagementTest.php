@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Santri;
-use App\Models\User;
+use App\Models\Tenant;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
@@ -20,7 +20,7 @@ beforeEach(function () {
 });
 
 test('user with santri permission can view the santri management page', function () {
-    $pengurus = User::factory()->create();
+    $pengurus = tenantUser('Pengurus');
     $pengurus->givePermissionTo('view santri');
 
     $response = $this
@@ -32,17 +32,18 @@ test('user with santri permission can view the santri management page', function
 });
 
 test('user with view santri permission can search and filter santri', function () {
-    $pengurus = User::factory()->create();
+    $pengurus = tenantUser('Pengurus');
     $pengurus->givePermissionTo('view santri');
+    $tenant = $pengurus->tenant;
 
-    Santri::factory()->create([
+    Santri::factory()->forTenant($tenant)->create([
         'nis' => 'NIS0001',
         'full_name' => 'Ahmad Santri',
         'gender' => Santri::GENDER_MALE,
         'status' => Santri::STATUS_ACTIVE,
     ]);
 
-    Santri::factory()->create([
+    Santri::factory()->forTenant($tenant)->create([
         'nis' => 'NIS0002',
         'full_name' => 'Aisyah Santri',
         'gender' => Santri::GENDER_FEMALE,
@@ -62,10 +63,84 @@ test('user with view santri permission can search and filter santri', function (
     $response->assertDontSee('Aisyah Santri');
 });
 
+test('santri list is scoped to the current tenant', function () {
+    $pengurus = tenantUser('Pengurus');
+    $pengurus->givePermissionTo('view santri');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    Santri::factory()->forTenant($pengurus->tenant)->create([
+        'full_name' => 'Santri Tenant Sendiri',
+    ]);
+
+    Santri::factory()->forTenant($otherTenant)->create([
+        'full_name' => 'Santri Tenant Lain',
+    ]);
+
+    $response = $this
+        ->actingAs($pengurus)
+        ->get(route('santri.index'));
+
+    $response->assertOk();
+    $response->assertSee('Santri Tenant Sendiri');
+    $response->assertDontSee('Santri Tenant Lain');
+});
+
+test('user can not view santri detail from another tenant', function () {
+    $pengurus = tenantUser('Pengurus');
+    $pengurus->givePermissionTo('view santri');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+    $otherSantri = Santri::factory()->forTenant($otherTenant)->create();
+
+    $response = $this
+        ->actingAs($pengurus)
+        ->get(route('santri.show', $otherSantri));
+
+    $response->assertForbidden();
+});
+
+test('nis can be reused by different tenants but remains unique within one tenant', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('create santri');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    Santri::factory()->forTenant($admin->tenant)->create([
+        'nis' => 'NIS-SAMA',
+    ]);
+
+    Santri::factory()->forTenant($otherTenant)->create([
+        'nis' => 'NIS-SAMA',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->from(route('santri.index'))
+        ->post(route('santri.store'), [
+            'nis' => 'NIS-SAMA',
+            'full_name' => 'Duplikat Tenant Sama',
+            'gender' => Santri::GENDER_MALE,
+            'birth_place' => 'Bandung',
+            'birth_date' => '2012-01-10',
+            'address' => 'Alamat',
+            'guardian_name' => 'Bapak Duplikat',
+            'father_name' => 'Ayah Duplikat',
+            'mother_name' => 'Ibu Duplikat',
+            'guardian_phone_number' => '081234567890',
+            'emergency_contact' => '081234567891',
+            'entry_date' => '2024-01-01',
+            'entry_year' => 2024,
+            'room_name' => 'Asrama A1',
+            'status' => Santri::STATUS_ACTIVE,
+        ]);
+
+    $response->assertRedirect(route('santri.index', absolute: false));
+    $response->assertSessionHasErrors(['nis'], null, 'createSantri');
+    expect(Santri::query()->where('nis', 'NIS-SAMA')->count())->toBe(2);
+});
+
 test('user with permission can create santri', function () {
     Storage::fake('public');
 
-    $admin = User::factory()->create();
+    $admin = tenantUser('Admin');
     $admin->givePermissionTo('view santri');
     $admin->givePermissionTo('create santri');
 
@@ -121,7 +196,7 @@ test('user with permission can create santri', function () {
 });
 
 test('santri can not be created with entry date before birth date', function () {
-    $admin = User::factory()->create();
+    $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
 
     $response = $this
@@ -151,7 +226,7 @@ test('santri can not be created with entry date before birth date', function () 
 });
 
 test('santri can not be created with invalid guardian phone number', function () {
-    $admin = User::factory()->create();
+    $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
 
     $response = $this
@@ -181,7 +256,7 @@ test('santri can not be created with invalid guardian phone number', function ()
 });
 
 test('santri can be created with indonesian guardian phone number formats', function () {
-    $admin = User::factory()->create();
+    $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
 
     foreach (['081234567890', '6281234567890', '+6281234567890'] as $index => $phoneNumber) {
@@ -210,7 +285,7 @@ test('santri can be created with indonesian guardian phone number formats', func
 });
 
 test('santri can be created without guardian data', function () {
-    $admin = User::factory()->create();
+    $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
 
     $response = $this
@@ -243,7 +318,7 @@ test('santri can be created without guardian data', function () {
 });
 
 test('guardian phone number is required when guardian name is filled', function () {
-    $admin = User::factory()->create();
+    $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
 
     $response = $this
@@ -272,10 +347,10 @@ test('guardian phone number is required when guardian name is filled', function 
 });
 
 test('santri can not be updated with future entry date', function () {
-    $pengurus = User::factory()->create();
+    $pengurus = tenantUser('Pengurus');
     $pengurus->givePermissionTo('update santri');
 
-    $santri = Santri::factory()->create([
+    $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
         'birth_date' => '2010-01-01',
         'entry_date' => '2024-01-01',
     ]);
@@ -309,10 +384,10 @@ test('santri can not be updated with future entry date', function () {
 });
 
 test('user with permission can view santri detail', function () {
-    $musyrif = User::factory()->create();
+    $musyrif = tenantUser('Musyrif/Ustadz');
     $musyrif->givePermissionTo('view santri');
 
-    $santri = Santri::factory()->create([
+    $santri = Santri::factory()->forTenant($musyrif->tenant)->create([
         'full_name' => 'Santri Detail',
         'nis' => 'NIS2001',
     ]);
@@ -333,7 +408,7 @@ test('user with permission can view santri detail', function () {
 test('user with permission can update santri', function () {
     Storage::fake('public');
 
-    $pengurus = User::factory()->create();
+    $pengurus = tenantUser('Pengurus');
     $pengurus->givePermissionTo('view santri');
     $pengurus->givePermissionTo('update santri');
 
@@ -341,7 +416,7 @@ test('user with permission can update santri', function () {
         ? UploadedFile::fake()->image('santri-baru.png', 500, 500)->size(700)
         : null;
 
-    $santri = Santri::factory()->create([
+    $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
         'nis' => 'NIS3001',
         'full_name' => 'Nama Lama',
         'status' => Santri::STATUS_ACTIVE,
@@ -394,11 +469,11 @@ test('user with permission can update santri', function () {
 });
 
 test('user with permission can delete santri', function () {
-    $admin = User::factory()->create();
+    $admin = tenantUser('Admin');
     $admin->givePermissionTo('view santri');
     $admin->givePermissionTo('delete santri');
 
-    $santri = Santri::factory()->create();
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
 
     $response = $this
         ->actingAs($admin)
@@ -409,7 +484,7 @@ test('user with permission can delete santri', function () {
 });
 
 test('user without santri permission can not access santri page', function () {
-    $user = User::factory()->create();
+    $user = tenantUser('Pengurus');
 
     $response = $this
         ->actingAs($user)

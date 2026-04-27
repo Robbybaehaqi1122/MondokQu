@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="page-title">Langganan Tenant Berakhir</h2>
-            <div class="text-secondary mt-1">Akses aplikasi sementara dibatasi sampai masa trial atau langganan tenant diperpanjang.</div>
+            <h2 class="page-title">Akses Tenant Dibatasi</h2>
+            <div class="text-secondary mt-1">Akses aplikasi sementara dibatasi sampai tenant pondok Anda aktif dan terhubung dengan benar.</div>
         </div>
     </x-slot>
 
@@ -10,10 +10,10 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-body">
-                    <h3 class="card-title">Perpanjang Paket Pondok Anda</h3>
+                    <h3 class="card-title">Hubungi Admin Platform</h3>
                     <p class="text-secondary mb-0">
-                        Silakan lanjutkan pembayaran atau hubungi admin platform agar tenant pondok Anda diaktifkan kembali.
-                        Selama status tenant masih berakhir, menu operasional pondok akan dibatasi.
+                        Silakan lanjutkan pembayaran, minta aktivasi ulang, atau minta admin platform menautkan akun Anda ke tenant pondok yang tepat.
+                        Selama status tenant belum valid, menu operasional pondok akan dibatasi.
                     </p>
                 </div>
             </div>

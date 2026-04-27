@@ -2,7 +2,9 @@
 
 namespace App\Modules\Saas\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreBillingNoteRequest extends FormRequest
 {
@@ -24,7 +26,7 @@ class StoreBillingNoteRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -32,7 +34,7 @@ class StoreBillingNoteRequest extends FormRequest
             'tenant_id' => ['required', 'exists:tenants,id'],
             'paid_at' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0'],
-            'payment_method' => ['required', 'string', 'max:50'],
+            'payment_method' => ['required', 'string', 'max:50', Rule::in(['transfer bank', 'cash', 'e-wallet', 'qris', 'lainnya'])],
             'period_starts_at' => ['required', 'date'],
             'period_ends_at' => ['required', 'date', 'after_or_equal:period_starts_at'],
             'admin_note' => ['nullable', 'string', 'max:1000'],
@@ -56,6 +58,7 @@ class StoreBillingNoteRequest extends FormRequest
             'amount.min' => 'Nominal pembayaran tidak boleh negatif.',
             'payment_method.required' => 'Metode bayar wajib dipilih.',
             'payment_method.max' => 'Metode bayar maksimal 50 karakter.',
+            'payment_method.in' => 'Metode bayar yang dipilih tidak valid.',
             'period_starts_at.required' => 'Tanggal mulai periode wajib diisi.',
             'period_starts_at.date' => 'Tanggal mulai periode harus valid.',
             'period_ends_at.required' => 'Tanggal akhir periode wajib diisi.',

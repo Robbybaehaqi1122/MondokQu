@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Santri extends Model
 {
-    use HasFactory;
+    use BelongsToTenant, HasFactory;
 
     public const GENDER_MALE = 'male';
+
     public const GENDER_FEMALE = 'female';
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_LEAVE = 'leave';
+
     public const STATUS_EXITED = 'exited';
+
     public const STATUS_ALUMNI = 'alumni';
 
     /**

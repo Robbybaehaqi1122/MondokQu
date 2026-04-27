@@ -26,8 +26,7 @@ class UserManagementController extends Controller
     public function __construct(
         protected ActivityLogger $activityLogger,
         protected UserAvatarUploader $userAvatarUploader
-    ) {
-    }
+    ) {}
 
     /**
      * Display the user management panel.
@@ -37,7 +36,6 @@ class UserManagementController extends Controller
         $this->authorize('viewAny', User::class);
 
         $currentUser = $request->user();
-        $tenantId = $currentUser && ! $currentUser->isSuperAdmin() ? $currentUser->tenant_id : null;
         $roles = Role::query()
             ->orderBy('name')
             ->get();
@@ -45,8 +43,7 @@ class UserManagementController extends Controller
             return $currentUser?->can('createWithRole', [User::class, $role->name]) ?? false;
         })->values();
 
-        $baseUsersQuery = User::query()
-            ->when($tenantId, fn ($builder) => $builder->where('tenant_id', $tenantId));
+        $baseUsersQuery = User::query()->visibleTo($currentUser);
 
         $allUsersCount = (clone $baseUsersQuery)->count();
         $query = trim((string) $request->string('q'));
@@ -116,12 +113,11 @@ class UserManagementController extends Controller
         $this->authorize('view', $user);
 
         $currentUser = $request->user();
-        $tenantId = $currentUser && ! $currentUser->isSuperAdmin() ? $currentUser->tenant_id : null;
         $user->load(['roles', 'creator', 'tenant']);
 
         $activityLogs = ActivityLog::query()
             ->with('actor')
-            ->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))
+            ->visibleTo($currentUser)
             ->where(function ($query) use ($user) {
                 $query
                     ->where(function ($targetQuery) use ($user) {
@@ -137,7 +133,7 @@ class UserManagementController extends Controller
 
         $roleHistory = ActivityLog::query()
             ->with('actor')
-            ->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))
+            ->visibleTo($currentUser)
             ->where('target_type', User::class)
             ->where('target_id', $user->id)
             ->whereIn('action', ['user_created', 'user_role_updated'])

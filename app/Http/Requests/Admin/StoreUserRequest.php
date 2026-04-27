@@ -57,6 +57,24 @@ class StoreUserRequest extends FormRequest
     }
 
     /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            $role = (string) $this->input('role');
+
+            if (($this->user()?->isSuperAdmin() ?? false) && $role !== 'Superadmin' && ! $this->filled('tenant_id')) {
+                $validator->errors()->add('tenant_id', 'User operasional pondok wajib ditempatkan pada tenant.');
+            }
+
+            if (! ($this->user()?->isSuperAdmin() ?? false) && ! $this->user()?->tenant_id) {
+                $validator->errors()->add('tenant_id', 'Akun Anda belum terhubung ke tenant pondok.');
+            }
+        });
+    }
+
+    /**
      * Get the validation messages that apply to the request.
      *
      * @return array<string, string>

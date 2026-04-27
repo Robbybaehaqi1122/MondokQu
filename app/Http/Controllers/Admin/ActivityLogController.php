@@ -15,11 +15,10 @@ class ActivityLogController extends Controller
     public function index(): View
     {
         $currentUser = request()->user();
-        $tenantId = $currentUser && ! $currentUser->isSuperAdmin() ? $currentUser->tenant_id : null;
 
         return view('admin.activity-logs', [
             'logs' => ActivityLog::query()
-                ->when($tenantId, fn ($query) => $query->where('tenant_id', $tenantId))
+                ->visibleTo($currentUser)
                 ->with('actor')
                 ->latest()
                 ->paginate(20),
@@ -34,10 +33,7 @@ class ActivityLogController extends Controller
         $currentUser = request()->user();
 
         ActivityLog::query()
-            ->when(
-                $currentUser && ! $currentUser->isSuperAdmin() && $currentUser->tenant_id,
-                fn ($query) => $query->where('tenant_id', $currentUser->tenant_id)
-            )
+            ->visibleTo($currentUser)
             ->delete();
 
         return redirect()
