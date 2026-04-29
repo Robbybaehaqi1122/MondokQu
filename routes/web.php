@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SantriManagementController;
+use App\Http\Controllers\SubscriptionStatusController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,7 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::view('/subscription/expired', 'subscription.expired')->name('subscription.expired');
+    Route::get('/subscription/expired', [SubscriptionStatusController::class, 'showExpired'])->name('subscription.expired');
 });
 
 // Role-based access routes
@@ -57,11 +58,11 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'p
     Route::patch('/admin/permissions/{permission}/roles', [PermissionManagementController::class, 'updateRoles'])->name('admin.permissions.update-roles');
 });
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:view activity logs'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'role_or_permission:Superadmin|view activity logs'])->group(function () {
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity-logs');
 });
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'permission:manage activity logs'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'role_or_permission:Superadmin|manage activity logs'])->group(function () {
     Route::delete('/admin/activity-logs', [ActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
 });
 

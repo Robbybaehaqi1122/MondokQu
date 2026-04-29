@@ -1,4 +1,9 @@
 <x-app-layout>
+    @php
+        $currentUser = auth()->user();
+        $canManageActivityLogs = $currentUser?->hasRole('Superadmin') || ($currentUser?->can('manage activity logs') ?? false);
+    @endphp
+
     <x-slot name="header">
         <div>
             <h2 class="page-title">Log Activity</h2>
@@ -16,7 +21,7 @@
                             <p class="text-secondary mb-0">Menampilkan siapa melakukan apa, targetnya siapa, kapan terjadi.</p>
                         </div>
 
-                        @if (auth()->user()?->hasAnyRole(['Superadmin', 'Admin']))
+                        @if ($canManageActivityLogs)
                             <form method="POST" action="{{ route('admin.activity-logs.destroy-all') }}" onsubmit="return confirm('Yakin ingin menghapus semua log activity? Tindakan ini tidak bisa dibatalkan.')">
                                 @csrf
                                 @method('DELETE')

@@ -2,6 +2,7 @@
 
 use App\Models\ActivityLog;
 use App\Models\User;
+use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -95,6 +96,32 @@ test('admin can delete all activity logs', function () {
 
     $response = $this
         ->actingAs($admin)
+        ->delete(route('admin.activity-logs.destroy-all'));
+
+    $response->assertRedirect(route('admin.activity-logs', absolute: false));
+    $response->assertSessionHas('success');
+    expect(ActivityLog::query()->count())->toBe(0);
+});
+
+test('superadmin can delete activity logs by role even without explicit manage permission', function () {
+    $superadminRole = Role::findByName('Superadmin', 'web');
+    $superadminRole->revokePermissionTo('manage activity logs');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $superadmin = User::factory()->create();
+    $superadmin->assignRole('Superadmin');
+
+    ActivityLog::query()->create([
+        'actor_id' => $superadmin->id,
+        'actor_name' => $superadmin->name,
+        'action' => 'login_success',
+        'description' => 'Login berhasil ke aplikasi.',
+        'target_name' => $superadmin->name,
+        'ip_address' => '127.0.0.1',
+    ]);
+
+    $response = $this
+        ->actingAs($superadmin)
         ->delete(route('admin.activity-logs.destroy-all'));
 
     $response->assertRedirect(route('admin.activity-logs', absolute: false));

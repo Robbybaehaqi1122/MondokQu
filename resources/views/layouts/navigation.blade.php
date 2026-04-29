@@ -2,15 +2,44 @@
     $user = Auth::user();
     $roles = $user?->getRoleNames() ?? collect();
     $roleLabel = $roles->implode(', ') ?: 'Tanpa role';
+    $userInitial = strtoupper(substr($user->name, 0, 1));
 @endphp
+
+<div class="mobile-topbar d-lg-none">
+    <button class="mobile-topbar-toggle" type="button" id="mobile-sidebar-toggle" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Buka navigasi">
+        <i class="ti ti-menu-2"></i>
+    </button>
+
+    <a href="{{ route('dashboard') }}" class="mobile-topbar-brand text-decoration-none text-reset">
+        <span class="mobile-topbar-brand-mark">
+            <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Logo Mondok Qu" class="sidebar-brand-image">
+        </span>
+        <span class="mobile-topbar-brand-copy">
+            <span class="mobile-topbar-brand-title">Mondok Qu</span>
+            <span class="mobile-topbar-brand-subtitle">{{ $roleLabel }}</span>
+        </span>
+    </a>
+
+    <a href="{{ route('profile.edit') }}" class="mobile-topbar-profile" aria-label="Buka profil pengguna">
+        @if ($user->avatarUrl())
+            <span class="avatar avatar-sm" style="background-image: url('{{ $user->avatarUrl() }}')"></span>
+        @else
+            <span class="avatar avatar-sm">{{ $userInitial }}</span>
+        @endif
+    </a>
+</div>
+
+<div class="mobile-sidebar-backdrop d-lg-none" id="mobile-sidebar-backdrop" hidden></div>
 
 <aside class="navbar navbar-vertical navbar-expand-lg navbar-dark" data-bs-theme="dark">
     <div class="container-fluid">
-        <button class="navbar-toggler" type="button" id="mobile-sidebar-toggle" aria-controls="sidebar-menu" aria-expanded="true" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <div class="mobile-sidebar-head d-lg-none">
+            <button class="mobile-sidebar-close" type="button" id="mobile-sidebar-close" aria-label="Tutup navigasi">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
 
-        <h1 class="navbar-brand navbar-brand-autodark w-100">
+        <h1 class="navbar-brand navbar-brand-autodark w-100 mobile-sidebar-brand-wrap">
             <a href="{{ route('dashboard') }}" class="sidebar-brand-card text-decoration-none text-reset">
                 <span class="sidebar-brand-mark">
                     <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Logo Mondok Qu" class="sidebar-brand-image">
@@ -21,13 +50,47 @@
             </a>
         </h1>
 
-        <div class="navbar-nav flex-row d-lg-none">
+        <div class="mobile-sidebar-user d-lg-none">
+            <a href="{{ route('profile.edit') }}" class="mobile-sidebar-user-card text-decoration-none">
+                <span class="mobile-sidebar-user-avatar">
+                    @if ($user->avatarUrl())
+                        <span class="avatar avatar-md" style="background-image: url('{{ $user->avatarUrl() }}')"></span>
+                    @else
+                        <span class="avatar avatar-md">{{ $userInitial }}</span>
+                    @endif
+                </span>
+                <span class="mobile-sidebar-user-copy">
+                    <span class="mobile-sidebar-user-name">{{ $user->name }}</span>
+                    <span class="mobile-sidebar-user-meta">{{ '@'.$user->username }}</span>
+                    <span class="mobile-sidebar-user-meta">{{ $roleLabel }}</span>
+                </span>
+                <span class="mobile-sidebar-user-arrow">
+                    <i class="ti ti-chevron-right"></i>
+                </span>
+            </a>
+
+            <div class="mobile-sidebar-user-actions">
+                <a href="{{ route('profile.edit') }}" class="mobile-sidebar-action">
+                    <i class="ti ti-user"></i>
+                    <span>Profil Saya</span>
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="mobile-sidebar-action mobile-sidebar-action-danger">
+                        <i class="ti ti-logout"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="navbar-nav flex-row d-lg-none d-none">
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
                     @if ($user->avatarUrl())
                         <span class="avatar avatar-sm" style="background-image: url('{{ $user->avatarUrl() }}')"></span>
                     @else
-                        <span class="avatar avatar-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                        <span class="avatar avatar-sm">{{ $userInitial }}</span>
                     @endif
                 </a>
                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
@@ -40,7 +103,7 @@
             </div>
         </div>
 
-        <div class="sidebar-menu is-open" id="sidebar-menu">
+        <div class="sidebar-menu" id="sidebar-menu">
             <div class="sidebar-menu-inner pt-lg-3">
                 <a class="sidebar-link {{ request()->routeIs('dashboard') || request()->routeIs('dashboard.home') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                     <span class="sidebar-link-icon">
@@ -116,14 +179,14 @@
                                 </a>
                             @endcan
 
-                            @can('view activity logs')
+                            @if ($user->hasRole('Superadmin') || $user->can('view activity logs'))
                                 <a class="sidebar-sublink {{ request()->routeIs('admin.activity-logs') ? 'active' : '' }}" href="{{ route('admin.activity-logs') }}">
                                     <span class="sidebar-link-icon">
                                         <i class="ti ti-history"></i>
                                     </span>
                                     <span>Log Activity</span>
                                 </a>
-                            @endcan
+                            @endif
                         </div>
                     </details>
                 @endif

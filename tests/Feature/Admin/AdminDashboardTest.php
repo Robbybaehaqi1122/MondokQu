@@ -42,16 +42,25 @@ test('admin dashboard shows monitoring statistics', function () {
 
     Santri::factory()->forTenant($tenant)->create([
         'status' => Santri::STATUS_ACTIVE,
+        'full_name' => 'Santri Aktif A',
+        'room_name' => 'Asrama A1',
+        'entry_year' => 2024,
         'created_at' => now()->startOfMonth()->addDay(),
     ]);
 
     Santri::factory()->forTenant($tenant)->create([
         'status' => Santri::STATUS_ALUMNI,
+        'full_name' => 'Santri Alumni B',
+        'room_name' => 'Asrama A1',
+        'entry_year' => 2023,
         'created_at' => now()->subMonths(2),
     ]);
 
     Santri::factory()->forTenant($tenant)->create([
         'status' => Santri::STATUS_EXITED,
+        'full_name' => 'Santri Keluar C',
+        'room_name' => 'Asrama B2',
+        'entry_year' => 2024,
         'created_at' => now()->subMonths(1),
     ]);
 
@@ -87,13 +96,22 @@ test('admin dashboard shows monitoring statistics', function () {
         ->get(route('admin.dashboard'));
 
     $response->assertOk();
-    $response->assertSee('System Monitoring Dashboard');
+    $response->assertSee('Dashboard Operasional Pondok');
     $response->assertSee('Total User');
     $response->assertSee('Total Santri');
     $response->assertSee('User per Role');
     $response->assertSee('Login Hari Ini');
     $response->assertSee('User Baru Minggu Ini');
     $response->assertSee('Santri Baru Bulan Ini');
+    $response->assertSee('Sebaran Santri per Kamar');
+    $response->assertSee('Sebaran Santri per Angkatan');
+    $response->assertSee('Login Terakhir User');
+    $response->assertSee('Santri Terbaru');
+    $response->assertSee($tenant->name);
+    $response->assertSee('Subscription Aktif');
+    $response->assertSee('Asrama A1');
+    $response->assertSee('Angkatan 2024');
+    $response->assertSee('Santri Aktif A');
 
     expect($response->viewData('stats')['total_users'])->toBe(3);
     expect($response->viewData('stats')['active_users'])->toBe(1);
@@ -107,4 +125,57 @@ test('admin dashboard shows monitoring statistics', function () {
     expect($response->viewData('santriStats')['active_santri'])->toBe(1);
     expect($response->viewData('santriStats')['alumni_santri'])->toBe(1);
     expect($response->viewData('santriStats')['exited_santri'])->toBe(1);
+    expect($response->viewData('tenantSummary')['title'])->toBe($tenant->name);
+    expect($response->viewData('tenantSummary')['badge'])->toBe('Subscription Aktif');
+    expect($response->viewData('roomDistribution')->first()['room_name'])->toBe('Asrama A1');
+    expect($response->viewData('roomDistribution')->first()['santri_count'])->toBe(2);
+    expect($response->viewData('entryYearDistribution')->first()['entry_year'])->toBe('2024');
+    expect($response->viewData('entryYearDistribution')->first()['santri_count'])->toBe(2);
+    expect($response->viewData('recentUsers'))->toHaveCount(3);
+    expect($response->viewData('recentSantri'))->toHaveCount(3);
+});
+
+test('admin dashboard shows trial warning when tenant trial is near expiry', function () {
+    $admin = tenantUser('Admin');
+    $tenant = $admin->tenant;
+
+    $tenant->forceFill([
+        'subscription_status' => \App\Models\Tenant::SUBSCRIPTION_TRIAL,
+        'subscription_plan' => 'trial',
+        'trial_ends_at' => now()->addDays(2),
+        'subscription_starts_at' => null,
+        'subscription_ends_at' => null,
+        'grace_ends_at' => null,
+    ])->save();
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('admin.dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('Masa trial akan segera berakhir');
+    $response->assertSee('Segera hubungi admin platform untuk aktivasi subscription');
+    expect($response->viewData('tenantLifecycleNotice')['style'])->toBe('warning');
+});
+
+test('admin dashboard shows grace period warning for tenant', function () {
+    $admin = tenantUser('Admin');
+    $tenant = $admin->tenant;
+
+    $tenant->forceFill([
+        'subscription_status' => \App\Models\Tenant::SUBSCRIPTION_GRACE,
+        'subscription_plan' => 'basic',
+        'subscription_starts_at' => now()->subMonth(),
+        'subscription_ends_at' => now()->subDay(),
+        'grace_ends_at' => now()->addDay(),
+    ])->save();
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('admin.dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('Tenant sedang dalam grace period');
+    $response->assertSee('Konfirmasi pembayaran atau minta perpanjangan ke admin platform');
+    expect($response->viewData('tenantLifecycleNotice')['style'])->toBe('danger');
 });
