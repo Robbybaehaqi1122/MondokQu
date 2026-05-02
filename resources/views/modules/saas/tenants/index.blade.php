@@ -121,6 +121,17 @@
                                                 >
                                                     Subscription Control
                                                 </button>
+
+                                                <div class="dropdown-divider my-3"></div>
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-outline-danger btn-sm w-100"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteTenantModal{{ $tenant->id }}"
+                                                >
+                                                    Hapus Permanen
+                                                </button>
                                             </div>
                                         </div>
                                     </td>
@@ -313,6 +324,113 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal modal-blur fade" id="deleteTenantModal{{ $tenant->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('saas.tenants.destroy', $tenant) }}">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="delete_tenant_id" value="{{ $tenant->id }}">
+
+                        <div class="modal-header">
+                            <div>
+                                <h5 class="modal-title text-danger">Hapus Tenant Permanen</h5>
+                                <div class="text-secondary small mt-1">{{ $tenant->name }} · {{ $tenant->slug }}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            @if ($errors->deleteTenant->any() && (string) old('delete_tenant_id') === (string) $tenant->id)
+                                <div class="alert alert-danger" role="alert">
+                                    <div class="fw-semibold mb-2">Tenant belum bisa dihapus.</div>
+                                    <ul class="mb-0 ps-3">
+                                        @foreach ($errors->deleteTenant->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <div class="alert alert-danger" role="alert">
+                                <div class="fw-semibold">Aksi ini menghapus data tenant secara permanen.</div>
+                                <div class="mt-2">
+                                    Data user tenant, santri, activity log tenant, billing note, dan riwayat subscription tenant akan dihapus. Aksi ini tidak bisa dibatalkan.
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="card bg-body-tertiary border-0">
+                                        <div class="card-body py-3">
+                                            <div class="text-secondary small">User tenant</div>
+                                            <div class="h2 mb-0">{{ $tenant->users_count }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-body-tertiary border-0">
+                                        <div class="card-body py-3">
+                                            <div class="text-secondary small">Santri</div>
+                                            <div class="h2 mb-0">{{ $tenant->santris_count }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-body-tertiary border-0">
+                                        <div class="card-body py-3">
+                                            <div class="text-secondary small">Status</div>
+                                            <div class="h2 mb-0">{{ str($tenant->subscription_status)->headline() }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="tenant_delete_confirmation_{{ $tenant->id }}" class="form-label">
+                                        Ketik slug tenant untuk konfirmasi
+                                    </label>
+                                    <input
+                                        id="tenant_delete_confirmation_{{ $tenant->id }}"
+                                        name="tenant_delete_confirmation"
+                                        type="text"
+                                        class="form-control @if($errors->deleteTenant->has('tenant_delete_confirmation') && (string) old('delete_tenant_id') === (string) $tenant->id) is-invalid @endif"
+                                        placeholder="{{ $tenant->slug }}"
+                                        autocomplete="off"
+                                    >
+                                    @if ($errors->deleteTenant->has('tenant_delete_confirmation') && (string) old('delete_tenant_id') === (string) $tenant->id)
+                                        <div class="invalid-feedback">{{ $errors->deleteTenant->first('tenant_delete_confirmation') }}</div>
+                                    @else
+                                        <div class="form-hint mt-2">Slug harus diketik persis: <strong>{{ $tenant->slug }}</strong></div>
+                                    @endif
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="delete_reason_{{ $tenant->id }}" class="form-label">Catatan Penghapusan</label>
+                                    <textarea
+                                        id="delete_reason_{{ $tenant->id }}"
+                                        name="delete_reason"
+                                        rows="3"
+                                        class="form-control @if($errors->deleteTenant->has('delete_reason') && (string) old('delete_tenant_id') === (string) $tenant->id) is-invalid @endif"
+                                        placeholder="Opsional. Contoh: Tenant demo / tenant berhenti langganan dan data boleh dihapus."
+                                    >{{ old('delete_tenant_id') == $tenant->id ? old('delete_reason') : '' }}</textarea>
+                                    @if ($errors->deleteTenant->has('delete_reason') && (string) old('delete_tenant_id') === (string) $tenant->id)
+                                        <div class="invalid-feedback">{{ $errors->deleteTenant->first('delete_reason') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Hapus permanen tenant ini beserta data tenantnya?')">
+                                Hapus Permanen
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -536,6 +654,14 @@
 
                 if (subscriptionModalElement && window.bootstrap?.Modal) {
                     window.bootstrap.Modal.getOrCreateInstance(subscriptionModalElement).show();
+                }
+            @endif
+
+            @if ($errors->deleteTenant->any() && old('delete_tenant_id'))
+                const deleteTenantModalElement = document.getElementById('deleteTenantModal{{ old('delete_tenant_id') }}');
+
+                if (deleteTenantModalElement && window.bootstrap?.Modal) {
+                    window.bootstrap.Modal.getOrCreateInstance(deleteTenantModalElement).show();
                 }
             @endif
         });

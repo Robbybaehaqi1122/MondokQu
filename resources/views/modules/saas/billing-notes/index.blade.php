@@ -1,3 +1,7 @@
+@php
+    use App\Models\Tenant;
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
         <div>
@@ -28,9 +32,46 @@
                     </div>
                 </div>
 
+                <div class="card-body pb-0">
+                    <div class="row row-cards">
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card card-sm">
+                                <div class="card-body">
+                                    <div class="text-uppercase text-secondary small">Jumlah Billing</div>
+                                    <div class="fs-3 fw-bold">{{ number_format($summary['total_notes']) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card card-sm">
+                                <div class="card-body">
+                                    <div class="text-uppercase text-secondary small">Total Pembayaran</div>
+                                    <div class="fs-3 fw-bold">Rp {{ number_format((float) $summary['total_amount'], 0, ',', '.') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card card-sm">
+                                <div class="card-body">
+                                    <div class="text-uppercase text-secondary small">Tenant Aktif</div>
+                                    <div class="fs-3 fw-bold">{{ number_format($summary['status_counts'][Tenant::SUBSCRIPTION_ACTIVE]) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card card-sm">
+                                <div class="card-body">
+                                    <div class="text-uppercase text-secondary small">Tenant Kadaluarsa</div>
+                                    <div class="fs-3 fw-bold">{{ number_format($summary['status_counts'][Tenant::SUBSCRIPTION_EXPIRED]) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card-body border-bottom user-filter-panel">
                     <form method="GET" action="{{ route('saas.billing-notes.index') }}" class="row g-3 align-items-end user-filter-form">
-                            <div class="col-lg-4 col-xl-4">
+                            <div class="col-lg-4 col-xl-3">
                                 <label for="billing-note-search" class="form-label">Cari Billing</label>
                                 <input
                                     id="billing-note-search"
@@ -41,7 +82,7 @@
                                     placeholder="Cari tenant, catatan billing, metode, atau admin"
                                 >
                             </div>
-                            <div class="col-md-6 col-lg-2 col-xl-2">
+                            <div class="col-md-6 col-lg-3 col-xl-2">
                                 <label for="billing-note-tenant" class="form-label">Tenant</label>
                                 <select id="billing-note-tenant" name="tenant_id" class="form-select form-select-pretty">
                                     <option value="">Semua tenant</option>
@@ -59,10 +100,46 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-12 col-md-6 col-lg-3 col-xl-2">
-                                <div class="d-flex gap-2 user-filter-actions">
-                                    <button type="submit" class="btn btn-primary">Filter</button>
-                                    <a href="{{ route('saas.billing-notes.index') }}" class="btn btn-outline-secondary">Reset</a>
+                            <div class="col-md-6 col-lg-3 col-xl-2">
+                                <label for="billing-note-status" class="form-label">Status Tenant</label>
+                                <select id="billing-note-status" name="tenant_status" class="form-select form-select-pretty">
+                                    <option value="">Semua status</option>
+                                    <option value="{{ Tenant::SUBSCRIPTION_ACTIVE }}" @selected(($filters['tenant_status'] ?? '') === Tenant::SUBSCRIPTION_ACTIVE)>Aktif</option>
+                                    <option value="{{ Tenant::SUBSCRIPTION_TRIAL }}" @selected(($filters['tenant_status'] ?? '') === Tenant::SUBSCRIPTION_TRIAL)>Trial</option>
+                                    <option value="{{ Tenant::SUBSCRIPTION_GRACE }}" @selected(($filters['tenant_status'] ?? '') === Tenant::SUBSCRIPTION_GRACE)>Grace</option>
+                                    <option value="{{ Tenant::SUBSCRIPTION_EXPIRED }}" @selected(($filters['tenant_status'] ?? '') === Tenant::SUBSCRIPTION_EXPIRED)>Expired</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-lg-3 col-xl-2">
+                                <label class="form-label">Bayar</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label for="paid-from" class="form-label small text-secondary mb-1">Dari</label>
+                                        <input id="paid-from" name="paid_from" type="date" class="form-control" value="{{ $filters['paid_from'] ?? '' }}" placeholder="YYYY-MM-DD">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="paid-to" class="form-label small text-secondary mb-1">Sampai</label>
+                                        <input id="paid-to" name="paid_to" type="date" class="form-control" value="{{ $filters['paid_to'] ?? '' }}" placeholder="YYYY-MM-DD">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3 col-xl-2">
+                                <label class="form-label">Periode</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label for="period-from" class="form-label small text-secondary mb-1">Dari</label>
+                                        <input id="period-from" name="period_from" type="date" class="form-control" value="{{ $filters['period_from'] ?? '' }}" placeholder="YYYY-MM-DD">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="period-to" class="form-label small text-secondary mb-1">Sampai</label>
+                                        <input id="period-to" name="period_to" type="date" class="form-control" value="{{ $filters['period_to'] ?? '' }}" placeholder="YYYY-MM-DD">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-2 col-xl-2">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <button type="submit" class="btn btn-primary flex-fill">Filter</button>
+                                    <a href="{{ route('saas.billing-notes.index') }}" class="btn btn-outline-secondary flex-fill">Reset</a>
                                 </div>
                             </div>
                     </form>
@@ -85,7 +162,27 @@
                             @forelse ($billingNotes as $billingNote)
                                 <tr>
                                     <td>
-                                        <div class="fw-semibold">{{ $billingNote->tenant?->name ?? 'Tenant tidak ditemukan' }}</div>
+                                        <div class="d-flex flex-wrap gap-2 align-items-center mb-1">
+                                            <div class="fw-semibold">{{ $billingNote->tenant?->name ?? 'Tenant tidak ditemukan' }}</div>
+                                            @php
+                                                $tenantStatus = $billingNote->tenant?->subscription_status;
+                                                $statusLabel = match ($tenantStatus) {
+                                                    Tenant::SUBSCRIPTION_ACTIVE => 'Aktif',
+                                                    Tenant::SUBSCRIPTION_TRIAL => 'Trial',
+                                                    Tenant::SUBSCRIPTION_GRACE => 'Grace',
+                                                    Tenant::SUBSCRIPTION_EXPIRED => 'Expired',
+                                                    default => 'Tidak diketahui',
+                                                };
+                                                $statusBadge = match ($tenantStatus) {
+                                                    Tenant::SUBSCRIPTION_ACTIVE => 'bg-success-lt text-success',
+                                                    Tenant::SUBSCRIPTION_TRIAL => 'bg-info-lt text-info',
+                                                    Tenant::SUBSCRIPTION_GRACE => 'bg-warning-lt text-warning',
+                                                    Tenant::SUBSCRIPTION_EXPIRED => 'bg-danger-lt text-danger',
+                                                    default => 'bg-secondary-lt text-secondary',
+                                                };
+                                            @endphp
+                                            <span class="badge {{ $statusBadge }}">{{ $statusLabel }}</span>
+                                        </div>
                                         <div class="text-secondary small">{{ $billingNote->tenant?->slug ?? '-' }}</div>
                                     </td>
                                     <td class="text-secondary small">{{ $billingNote->paid_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>

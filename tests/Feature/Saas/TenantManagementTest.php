@@ -1,10 +1,12 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\TenantBillingNote;
 use App\Models\TenantSubscriptionHistory;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
@@ -419,6 +421,61 @@ test('superadmin can filter billing notes', function () {
     $response->assertDontSee('Pembayaran cash tenant B.');
 });
 
+test('superadmin can filter billing notes by tenant status and date ranges', function () {
+    $superadmin = User::factory()->create(['name' => 'Billing Date Filter']);
+    $superadmin->assignRole('Superadmin');
+
+    $activeTenant = Tenant::factory()->activeSubscription()->create([
+        'name' => 'Pondok Billing Aktif',
+    ]);
+    $expiredTenant = Tenant::factory()->expired()->create([
+        'name' => 'Pondok Billing Expired',
+    ]);
+
+    TenantBillingNote::query()->create([
+        'tenant_id' => $activeTenant->id,
+        'paid_at' => '2026-05-02 10:00:00',
+        'amount' => 500000,
+        'payment_method' => 'transfer bank',
+        'period_starts_at' => '2026-05-01',
+        'period_ends_at' => '2026-05-31',
+        'admin_note' => 'Masuk filter billing aktif.',
+        'recorded_by' => $superadmin->id,
+    ]);
+
+    TenantBillingNote::query()->create([
+        'tenant_id' => $expiredTenant->id,
+        'paid_at' => '2026-04-15 10:00:00',
+        'amount' => 700000,
+        'payment_method' => 'cash',
+        'period_starts_at' => '2026-04-01',
+        'period_ends_at' => '2026-04-30',
+        'admin_note' => 'Di luar filter billing aktif.',
+        'recorded_by' => $superadmin->id,
+    ]);
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->get(route('saas.billing-notes.index', [
+            'tenant_status' => Tenant::SUBSCRIPTION_ACTIVE,
+            'paid_from' => '2026-05-01',
+            'paid_to' => '2026-05-03',
+            'period_from' => '2026-05-01',
+            'period_to' => '2026-05-31',
+        ]));
+
+    $response->assertOk();
+    $response->assertSee('Masuk filter billing aktif.');
+    $response->assertDontSee('Di luar filter billing aktif.');
+
+    $summary = $response->viewData('summary');
+
+    expect($summary['total_notes'])->toBe(1);
+    expect((float) $summary['total_amount'])->toBe(500000.0);
+    expect($summary['status_counts'][Tenant::SUBSCRIPTION_ACTIVE])->toBe(1);
+    expect($summary['status_counts'][Tenant::SUBSCRIPTION_EXPIRED])->toBe(0);
+});
+
 test('superadmin can store billing notes for a tenant', function () {
     $superadmin = User::factory()->create(['name' => 'Billing Recorder']);
     $superadmin->assignRole('Superadmin');
@@ -520,6 +577,119 @@ test('billing note can not activate subscription with an expired billing period'
     expect($tenant->fresh()->subscription_status)->toBe(Tenant::SUBSCRIPTION_EXPIRED);
 });
 
+test('superadmin can permanently delete a tenant with exact slug confirmation', function () {
+    $superadmin = User::factory()->create(['name' => 'Tenant Deleter']);
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->activeSubscription()->create([
+        'name' => 'Pondok Demo Delete',
+        'slug' => 'pondok-demo-delete',
+    ]);
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    $tenantUser = User::factory()->forTenant($tenant)->create([
+        'email' => 'tenant-user-delete@example.com',
+    ]);
+    $tenantUser->assignRole('Admin');
+
+    $otherUser = User::factory()->forTenant($otherTenant)->create();
+    $otherUser->assignRole('Admin');
+
+    $santri = Santri::factory()->forTenant($tenant)->create([
+        'created_by' => $tenantUser->id,
+    ]);
+    $otherSantri = Santri::factory()->forTenant($otherTenant)->create();
+
+    ActivityLog::query()->create([
+        'tenant_id' => $tenant->id,
+        'actor_id' => $tenantUser->id,
+        'actor_name' => $tenantUser->name,
+        'action' => 'tenant_user_activity',
+        'description' => 'Aktivitas tenant yang akan dihapus.',
+        'target_name' => 'Tenant delete test',
+        'ip_address' => '127.0.0.1',
+    ]);
+
+    TenantBillingNote::query()->create([
+        'tenant_id' => $tenant->id,
+        'paid_at' => now(),
+        'amount' => 500000,
+        'payment_method' => 'cash',
+        'period_starts_at' => now()->toDateString(),
+        'period_ends_at' => now()->addMonth()->toDateString(),
+        'recorded_by' => $superadmin->id,
+    ]);
+
+    TenantSubscriptionHistory::query()->create([
+        'tenant_id' => $tenant->id,
+        'action' => 'activate_subscription',
+        'period_starts_at' => now(),
+        'period_ends_at' => now()->addMonth(),
+        'changed_by' => $superadmin->id,
+    ]);
+
+    DB::table('sessions')->insert([
+        'id' => 'tenant-user-session',
+        'user_id' => $tenantUser->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'Pest',
+        'payload' => '',
+        'last_activity' => now()->timestamp,
+    ]);
+    DB::table('password_reset_tokens')->insert([
+        'email' => $tenantUser->email,
+        'token' => 'delete-token',
+        'created_at' => now(),
+    ]);
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->from(route('saas.tenants.index'))
+        ->delete(route('saas.tenants.destroy', $tenant), [
+            'delete_tenant_id' => $tenant->id,
+            'tenant_delete_confirmation' => $tenant->slug,
+            'delete_reason' => 'Tenant demo tidak diperlukan lagi.',
+        ]);
+
+    $response->assertRedirect(route('saas.tenants.index', absolute: false));
+    $response->assertSessionHas('success');
+
+    expect(Tenant::query()->whereKey($tenant->id)->exists())->toBeFalse();
+    expect(User::query()->whereKey($tenantUser->id)->exists())->toBeFalse();
+    expect(Santri::query()->whereKey($santri->id)->exists())->toBeFalse();
+    expect(ActivityLog::query()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
+    expect(TenantBillingNote::query()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
+    expect(TenantSubscriptionHistory::query()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
+    expect(DB::table('sessions')->where('user_id', $tenantUser->id)->exists())->toBeFalse();
+    expect(DB::table('password_reset_tokens')->where('email', $tenantUser->email)->exists())->toBeFalse();
+    expect(ActivityLog::query()->where('action', 'tenant_deleted_permanently')->exists())->toBeTrue();
+
+    expect(Tenant::query()->whereKey($otherTenant->id)->exists())->toBeTrue();
+    expect(User::query()->whereKey($otherUser->id)->exists())->toBeTrue();
+    expect(Santri::query()->whereKey($otherSantri->id)->exists())->toBeTrue();
+});
+
+test('tenant permanent delete requires exact slug confirmation', function () {
+    $superadmin = User::factory()->create();
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->create([
+        'slug' => 'pondok-konfirmasi-delete',
+    ]);
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->from(route('saas.tenants.index'))
+        ->delete(route('saas.tenants.destroy', $tenant), [
+            'delete_tenant_id' => $tenant->id,
+            'tenant_delete_confirmation' => 'slug-salah',
+        ]);
+
+    $response->assertRedirect(route('saas.tenants.index', absolute: false));
+    $response->assertSessionHasErrors(['tenant_delete_confirmation'], null, 'deleteTenant');
+    expect($tenant->fresh())->not->toBeNull();
+});
+
 test('non superadmin can not access tenant management page', function () {
     $admin = User::factory()->create();
     $admin->assignRole('Admin');
@@ -568,6 +738,24 @@ test('non superadmin can not update tenant subscription', function () {
         ]);
 
     $response->assertForbidden();
+});
+
+test('non superadmin can not permanently delete tenant', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('Admin');
+    $tenant = Tenant::factory()->create([
+        'slug' => 'pondok-tidak-boleh-delete',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->delete(route('saas.tenants.destroy', $tenant), [
+            'delete_tenant_id' => $tenant->id,
+            'tenant_delete_confirmation' => $tenant->slug,
+        ]);
+
+    $response->assertForbidden();
+    expect($tenant->fresh())->not->toBeNull();
 });
 
 test('non superadmin can not access subscription histories page', function () {

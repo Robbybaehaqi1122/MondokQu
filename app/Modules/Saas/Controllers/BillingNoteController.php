@@ -30,40 +30,78 @@ class BillingNoteController extends Controller
         $search = trim((string) $request->string('search'));
         $paymentMethod = $request->string('payment_method')->toString();
         $tenantId = $request->integer('tenant_id');
+        $tenantStatus = $request->string('tenant_status')->toString();
+        $paidFrom = $request->string('paid_from')->toString();
+        $paidTo = $request->string('paid_to')->toString();
+        $periodFrom = $request->string('period_from')->toString();
+        $periodTo = $request->string('period_to')->toString();
+
+        $billingQuery = TenantBillingNote::query()
+            ->with(['tenant', 'recordedByUser'])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($billingQuery) use ($search) {
+                    $billingQuery
+                        ->where('admin_note', 'like', "%{$search}%")
+                        ->orWhere('payment_method', 'like', "%{$search}%")
+                        ->orWhereHas('tenant', function ($tenantQuery) use ($search) {
+                            $tenantQuery
+                                ->where('name', 'like', "%{$search}%")
+                                ->orWhere('slug', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('recordedByUser', function ($userQuery) use ($search) {
+                            $userQuery
+                                ->where('name', 'like', "%{$search}%")
+                                ->orWhere('username', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when(in_array($paymentMethod, ['transfer bank', 'cash', 'e-wallet', 'qris', 'lainnya'], true), fn ($query) => $query->where('payment_method', $paymentMethod))
+            ->when($tenantId > 0, fn ($query) => $query->where('tenant_id', $tenantId))
+            ->when(in_array($tenantStatus, [Tenant::SUBSCRIPTION_TRIAL, Tenant::SUBSCRIPTION_ACTIVE, Tenant::SUBSCRIPTION_GRACE, Tenant::SUBSCRIPTION_EXPIRED], true), fn ($query) => $query->whereHas('tenant', function ($tenantQuery) use ($tenantStatus) {
+                $tenantQuery->where('subscription_status', $tenantStatus);
+            }))
+            ->when($paidFrom !== '', fn ($query) => $query->whereDate('paid_at', '>=', $paidFrom))
+            ->when($paidTo !== '', fn ($query) => $query->whereDate('paid_at', '<=', $paidTo))
+            ->when($periodFrom !== '', fn ($query) => $query->whereDate('period_starts_at', '>=', $periodFrom))
+            ->when($periodTo !== '', fn ($query) => $query->whereDate('period_ends_at', '<=', $periodTo));
+
+        $billingNotes = (clone $billingQuery)
+            ->latest('paid_at')
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        $statusCounts = (clone $billingQuery)
+            ->join('tenants', 'tenant_billing_notes.tenant_id', '=', 'tenants.id')
+            ->selectRaw('tenants.subscription_status, count(*) as count')
+            ->groupBy('tenants.subscription_status')
+            ->pluck('count', 'subscription_status')
+            ->toArray();
 
         return view('modules.saas.billing-notes.index', [
-            'billingNotes' => TenantBillingNote::query()
-                ->with(['tenant', 'recordedByUser'])
-                ->when($search !== '', function ($query) use ($search) {
-                    $query->where(function ($billingQuery) use ($search) {
-                        $billingQuery
-                            ->where('admin_note', 'like', "%{$search}%")
-                            ->orWhere('payment_method', 'like', "%{$search}%")
-                            ->orWhereHas('tenant', function ($tenantQuery) use ($search) {
-                                $tenantQuery
-                                    ->where('name', 'like', "%{$search}%")
-                                    ->orWhere('slug', 'like', "%{$search}%");
-                            })
-                            ->orWhereHas('recordedByUser', function ($userQuery) use ($search) {
-                                $userQuery
-                                    ->where('name', 'like', "%{$search}%")
-                                    ->orWhere('username', 'like', "%{$search}%");
-                            });
-                    });
-                })
-                ->when(in_array($paymentMethod, ['transfer bank', 'cash', 'e-wallet', 'qris', 'lainnya'], true), fn ($query) => $query->where('payment_method', $paymentMethod))
-                ->when($tenantId > 0, fn ($query) => $query->where('tenant_id', $tenantId))
-                ->latest('paid_at')
-                ->latest()
-                ->paginate(15)
-                ->withQueryString(),
+            'billingNotes' => $billingNotes,
             'tenants' => Tenant::query()
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug']),
+            'summary' => [
+                'total_notes' => (clone $billingQuery)->count(),
+                'total_amount' => (clone $billingQuery)->sum('amount'),
+                'status_counts' => [
+                    Tenant::SUBSCRIPTION_ACTIVE => $statusCounts[Tenant::SUBSCRIPTION_ACTIVE] ?? 0,
+                    Tenant::SUBSCRIPTION_TRIAL => $statusCounts[Tenant::SUBSCRIPTION_TRIAL] ?? 0,
+                    Tenant::SUBSCRIPTION_GRACE => $statusCounts[Tenant::SUBSCRIPTION_GRACE] ?? 0,
+                    Tenant::SUBSCRIPTION_EXPIRED => $statusCounts[Tenant::SUBSCRIPTION_EXPIRED] ?? 0,
+                ],
+            ],
             'filters' => [
                 'search' => $search,
                 'payment_method' => $paymentMethod,
                 'tenant_id' => $tenantId > 0 ? $tenantId : null,
+                'tenant_status' => $tenantStatus,
+                'paid_from' => $paidFrom,
+                'paid_to' => $paidTo,
+                'period_from' => $periodFrom,
+                'period_to' => $periodTo,
             ],
         ]);
     }

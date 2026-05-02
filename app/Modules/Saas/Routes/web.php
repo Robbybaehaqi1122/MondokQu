@@ -1,7 +1,7 @@
 <?php
 
-use App\Modules\Saas\Controllers\SaasDashboardController;
 use App\Modules\Saas\Controllers\BillingNoteController;
+use App\Modules\Saas\Controllers\SaasDashboardController;
 use App\Modules\Saas\Controllers\SubscriptionHistoryController;
 use App\Modules\Saas\Controllers\TenantManagementController;
 use Illuminate\Support\Facades\Route;
@@ -23,4 +23,6 @@ Route::middleware(['auth', 'password_change_required', 'verified', 'role:Superad
         ->name('saas.tenants.show');
     Route::patch('/saas/tenants/{tenant}/subscription', [TenantManagementController::class, 'updateSubscription'])
         ->name('saas.tenants.update-subscription');
+    Route::delete('/saas/tenants/{tenant}', [TenantManagementController::class, 'destroy'])
+        ->name('saas.tenants.destroy');
 });
