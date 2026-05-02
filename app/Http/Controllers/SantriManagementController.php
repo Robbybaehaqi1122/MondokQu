@@ -62,7 +62,6 @@ class SantriManagementController extends Controller
             ],
             'genders' => $this->genderOptions(),
             'canCreateSantri' => $currentUser?->can('create', Santri::class) ?? false,
-            'canUpdateSantri' => $currentUser?->can('update', new Santri) ?? false,
             'statuses' => $this->statusOptions(),
             'santris' => $santris,
         ]);
@@ -162,7 +161,12 @@ class SantriManagementController extends Controller
             'photo_path',
         ]);
 
-        $photoPath = $this->santriPhotoUploader->store($request->file('photo'), $santri->photo_path);
+        if ($request->boolean('delete_photo') && ! $request->file('photo')) {
+            $this->santriPhotoUploader->deleteIfManaged($santri->photo_path);
+            $photoPath = null;
+        } else {
+            $photoPath = $this->santriPhotoUploader->store($request->file('photo'), $santri->photo_path);
+        }
 
         $santri->update([
             'nis' => $validated['nis'],

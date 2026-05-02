@@ -87,7 +87,7 @@ test('superadmin without tenant can not create tenantless santri', function () {
     expect(Santri::query()->whereNull('tenant_id')->exists())->toBeFalse();
 });
 
-test('superadmin can not update or delete santri from tenant operations', function () {
+test('superadmin can update or delete santri from tenant operations', function () {
     $superadmin = User::factory()->create();
     $superadmin->assignRole('Superadmin');
     $superadmin->givePermissionTo(['update santri', 'delete santri']);
@@ -111,7 +111,7 @@ test('superadmin can not update or delete santri from tenant operations', functi
         'status' => Santri::STATUS_ACTIVE,
     ]);
 
-    $this
+    $response = $this
         ->actingAs($superadmin)
         ->patch(route('santri.update', $santri), [
             'nis' => 'NIS-READONLY-UPDATED',
@@ -129,17 +129,17 @@ test('superadmin can not update or delete santri from tenant operations', functi
             'entry_year' => 2024,
             'room_name' => 'Asrama B1',
             'status' => Santri::STATUS_ALUMNI,
-        ])
-        ->assertForbidden();
+        ]);
 
-    expect($santri->fresh()->full_name)->toBe('Santri Read Only');
+    $response->assertRedirect(route('santri.index', absolute: false));
+    expect($santri->fresh()->full_name)->toBe('Santri Updated By Superadmin');
 
-    $this
+    $response = $this
         ->actingAs($superadmin)
-        ->delete(route('santri.destroy', $santri))
-        ->assertForbidden();
+        ->delete(route('santri.destroy', $santri));
 
-    expect($santri->fresh())->not->toBeNull();
+    $response->assertRedirect(route('santri.index', absolute: false));
+    expect(Santri::find($santri->id))->toBeNull();
 });
 
 test('user with view santri permission can search and filter santri', function () {
@@ -514,6 +514,58 @@ test('user with permission can view santri detail', function () {
     $response->assertSee($santri->room_name);
     $response->assertSee($santri->father_name);
     $response->assertSee($santri->mother_name);
+});
+
+test('user with permission can delete santri photo when requested during update', function () {
+    Storage::fake('public');
+
+    $pengurus = tenantUser('Pengurus');
+    $pengurus->givePermissionTo('view santri');
+    $pengurus->givePermissionTo('update santri');
+
+    $existingPhoto = function_exists('imagecreatetruecolor')
+        ? UploadedFile::fake()->image('santri-lama.png', 300, 300)->size(300)
+        : UploadedFile::fake()->create('santri-lama.png', 300, 'image/png');
+    $existingPath = $existingPhoto->store('santri-photos', 'public');
+
+    $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
+        'nis' => 'NIS4001',
+        'full_name' => 'Nama Lama',
+        'status' => Santri::STATUS_ACTIVE,
+        'photo_path' => $existingPath,
+    ]);
+
+    $payload = [
+        'nis' => 'NIS4001',
+        'full_name' => 'Nama Lama Tetap',
+        'gender' => Santri::GENDER_MALE,
+        'birth_place' => 'Garut',
+        'birth_date' => '2010-01-01',
+        'address' => 'Alamat Baru',
+        'guardian_name' => 'Ibu Contact',
+        'father_name' => 'Ayah Contact',
+        'mother_name' => 'Ibu Contact',
+        'guardian_phone_number' => '089999999998',
+        'emergency_contact' => '081277777778',
+        'entry_date' => '2025-01-05',
+        'entry_year' => 2025,
+        'room_name' => 'Asrama Putra 1',
+        'notes' => 'Hapus foto lama saja.',
+        'status' => Santri::STATUS_ACTIVE,
+        'delete_photo' => '1',
+        'editing_santri_id' => $santri->id,
+    ];
+
+    $response = $this
+        ->actingAs($pengurus)
+        ->patch(route('santri.update', $santri), $payload);
+
+    $response->assertRedirect(route('santri.index', absolute: false));
+
+    $santri = $santri->fresh();
+
+    expect($santri->photo_path)->toBeNull();
+    Storage::disk('public')->assertMissing($existingPath);
 });
 
 test('user with permission can update santri', function () {

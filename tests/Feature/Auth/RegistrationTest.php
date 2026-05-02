@@ -1,20 +1,31 @@
 <?php
 
-test('public registration screen is disabled', function () {
+use Spatie\Permission\Models\Role;
+
+test('registration screen can be rendered', function () {
     $response = $this->get('/register');
 
-    $response->assertNotFound();
+    $response->assertStatus(200);
 });
 
-test('public registration endpoint is disabled', function () {
+test('new users can register', function () {
+    Role::findOrCreate('Admin', 'web');
+
     $response = $this->post('/register', [
         'name' => 'Test User',
         'username' => 'testuser',
         'email' => 'test@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'phone_number' => '+628123456789',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
     ]);
 
-    $this->assertGuest();
-    $response->assertNotFound();
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('dashboard', absolute: false));
+
+    $user = auth()->user();
+    expect($user)->not->toBeNull();
+    expect($user?->hasRole('Admin'))->toBeTrue();
+    expect($user?->tenant)->not->toBeNull();
+    expect($user?->tenant->owner_id)->toBe($user->id);
 });

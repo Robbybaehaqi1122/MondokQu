@@ -1,16 +1,23 @@
 <?php
 
-use App\Modules\Auth\Controllers\ConfirmablePasswordController;
-use App\Modules\Auth\Controllers\EmailVerificationNotificationController;
-use App\Modules\Auth\Controllers\EmailVerificationPromptController;
+use App\Modules\Auth\Controllers\RegisteredUserController;
 use App\Modules\Auth\Controllers\AuthenticatedSessionController;
+use App\Modules\Auth\Controllers\ConfirmablePasswordController;
 use App\Modules\Auth\Controllers\NewPasswordController;
 use App\Modules\Auth\Controllers\PasswordController;
 use App\Modules\Auth\Controllers\PasswordResetLinkController;
 use App\Modules\Auth\Controllers\VerifyEmailController;
+use App\Modules\Auth\Controllers\EmailVerificationPromptController;
+use App\Modules\Auth\Controllers\EmailVerificationNotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
+    Route::get('/register', [RegisteredUserController::class, 'create'])
+        ->name('register');
+
+    Route::post('/register', [RegisteredUserController::class, 'store'])
+        ->name('register.store');
+
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
@@ -35,7 +42,7 @@ Route::middleware('guest')->group(function () {
         ->name('password.store');
 });
 
-Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
     ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
 
@@ -46,7 +53,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/password', [PasswordController::class, 'update'])
         ->name('password.update');
 
-    Route::get('verify-email', EmailVerificationPromptController::class)
+    Route::get('verify-email', [EmailVerificationPromptController::class, '__invoke'])
         ->name('verification.notice');
 
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])

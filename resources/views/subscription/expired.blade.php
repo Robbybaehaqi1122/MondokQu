@@ -41,6 +41,16 @@
                                 <div class="fw-semibold">{{ $subscriptionContext['action'] }}</div>
                             </div>
                         </div>
+
+                        <div class="col-12">
+                            <div class="border rounded p-3 bg-success-lt">
+                                <div class="text-secondary small text-uppercase fw-bold mb-1">Hubungi Admin</div>
+                                <div class="fw-semibold mb-3">Jika Anda tertarik menggunakan MondokQu, silakan chat admin melalui WhatsApp.</div>
+                                <a href="https://wa.me/6285117511220?text=Halo%20admin%20MondokQu,%20saya%20ingin%20mengaktifkan%20langganan." target="_blank" class="btn btn-success">
+                                    Chat Admin: 085117511220
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

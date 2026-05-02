@@ -43,10 +43,6 @@ class SantriPolicy
      */
     public function create(User $user): Response
     {
-        if ($user->isSuperAdmin()) {
-            return Response::deny('Superadmin hanya dapat melihat data santri lintas tenant. Pembuatan santri harus dilakukan dari akun tenant pondok.');
-        }
-
         if (! $user->tenant_id) {
             return Response::deny('Akun Anda belum terhubung ke tenant pondok.');
         }
@@ -61,10 +57,6 @@ class SantriPolicy
      */
     public function update(User $user, Santri $santri): Response
     {
-        if ($user->isSuperAdmin()) {
-            return Response::deny('Superadmin hanya dapat melihat data santri lintas tenant. Perubahan data santri harus dilakukan dari akun tenant pondok.');
-        }
-
         if (! $user->can('update santri')) {
             return Response::deny('Anda tidak memiliki akses untuk mengubah data santri.');
         }
@@ -81,10 +73,6 @@ class SantriPolicy
      */
     public function delete(User $user, Santri $santri): Response
     {
-        if ($user->isSuperAdmin()) {
-            return Response::deny('Superadmin hanya dapat melihat data santri lintas tenant. Penghapusan santri harus dilakukan dari akun tenant pondok.');
-        }
-
         if (! $user->can('delete santri')) {
             return Response::deny('Anda tidak memiliki akses untuk menghapus data santri.');
         }

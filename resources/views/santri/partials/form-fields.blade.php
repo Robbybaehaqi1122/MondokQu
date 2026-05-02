@@ -270,7 +270,22 @@
                 <img src="{{ $santriItem->photoUrl() }}" alt="Foto {{ $santriItem->full_name }}" class="user-inline-avatar">
                 <div class="text-secondary small">Foto saat ini</div>
             </div>
+
+            <div class="form-check mb-3">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="1"
+                    id="delete_photo_{{ $santriFormId }}"
+                    name="delete_photo"
+                    @checked(old('delete_photo'))
+                >
+                <label class="form-check-label" for="delete_photo_{{ $santriFormId }}">
+                    Hapus foto lama tanpa mengunggah foto baru
+                </label>
+            </div>
         @endif
+
         <input
             id="photo_{{ $santriFormId }}"
             name="photo"

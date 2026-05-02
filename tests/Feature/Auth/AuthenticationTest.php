@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Tenant;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -33,6 +34,15 @@ test('users can authenticate using email on the login screen', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard.home', absolute: false));
+});
+
+test('unverified users are redirected to verification notice when accessing dashboard features', function () {
+    $tenant = Tenant::factory()->activeSubscription()->create();
+    $user = User::factory()->forTenant($tenant)->unverified()->create();
+
+    $response = $this->actingAs($user)->get(route('dashboard.home'));
+
+    $response->assertRedirect(route('verification.notice', absolute: false));
 });
 
 test('identity check does not reveal whether a user exists', function () {

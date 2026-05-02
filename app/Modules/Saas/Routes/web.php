@@ -6,7 +6,7 @@ use App\Modules\Saas\Controllers\SubscriptionHistoryController;
 use App\Modules\Saas\Controllers\TenantManagementController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'password_change_required', 'role:Superadmin'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'verified', 'role:Superadmin'])->group(function () {
     Route::get('/saas', [SaasDashboardController::class, 'index'])
         ->name('saas.dashboard');
     Route::get('/saas/tenants', [TenantManagementController::class, 'index'])

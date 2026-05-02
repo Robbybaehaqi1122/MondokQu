@@ -63,6 +63,7 @@ class UpdateSantriRequest extends FormRequest
             'room_name' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'status' => ['required', 'string', Rule::in(Santri::availableStatuses())],
+            'delete_photo' => ['sometimes', 'boolean'],
             'photo' => [
                 'nullable',
                 File::image()
