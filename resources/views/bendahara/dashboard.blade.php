@@ -11,14 +11,17 @@
             <div class="card">
                 <div class="card-body">
                     <h3 class="card-title">Tugas Bendahara</h3>
-                    <p class="text-secondary mb-0">Bendahara dapat mengelola pembayaran dan melihat laporan keuangan.</p>
+                    <p class="text-secondary mb-0">Bendahara dapat mengelola tagihan, mencatat pembayaran, dan melihat laporan keuangan.</p>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <a href="{{ route('bendahara.laporan') }}" class="btn btn-primary">Buka Laporan</a>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('santri.payments.index') }}" class="btn btn-primary">Buka Pembayaran</a>
+                        <a href="{{ route('santri.payments.reports') }}" class="btn btn-outline-primary">Buka Laporan</a>
+                    </div>
                 </div>
             </div>
         </div>

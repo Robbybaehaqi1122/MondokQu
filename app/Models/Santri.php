@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Santri extends Model
 {
@@ -77,6 +78,22 @@ class Santri extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Get invoices issued to this santri.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(SantriInvoice::class);
+    }
+
+    /**
+     * Get payments recorded for this santri.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SantriPayment::class);
     }
 
     /**

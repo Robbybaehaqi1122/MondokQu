@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Tenant;
 use Spatie\Permission\Models\Role;
 
 test('registration screen can be rendered', function () {
@@ -26,6 +27,15 @@ test('new users can register', function () {
     $user = auth()->user();
     expect($user)->not->toBeNull();
     expect($user?->hasRole('Admin'))->toBeTrue();
+    expect($user?->hasVerifiedEmail())->toBeTrue();
     expect($user?->tenant)->not->toBeNull();
+    expect($user?->tenant->subscription_status)->toBe(Tenant::SUBSCRIPTION_TRIAL);
+    expect($user?->tenant->hasAccess())->toBeTrue();
     expect($user?->tenant->owner_id)->toBe($user->id);
+
+    $this->get(route('dashboard'))
+        ->assertRedirect(route('admin.dashboard', absolute: false));
+
+    $this->get(route('admin.dashboard'))
+        ->assertOk();
 });

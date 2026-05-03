@@ -12,8 +12,11 @@ class Tenant extends Model
     use HasFactory;
 
     public const SUBSCRIPTION_TRIAL = 'trial';
+
     public const SUBSCRIPTION_ACTIVE = 'active';
+
     public const SUBSCRIPTION_GRACE = 'grace';
+
     public const SUBSCRIPTION_EXPIRED = 'expired';
 
     /**
@@ -96,6 +99,22 @@ class Tenant extends Model
     public function billingNotes(): HasMany
     {
         return $this->hasMany(TenantBillingNote::class);
+    }
+
+    /**
+     * Get the santri invoices that belong to the tenant.
+     */
+    public function santriInvoices(): HasMany
+    {
+        return $this->hasMany(SantriInvoice::class);
+    }
+
+    /**
+     * Get the santri payments that belong to the tenant.
+     */
+    public function santriPayments(): HasMany
+    {
+        return $this->hasMany(SantriPayment::class);
     }
 
     /**

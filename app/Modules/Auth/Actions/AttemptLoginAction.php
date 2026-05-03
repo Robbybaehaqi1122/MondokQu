@@ -15,8 +15,7 @@ class AttemptLoginAction
 {
     public function __construct(
         protected ActivityLogger $activityLogger
-    ) {
-    }
+    ) {}
 
     /**
      * Attempt to authenticate the user using username or email.

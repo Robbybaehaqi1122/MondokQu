@@ -112,7 +112,7 @@
                             @foreach($recentSantri as $santri)
                                 <li class="mb-2">
                                     <span class="fw-semibold">{{ $santri->full_name }}</span>
-                                    <div class="text-secondary small">NIS: {{ $santri->nis }} · {{ $santri->room_name ?: 'Belum kamar' }}</div>
+                                    <div class="text-secondary small">NIS: {{ $santri->nis }} - {{ $santri->room_name ?: 'Belum kamar' }}</div>
                                 </li>
                             @endforeach
                         </ul>

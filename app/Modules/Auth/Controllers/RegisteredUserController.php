@@ -39,8 +39,8 @@ class RegisteredUserController extends Controller
 
         $user = DB::transaction(function () use ($validated) {
             $tenant = Tenant::query()->create([
-                'name' => 'Pondok ' . $validated['name'],
-                'slug' => Str::slug('pondok-' . $validated['name'] . '-' . now()->timestamp),
+                'name' => 'Pondok '.$validated['name'],
+                'slug' => Str::slug('pondok-'.$validated['name'].'-'.now()->timestamp),
                 'contact_email' => $validated['email'],
                 'contact_phone_number' => $validated['phone_number'] ?? null,
                 'subscription_plan' => config('saas.default_plan', 'trial'),
@@ -60,6 +60,7 @@ class RegisteredUserController extends Controller
                 'phone_number' => $validated['phone_number'] ?? null,
                 'password' => Hash::make($validated['password']),
                 'status' => User::STATUS_ACTIVE,
+                'email_verified_at' => now(), // Verifikasi otomatis untuk onboarding SaaS
                 'password_change_required' => false, // Publik registrasi tidak perlu force change
             ]);
 

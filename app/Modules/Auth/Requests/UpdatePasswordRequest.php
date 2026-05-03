@@ -2,6 +2,7 @@
 
 namespace App\Modules\Auth\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -25,7 +26,7 @@ class UpdatePasswordRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, array<int, string|\Illuminate\Contracts\Validation\ValidationRule>>
+     * @return array<string, array<int, string|ValidationRule>>
      */
     public function rules(): array
     {

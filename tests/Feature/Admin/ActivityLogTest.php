@@ -2,9 +2,9 @@
 
 use App\Models\ActivityLog;
 use App\Models\User;
-use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     $superadmin = Role::findOrCreate('Superadmin', 'web');

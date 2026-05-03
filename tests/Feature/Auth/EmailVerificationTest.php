@@ -1,7 +1,7 @@
 <?php
 
-use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
 use App\Models\User;
+use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;

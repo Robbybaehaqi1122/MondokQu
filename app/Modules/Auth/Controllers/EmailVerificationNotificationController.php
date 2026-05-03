@@ -2,8 +2,8 @@
 
 namespace App\Modules\Auth\Controllers;
 
-use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
 use App\Http\Controllers\Controller;
+use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -15,8 +15,7 @@ class EmailVerificationNotificationController extends Controller
     public function store(
         Request $request,
         SendEmailVerificationNotificationAction $sendVerificationNotification
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         if ($request->user()->hasVerifiedEmail()) {
             return redirect()->intended(route('dashboard', absolute: false));
         }

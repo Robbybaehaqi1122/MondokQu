@@ -14,8 +14,7 @@ class ProfileController extends Controller
 {
     public function __construct(
         protected UserAvatarUploader $userAvatarUploader
-    ) {
-    }
+    ) {}
 
     /**
      * Display the user's profile form.

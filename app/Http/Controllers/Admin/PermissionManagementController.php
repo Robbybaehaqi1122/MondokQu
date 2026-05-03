@@ -16,8 +16,7 @@ class PermissionManagementController extends Controller
 {
     public function __construct(
         protected ActivityLogger $activityLogger
-    ) {
-    }
+    ) {}
 
     /**
      * Display the permission management panel.

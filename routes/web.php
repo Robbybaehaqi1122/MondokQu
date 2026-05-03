@@ -1,15 +1,16 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\PermissionManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Pengurus\PengurusDashboardController;
-use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SantriManagementController;
+use App\Http\Controllers\SantriPaymentController;
 use App\Http\Controllers\SubscriptionStatusController;
+use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -65,6 +66,46 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|manage activity logs'])->group(function () {
     Route::delete('/admin/activity-logs', [ActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
+});
+
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified'])->group(function () {
+    Route::prefix('santri/pembayaran')->name('santri.payments.')->group(function () {
+        Route::get('/', [SantriPaymentController::class, 'index'])
+            ->middleware('permission:view pembayaran')
+            ->name('index');
+
+        Route::get('/tagihan', [SantriPaymentController::class, 'invoices'])
+            ->middleware('permission:view pembayaran')
+            ->name('invoices');
+
+        Route::post('/tagihan', [SantriPaymentController::class, 'storeInvoice'])
+            ->middleware('permission:create pembayaran')
+            ->name('invoices.store');
+
+        Route::patch('/tagihan/{invoice}', [SantriPaymentController::class, 'updateInvoice'])
+            ->middleware('permission:update pembayaran')
+            ->name('invoices.update');
+
+        Route::delete('/tagihan/{invoice}', [SantriPaymentController::class, 'destroyInvoice'])
+            ->middleware('permission:update pembayaran')
+            ->name('invoices.destroy');
+
+        Route::post('/tagihan/{invoice}/payments', [SantriPaymentController::class, 'storePayment'])
+            ->middleware('permission:create pembayaran')
+            ->name('payments.store');
+
+        Route::patch('/payments/{payment}', [SantriPaymentController::class, 'updatePayment'])
+            ->middleware('permission:edit historical pembayaran')
+            ->name('payments.update');
+
+        Route::delete('/payments/{payment}', [SantriPaymentController::class, 'destroyPayment'])
+            ->middleware('permission:edit historical pembayaran')
+            ->name('payments.destroy');
+
+        Route::get('/laporan', [SantriPaymentController::class, 'reports'])
+            ->middleware('permission:view laporan keuangan')
+            ->name('reports');
+    });
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:view santri'])->group(function () {

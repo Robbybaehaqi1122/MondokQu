@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Pengurus;
 
 use App\Http\Controllers\Controller;
 use App\Models\Santri;
-use App\Models\User;
 use Illuminate\View\View;
 
 class PengurusDashboardController extends Controller

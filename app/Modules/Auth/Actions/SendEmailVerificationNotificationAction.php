@@ -12,6 +12,10 @@ class SendEmailVerificationNotificationAction
      */
     public function handle(User $user): bool
     {
+        if ($user->hasVerifiedEmail()) {
+            return true;
+        }
+
         try {
             $user->sendEmailVerificationNotification();
 

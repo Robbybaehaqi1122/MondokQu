@@ -3,6 +3,7 @@
     $roles = $user?->getRoleNames() ?? collect();
     $roleLabel = $roles->implode(', ') ?: 'Tanpa role';
     $userInitial = strtoupper(substr($user->name, 0, 1));
+    $canOpenSantriModule = $user->can('view santri') || $user->can('view pembayaran') || $user->can('view laporan keuangan');
 @endphp
 
 <div class="mobile-topbar d-lg-none">
@@ -112,10 +113,10 @@
                     <span>Dashboard</span>
                 </a>
 
-                @if ($user->can('view santri'))
+                @if ($canOpenSantriModule)
                     <div class="sidebar-section-title">Modul</div>
-                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('santri.payments.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('santri.payments.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-school"></i>
                             </span>
@@ -126,18 +127,38 @@
                         </summary>
 
                         <div class="sidebar-submenu">
-                            <a class="sidebar-sublink {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') ? 'active' : '' }}" href="{{ route('santri.index') }}">
-                                <span class="sidebar-link-icon">
-                                    <i class="ti ti-users"></i>
-                                </span>
-                                <span>Manajemen Santri</span>
-                            </a>
+                            @if ($user->can('view santri'))
+                                <a class="sidebar-sublink {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') ? 'active' : '' }}" href="{{ route('santri.index') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-users"></i>
+                                    </span>
+                                    <span>Manajemen Santri</span>
+                                </a>
+                            @endif
+
+                            @if ($user->can('view pembayaran'))
+                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.*') ? 'active' : '' }}" href="{{ route('santri.payments.index') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-wallet"></i>
+                                    </span>
+                                    <span>Pembayaran Santri</span>
+                                </a>
+                            @endif
+
+                            @if ($user->can('view laporan keuangan'))
+                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.reports') ? 'active' : '' }}" href="{{ route('santri.payments.reports') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-report-money"></i>
+                                    </span>
+                                    <span>Laporan Bendahara</span>
+                                </a>
+                            @endif
                         </div>
                     </details>
                 @endif
 
                 @if ($user->hasAnyRole(['Superadmin', 'Admin']) || $user->canAny(['assign roles', 'manage system settings', 'view activity logs']))
-                    @unless ($user->can('view santri'))
+                    @unless ($canOpenSantriModule)
                         <div class="sidebar-section-title">Modul</div>
                     @endunless
                     <details class="sidebar-dropdown" @if (request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs')) open @endif>
@@ -232,7 +253,7 @@
                     </details>
                 @endif
 
-                @if ($user->hasRole('Bendahara'))
+                @if ($user->hasRole('Bendahara') && ! $canOpenSantriModule)
                     <div class="sidebar-section-title">Modul Bendahara</div>
                     <a class="sidebar-link {{ request()->routeIs('bendahara.laporan') ? 'active' : '' }}" href="{{ route('bendahara.laporan') }}">
                         <span class="sidebar-link-icon">

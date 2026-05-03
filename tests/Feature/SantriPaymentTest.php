@@ -1,0 +1,266 @@
+<?php
+
+use App\Models\Santri;
+use App\Models\SantriInvoice;
+use App\Models\SantriPayment;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+
+beforeEach(function () {
+    Role::findOrCreate('Admin', 'web');
+    Role::findOrCreate('Bendahara', 'web');
+
+    Permission::findOrCreate('view pembayaran', 'web');
+    Permission::findOrCreate('create pembayaran', 'web');
+    Permission::findOrCreate('update pembayaran', 'web');
+    Permission::findOrCreate('edit historical pembayaran', 'web');
+    Permission::findOrCreate('view laporan keuangan', 'web');
+});
+
+test('admin can access santri payment overview', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('view pembayaran');
+
+    $response = $this->actingAs($admin)->get(route('santri.payments.index'));
+
+    $response->assertOk();
+    $response->assertSee('Pembayaran Santri');
+});
+
+test('admin can access santri invoice page', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('view pembayaran');
+
+    $response = $this->actingAs($admin)->get(route('santri.payments.invoices'));
+
+    $response->assertOk();
+    $response->assertSee('Tagihan Santri');
+});
+
+test('admin can access santri payment reports page', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('view laporan keuangan');
+
+    $response = $this->actingAs($admin)->get(route('santri.payments.reports'));
+
+    $response->assertOk();
+    $response->assertSee('Laporan Bendahara');
+});
+
+test('bendahara can open payment module without santri management permission', function () {
+    $bendahara = tenantUser('Bendahara');
+    $bendahara->givePermissionTo('view pembayaran');
+
+    $response = $this->actingAs($bendahara)->get(route('santri.payments.index'));
+
+    $response->assertOk();
+    $response->assertSee('Pembayaran Santri');
+    expect($bendahara->can('view santri'))->toBeFalse();
+});
+
+test('admin can create a santri invoice', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create([
+        'full_name' => 'Ahmad Pembayaran',
+    ]);
+
+    $response = $this->actingAs($admin)->post(route('santri.payments.invoices.store'), [
+        'santri_id' => $santri->id,
+        'title' => 'SPP Mei',
+        'period_month' => 5,
+        'period_year' => 2026,
+        'due_date' => '2026-05-20',
+        'amount' => 350000,
+        'notes' => 'Tagihan SPP bulan Mei.',
+    ]);
+
+    $response->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    $invoice = SantriInvoice::query()->where('santri_id', $santri->id)->first();
+    expect($invoice)->not->toBeNull();
+    expect($invoice?->tenant_id)->toBe($admin->tenant_id);
+    expect($invoice?->title)->toBe('SPP Mei');
+    expect((float) $invoice?->amount)->toBe(350000.0);
+    expect($invoice?->status)->toBe(SantriInvoice::STATUS_PENDING);
+});
+
+test('admin can record partial and full payments for an invoice', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 0,
+        'status' => SantriInvoice::STATUS_PENDING,
+    ]);
+
+    $this->actingAs($admin)->post(route('santri.payments.payments.store', $invoice), [
+        'amount' => 40000,
+        'paid_at' => now()->format('Y-m-d H:i:s'),
+        'payment_method' => 'cash',
+        'reference_number' => 'CASH-001',
+        'note' => 'Bayar sebagian.',
+    ])->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    $invoice->refresh();
+    expect((float) $invoice->paid_amount)->toBe(40000.0);
+    expect($invoice->status)->toBe(SantriInvoice::STATUS_PARTIAL);
+
+    $this->actingAs($admin)->post(route('santri.payments.payments.store', $invoice), [
+        'amount' => 60000,
+        'paid_at' => now()->format('Y-m-d H:i:s'),
+        'payment_method' => 'qris',
+    ])->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    $invoice->refresh();
+    expect((float) $invoice->paid_amount)->toBe(100000.0);
+    expect($invoice->status)->toBe(SantriInvoice::STATUS_PAID);
+    expect(SantriPayment::query()->where('santri_invoice_id', $invoice->id)->count())->toBe(2);
+});
+
+test('payment amount can not exceed invoice outstanding amount', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 25000,
+        'status' => SantriInvoice::STATUS_PARTIAL,
+    ]);
+
+    $response = $this->actingAs($admin)->post(route('santri.payments.payments.store', $invoice), [
+        'amount' => 80000,
+        'paid_at' => now()->format('Y-m-d H:i:s'),
+        'payment_method' => 'cash',
+        'paying_invoice_id' => $invoice->id,
+    ]);
+
+    $response->assertSessionHasErrors('amount', null, 'recordPayment');
+    expect(SantriPayment::query()->where('santri_invoice_id', $invoice->id)->exists())->toBeFalse();
+});
+
+test('admin can update an invoice before or after payment within paid amount rules', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'update pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'title' => 'SPP Lama',
+        'amount' => 100000,
+    ]);
+
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 40000,
+    ]);
+    $invoice->refreshPaymentStatus();
+
+    $response = $this->actingAs($admin)->patch(route('santri.payments.invoices.update', $invoice), [
+        'santri_id' => $santri->id,
+        'title' => 'SPP Diperbarui',
+        'period_month' => 5,
+        'period_year' => 2026,
+        'due_date' => '2026-05-25',
+        'amount' => 120000,
+        'notes' => 'Nominal disesuaikan.',
+        'editing_invoice_id' => $invoice->id,
+    ]);
+
+    $response->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    $invoice->refresh();
+    expect($invoice->title)->toBe('SPP Diperbarui');
+    expect((float) $invoice->amount)->toBe(120000.0);
+    expect((float) $invoice->paid_amount)->toBe(40000.0);
+    expect($invoice->status)->toBe(SantriInvoice::STATUS_PARTIAL);
+});
+
+test('invoice amount can not be reduced below recorded payments', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'update pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+    ]);
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 60000,
+    ]);
+    $invoice->refreshPaymentStatus();
+
+    $response = $this->actingAs($admin)->patch(route('santri.payments.invoices.update', $invoice), [
+        'santri_id' => $santri->id,
+        'title' => $invoice->title,
+        'period_month' => $invoice->period_month,
+        'period_year' => $invoice->period_year,
+        'due_date' => $invoice->due_date->toDateString(),
+        'amount' => 50000,
+        'editing_invoice_id' => $invoice->id,
+    ]);
+
+    $response->assertSessionHasErrors('amount', null, 'updateInvoice');
+    expect((float) $invoice->fresh()->amount)->toBe(100000.0);
+});
+
+test('admin can delete unpaid invoice but not invoice with payment', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'update pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $unpaidInvoice = SantriInvoice::factory()->forSantri($santri)->create();
+    $paidInvoice = SantriInvoice::factory()->forSantri($santri)->create();
+    SantriPayment::factory()->forInvoice($paidInvoice)->create([
+        'amount' => 1000,
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('santri.payments.invoices.destroy', $unpaidInvoice))
+        ->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    expect(SantriInvoice::query()->whereKey($unpaidInvoice->id)->exists())->toBeFalse();
+
+    $this->actingAs($admin)
+        ->delete(route('santri.payments.invoices.destroy', $paidInvoice))
+        ->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    expect(SantriInvoice::query()->whereKey($paidInvoice->id)->exists())->toBeTrue();
+});
+
+test('historical payment can be corrected and deleted with dedicated permission', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'edit historical pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 0,
+        'status' => SantriInvoice::STATUS_PENDING,
+    ]);
+    $payment = SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 100000,
+        'payment_method' => 'cash',
+    ]);
+    $invoice->refreshPaymentStatus();
+
+    $this->actingAs($admin)->patch(route('santri.payments.payments.update', $payment), [
+        'amount' => 45000,
+        'paid_at' => now()->format('Y-m-d H:i:s'),
+        'payment_method' => 'qris',
+        'reference_number' => 'QR-001',
+        'note' => 'Koreksi nominal.',
+        'editing_payment_id' => $payment->id,
+        'editing_payment_invoice_id' => $invoice->id,
+    ])->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    $invoice->refresh();
+    $payment->refresh();
+    expect((float) $payment->amount)->toBe(45000.0);
+    expect($payment->payment_method)->toBe('qris');
+    expect((float) $invoice->paid_amount)->toBe(45000.0);
+    expect($invoice->status)->toBe(SantriInvoice::STATUS_PARTIAL);
+
+    $this->actingAs($admin)
+        ->delete(route('santri.payments.payments.destroy', $payment))
+        ->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    $invoice->refresh();
+    expect(SantriPayment::query()->whereKey($payment->id)->exists())->toBeFalse();
+    expect((float) $invoice->paid_amount)->toBe(0.0);
+    expect($invoice->status)->toBe(SantriInvoice::STATUS_PENDING);
+});

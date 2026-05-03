@@ -2,6 +2,7 @@
 
 use App\Models\ActivityLog;
 use App\Models\Santri;
+use App\Models\Tenant;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -140,7 +141,7 @@ test('admin dashboard shows trial warning when tenant trial is near expiry', fun
     $tenant = $admin->tenant;
 
     $tenant->forceFill([
-        'subscription_status' => \App\Models\Tenant::SUBSCRIPTION_TRIAL,
+        'subscription_status' => Tenant::SUBSCRIPTION_TRIAL,
         'subscription_plan' => 'trial',
         'trial_ends_at' => now()->addDays(2),
         'subscription_starts_at' => null,
@@ -163,7 +164,7 @@ test('admin dashboard shows grace period warning for tenant', function () {
     $tenant = $admin->tenant;
 
     $tenant->forceFill([
-        'subscription_status' => \App\Models\Tenant::SUBSCRIPTION_GRACE,
+        'subscription_status' => Tenant::SUBSCRIPTION_GRACE,
         'subscription_plan' => 'basic',
         'subscription_starts_at' => now()->subMonth(),
         'subscription_ends_at' => now()->subDay(),
