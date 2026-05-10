@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Tenant;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -81,7 +82,45 @@ test('creating a user writes an activity log entry', function () {
     expect($log->actor_id)->toBe($admin->id);
 });
 
-test('admin can delete all activity logs', function () {
+test('admin can view and filter tenant scoped activity logs', function () {
+    $admin = tenantUser('Admin');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+    $otherUser = User::factory()->forTenant($otherTenant)->create();
+
+    ActivityLog::query()->create([
+        'tenant_id' => $admin->tenant_id,
+        'actor_id' => $admin->id,
+        'actor_name' => $admin->name,
+        'action' => 'santri_deleted',
+        'description' => 'Data santri dihapus dari sistem.',
+        'target_name' => 'Santri Tenant Sendiri',
+        'ip_address' => '127.0.0.1',
+    ]);
+    ActivityLog::query()->create([
+        'tenant_id' => $otherTenant->id,
+        'actor_id' => $otherUser->id,
+        'actor_name' => $otherUser->name,
+        'action' => 'santri_deleted',
+        'description' => 'Data santri tenant lain dihapus.',
+        'target_name' => 'Santri Tenant Lain',
+        'ip_address' => '127.0.0.1',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('admin.activity-logs', [
+            'action' => 'santri_deleted',
+            'search' => 'Tenant Sendiri',
+        ]));
+
+    $response->assertOk();
+    $response->assertSee('Catatan aktivitas internal tenant');
+    $response->assertSee('Santri Tenant Sendiri');
+    $response->assertDontSee('Santri Tenant Lain');
+    $response->assertViewHas('logSummary', fn (array $summary): bool => $summary['total'] === 1 && $summary['filtered'] === 1);
+});
+
+test('admin can not delete tenant activity logs', function () {
     $admin = tenantUser('Admin');
 
     ActivityLog::query()->create([
@@ -98,9 +137,8 @@ test('admin can delete all activity logs', function () {
         ->actingAs($admin)
         ->delete(route('admin.activity-logs.destroy-all'));
 
-    $response->assertRedirect(route('admin.activity-logs', absolute: false));
-    $response->assertSessionHas('success');
-    expect(ActivityLog::query()->count())->toBe(0);
+    $response->assertForbidden();
+    expect(ActivityLog::query()->count())->toBe(1);
 });
 
 test('superadmin can delete activity logs by role even without explicit manage permission', function () {

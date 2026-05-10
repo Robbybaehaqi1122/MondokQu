@@ -66,7 +66,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity-logs');
 });
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|manage activity logs'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin'])->group(function () {
     Route::delete('/admin/activity-logs', [ActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
 });
 
