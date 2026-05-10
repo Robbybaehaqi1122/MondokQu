@@ -60,7 +60,7 @@ class SubscriptionStatusController extends Controller
                 'badge' => 'Subscription Expired',
                 'badge_color' => 'danger',
                 'description' => 'Langganan tenant saat ini sudah berakhir sehingga akses operasional dibatasi.',
-                'detail' => 'Subscription terakhir tercatat aktif sampai '.optional($tenant->subscription_ends_at)->translatedFormat('d M Y H:i').'.',
+                'detail' => $this->expiredTenantDetail($tenant),
                 'action' => 'Hubungi admin platform untuk perpanjangan paket atau aktivasi ulang tenant.',
             ],
             Tenant::SUBSCRIPTION_ACTIVE => [
@@ -80,5 +80,22 @@ class SubscriptionStatusController extends Controller
                 'action' => 'Hubungi admin platform untuk verifikasi status tenant Anda.',
             ],
         };
+    }
+
+    protected function expiredTenantDetail(Tenant $tenant): string
+    {
+        if ($tenant->grace_ends_at?->isPast()) {
+            return 'Grace period terakhir tercatat sampai '.$tenant->grace_ends_at->translatedFormat('d M Y H:i').'.';
+        }
+
+        if ($tenant->subscription_ends_at?->isPast()) {
+            return 'Subscription terakhir tercatat aktif sampai '.$tenant->subscription_ends_at->translatedFormat('d M Y H:i').'.';
+        }
+
+        if ($tenant->trial_ends_at?->isPast()) {
+            return 'Trial terakhir tercatat sampai '.$tenant->trial_ends_at->translatedFormat('d M Y H:i').'.';
+        }
+
+        return 'Status tenant tercatat expired. Hubungi admin platform untuk memeriksa periode akses terakhir.';
     }
 }

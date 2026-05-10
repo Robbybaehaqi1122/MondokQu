@@ -79,3 +79,22 @@ test('expired subscription page explains when user is not linked to a tenant', f
     $response->assertSee('Tenant Belum Terhubung');
     $response->assertSee('Hubungi admin platform agar akun Anda ditautkan ke tenant yang benar');
 });
+
+test('expired subscription page explains expired trial tenants clearly', function () {
+    $tenant = Tenant::factory()->expired()->create([
+        'name' => 'Pondok Trial Selesai',
+        'trial_ends_at' => now()->subDay(),
+        'subscription_ends_at' => null,
+        'grace_ends_at' => null,
+    ]);
+    $user = User::factory()->forTenant($tenant)->create();
+    $user->assignRole('Pengurus');
+
+    $response = $this
+        ->actingAs($user)
+        ->get(route('subscription.expired'));
+
+    $response->assertOk();
+    $response->assertSee('Pondok Trial Selesai');
+    $response->assertSee('Trial terakhir tercatat sampai');
+});

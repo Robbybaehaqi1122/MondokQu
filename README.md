@@ -170,6 +170,30 @@ Contoh:
 
 Jika format nomor berubah, ubah regex di rule tersebut saja.
 
+## Checklist Deploy Singkat
+
+Gunakan checklist ini saat deploy ke server production atau staging:
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci
+npm run build
+php artisan migrate --force
+php artisan storage:link
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+Pastikan juga:
+
+- Backup database dibuat sebelum deploy.
+- `.env` production berisi `APP_KEY`, koneksi database, mail, queue, dan konfigurasi `SAAS_*` yang benar.
+- Cron Laravel scheduler aktif: `* * * * * cd /path/to/mondok-qu && php artisan schedule:run >> /dev/null 2>&1`.
+- Queue worker aktif jika production memakai queue database/redis untuk email atau pekerjaan latar.
+- Permission folder `storage` dan `bootstrap/cache` bisa ditulis oleh user web server.
+- Setelah deploy, jalankan smoke test: login superadmin, buka dashboard SaaS, login user tenant aktif, dan pastikan tenant expired diarahkan ke halaman status akses.
+
 ## Catatan `.env` Penting
 
 Nilai lokal boleh berbeda, tapi beberapa key ini penting untuk Mondok Qu:
