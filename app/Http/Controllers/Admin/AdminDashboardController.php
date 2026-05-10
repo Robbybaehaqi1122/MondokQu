@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Santri;
+use App\Models\SantriInvoice;
+use App\Models\SantriPayment;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -30,6 +32,8 @@ class AdminDashboardController extends Controller
 
         $maxRoleUsers = max(1, (int) $roles->max('users_count'));
         $santriBaseQuery = Santri::query()->visibleTo($currentUser);
+        $invoiceBaseQuery = SantriInvoice::query()->visibleTo($currentUser);
+        $paymentBaseQuery = SantriPayment::query()->visibleTo($currentUser);
         $userBaseQuery = User::query()->visibleTo($currentUser);
 
         return view('admin.dashboard', [
@@ -55,6 +59,8 @@ class AdminDashboardController extends Controller
             }),
             'roomDistribution' => $this->buildRoomDistribution(clone $santriBaseQuery),
             'entryYearDistribution' => $this->buildEntryYearDistribution(clone $santriBaseQuery),
+            'monthlyRevenue' => $this->buildMonthlyRevenue(clone $paymentBaseQuery),
+            'topOverdueInvoices' => $this->buildTopOverdueInvoices(clone $invoiceBaseQuery),
             'recentUsers' => (clone $userBaseQuery)
                 ->with('roles')
                 ->orderByDesc('last_login_at')
@@ -75,8 +81,22 @@ class AdminDashboardController extends Controller
             'santriStats' => [
                 'total_santri' => (clone $santriBaseQuery)->count(),
                 'active_santri' => (clone $santriBaseQuery)->where('status', Santri::STATUS_ACTIVE)->count(),
+                'leave_santri' => (clone $santriBaseQuery)->where('status', Santri::STATUS_LEAVE)->count(),
                 'alumni_santri' => (clone $santriBaseQuery)->where('status', Santri::STATUS_ALUMNI)->count(),
                 'exited_santri' => (clone $santriBaseQuery)->where('status', Santri::STATUS_EXITED)->count(),
+            ],
+            'financeStats' => [
+                'paid_this_month' => (clone $paymentBaseQuery)
+                    ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
+                    ->sum('amount'),
+                'outstanding_amount' => (clone $invoiceBaseQuery)
+                    ->where('status', '!=', SantriInvoice::STATUS_PAID)
+                    ->selectRaw('COALESCE(SUM(amount - paid_amount), 0) as total')
+                    ->value('total') ?? 0,
+                'overdue_invoices' => (clone $invoiceBaseQuery)
+                    ->where('status', '!=', SantriInvoice::STATUS_PAID)
+                    ->whereDate('due_date', '<', now()->toDateString())
+                    ->count(),
             ],
         ]);
     }
@@ -218,6 +238,58 @@ class AdminDashboardController extends Controller
             ->map(fn ($item): array => [
                 'entry_year' => (string) $item->entry_year,
                 'santri_count' => (int) $item->santri_count,
+            ]);
+    }
+
+    /**
+     * Build monthly revenue totals for the last six months.
+     *
+     * @return Collection<int, array{label: string, total: float, percentage: int}>
+     */
+    protected function buildMonthlyRevenue($query): Collection
+    {
+        $months = collect(range(5, 0))
+            ->map(fn (int $monthsAgo) => now()->subMonths($monthsAgo)->startOfMonth());
+        $totals = (clone $query)
+            ->whereBetween('paid_at', [$months->first()?->copy()->startOfMonth(), now()->endOfMonth()])
+            ->get(['paid_at', 'amount'])
+            ->groupBy(fn (SantriPayment $payment): string => $payment->paid_at->format('Y-m'))
+            ->map(fn (Collection $payments): float => (float) $payments->sum('amount'));
+        $maxTotal = max(1, (float) $totals->max());
+
+        return $months->map(function ($month) use ($maxTotal, $totals): array {
+            $total = (float) ($totals[$month->format('Y-m')] ?? 0);
+
+            return [
+                'label' => $month->translatedFormat('M Y'),
+                'total' => $total,
+                'percentage' => (int) round(($total / $maxTotal) * 100),
+            ];
+        });
+    }
+
+    /**
+     * Build the highest outstanding overdue invoices.
+     *
+     * @return Collection<int, array{invoice_number: string, santri_name: string, due_date: string, outstanding_amount: float}>
+     */
+    protected function buildTopOverdueInvoices($query): Collection
+    {
+        return $query
+            ->with('santri')
+            ->where('status', '!=', SantriInvoice::STATUS_PAID)
+            ->whereDate('due_date', '<', now()->toDateString())
+            ->select('*')
+            ->selectRaw('(amount - paid_amount) as outstanding_amount')
+            ->orderByDesc('outstanding_amount')
+            ->orderBy('due_date')
+            ->limit(5)
+            ->get()
+            ->map(fn (SantriInvoice $invoice): array => [
+                'invoice_number' => $invoice->invoice_number,
+                'santri_name' => $invoice->santri?->full_name ?? '-',
+                'due_date' => $invoice->due_date?->translatedFormat('d M Y') ?? '-',
+                'outstanding_amount' => (float) $invoice->outstanding_amount,
             ]);
     }
 }

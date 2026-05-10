@@ -2,6 +2,8 @@
 
 use App\Models\ActivityLog;
 use App\Models\Santri;
+use App\Models\SantriInvoice;
+use App\Models\SantriPayment;
 use App\Models\Tenant;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
@@ -41,7 +43,7 @@ test('admin dashboard shows monitoring statistics', function () {
     ]);
     $suspendedUser->assignRole('Bendahara');
 
-    Santri::factory()->forTenant($tenant)->create([
+    $activeSantri = Santri::factory()->forTenant($tenant)->create([
         'status' => Santri::STATUS_ACTIVE,
         'full_name' => 'Santri Aktif A',
         'room_name' => 'Asrama A1',
@@ -63,6 +65,28 @@ test('admin dashboard shows monitoring statistics', function () {
         'room_name' => 'Asrama B2',
         'entry_year' => 2024,
         'created_at' => now()->subMonths(1),
+    ]);
+    $overdueInvoice = SantriInvoice::factory()->forSantri($activeSantri)->create([
+        'invoice_number' => 'INV-OVERDUE-001',
+        'title' => 'SPP Tertunggak',
+        'amount' => 500000,
+        'paid_amount' => 100000,
+        'status' => SantriInvoice::STATUS_PARTIAL,
+        'due_date' => now()->subDays(5),
+    ]);
+    SantriInvoice::factory()->forSantri($activeSantri)->create([
+        'amount' => 250000,
+        'paid_amount' => 250000,
+        'status' => SantriInvoice::STATUS_PAID,
+        'due_date' => now()->subDays(10),
+    ]);
+    SantriPayment::factory()->forInvoice($overdueInvoice)->create([
+        'amount' => 100000,
+        'paid_at' => now()->subMonth(),
+    ]);
+    SantriPayment::factory()->forInvoice($overdueInvoice)->create([
+        'amount' => 150000,
+        'paid_at' => now(),
     ]);
 
     ActivityLog::query()->create([
@@ -106,6 +130,10 @@ test('admin dashboard shows monitoring statistics', function () {
     $response->assertSee('Santri Baru Bulan Ini');
     $response->assertSee('Sebaran Santri per Kamar');
     $response->assertSee('Sebaran Santri per Angkatan');
+    $response->assertSee('Grafik Pemasukan Bulanan');
+    $response->assertSee('Tagihan Paling Menunggak');
+    $response->assertSee('Status Santri');
+    $response->assertSee('Pemasukan Bulan Ini');
     $response->assertSee('Login Terakhir User');
     $response->assertSee('Santri Terbaru');
     $response->assertSee($tenant->name);
@@ -124,8 +152,15 @@ test('admin dashboard shows monitoring statistics', function () {
     expect($response->viewData('newSantriThisMonth'))->toBe(1);
     expect($response->viewData('santriStats')['total_santri'])->toBe(3);
     expect($response->viewData('santriStats')['active_santri'])->toBe(1);
+    expect($response->viewData('santriStats')['leave_santri'])->toBe(0);
     expect($response->viewData('santriStats')['alumni_santri'])->toBe(1);
     expect($response->viewData('santriStats')['exited_santri'])->toBe(1);
+    expect((float) $response->viewData('financeStats')['paid_this_month'])->toBe(150000.0);
+    expect((float) $response->viewData('financeStats')['outstanding_amount'])->toBe(400000.0);
+    expect($response->viewData('financeStats')['overdue_invoices'])->toBe(1);
+    expect($response->viewData('monthlyRevenue'))->toHaveCount(6);
+    expect($response->viewData('topOverdueInvoices')->first()['invoice_number'])->toBe('INV-OVERDUE-001');
+    expect($response->viewData('topOverdueInvoices')->first()['outstanding_amount'])->toBe(400000.0);
     expect($response->viewData('tenantSummary')['title'])->toBe($tenant->name);
     expect($response->viewData('tenantSummary')['badge'])->toBe('Subscription Aktif');
     expect($response->viewData('roomDistribution')->first()['room_name'])->toBe('Asrama A1');

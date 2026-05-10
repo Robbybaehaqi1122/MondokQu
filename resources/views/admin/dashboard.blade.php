@@ -116,6 +116,177 @@
             </div>
         </div>
 
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar bg-green-lt text-green">
+                                    <i class="ti ti-cash fs-2"></i>
+                                </span>
+                                <div>
+                                    <div class="text-secondary small text-uppercase fw-bold">Pemasukan Bulan Ini</div>
+                                    <div class="h2 mb-1">Rp {{ number_format((float) $financeStats['paid_this_month'], 0, ',', '.') }}</div>
+                                    <div class="text-secondary small">Total pembayaran yang sudah tercatat.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar bg-warning-lt text-warning">
+                                    <i class="ti ti-file-invoice fs-2"></i>
+                                </span>
+                                <div>
+                                    <div class="text-secondary small text-uppercase fw-bold">Sisa Tagihan</div>
+                                    <div class="h2 mb-1">Rp {{ number_format((float) $financeStats['outstanding_amount'], 0, ',', '.') }}</div>
+                                    <div class="text-secondary small">Nominal yang belum lunas.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar bg-danger-lt text-danger">
+                                    <i class="ti ti-alert-triangle fs-2"></i>
+                                </span>
+                                <div>
+                                    <div class="text-secondary small text-uppercase fw-bold">Tagihan Menunggak</div>
+                                    <div class="h2 mb-1">{{ $financeStats['overdue_invoices'] }}</div>
+                                    <div class="text-secondary small">Tagihan lewat jatuh tempo.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="avatar bg-orange-lt text-orange">
+                                    <i class="ti ti-user-pause fs-2"></i>
+                                </span>
+                                <div>
+                                    <div class="text-secondary small text-uppercase fw-bold">Santri Non-Aktif</div>
+                                    <div class="h2 mb-1">{{ $santriStats['leave_santri'] + $santriStats['alumni_santri'] + $santriStats['exited_santri'] }}</div>
+                                    <div class="text-secondary small">Cuti, alumni, dan keluar.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title mb-1">Grafik Pemasukan Bulanan</h3>
+                        <div class="text-secondary small">Total pembayaran santri yang tercatat dalam enam bulan terakhir.</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-4">
+                        @foreach ($monthlyRevenue as $month)
+                            <div>
+                                <div class="d-flex align-items-center justify-content-between mb-2 gap-3">
+                                    <div class="fw-semibold">{{ $month['label'] }}</div>
+                                    <div class="text-secondary">Rp {{ number_format($month['total'], 0, ',', '.') }}</div>
+                                </div>
+                                <div class="progress progress-sm">
+                                    <div
+                                        class="progress-bar bg-green"
+                                        style="width: {{ $month['total'] > 0 ? max(6, $month['percentage']) : 0 }}%"
+                                        role="progressbar"
+                                        aria-valuenow="{{ $month['percentage'] }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                    ></div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title mb-1">Status Santri</h3>
+                        <div class="text-secondary small">Komposisi santri aktif dan non-aktif.</div>
+                    </div>
+                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex align-items-center justify-content-between">
+                        <span>Aktif</span>
+                        <span class="badge bg-success-lt text-success">{{ $santriStats['active_santri'] }}</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center justify-content-between">
+                        <span>Cuti</span>
+                        <span class="badge bg-warning-lt text-warning">{{ $santriStats['leave_santri'] }}</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center justify-content-between">
+                        <span>Alumni</span>
+                        <span class="badge bg-blue-lt text-blue">{{ $santriStats['alumni_santri'] }}</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center justify-content-between">
+                        <span>Keluar</span>
+                        <span class="badge bg-danger-lt text-danger">{{ $santriStats['exited_santri'] }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title mb-1">Tagihan Paling Menunggak</h3>
+                        <div class="text-secondary small">Prioritas penagihan berdasarkan sisa tagihan terbesar yang sudah lewat jatuh tempo.</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>No. Invoice</th>
+                                <th>Santri</th>
+                                <th>Jatuh Tempo</th>
+                                <th class="text-end">Sisa Tagihan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($topOverdueInvoices as $invoice)
+                                <tr>
+                                    <td class="fw-semibold">{{ $invoice['invoice_number'] }}</td>
+                                    <td>{{ $invoice['santri_name'] }}</td>
+                                    <td>{{ $invoice['due_date'] }}</td>
+                                    <td class="text-end fw-bold">Rp {{ number_format($invoice['outstanding_amount'], 0, ',', '.') }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-secondary">Belum ada tagihan menunggak.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="col-xl-8">
             <div class="card h-100">
                 <div class="card-header">
