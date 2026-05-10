@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SantriManagementController;
 use App\Http\Controllers\SantriPaymentController;
 use App\Http\Controllers\SubscriptionStatusController;
+use App\Http\Controllers\TenantImpersonationController;
 use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/subscription/expired', [SubscriptionStatusController::class, 'showExpired'])->name('subscription.expired');
+    Route::post('/impersonation/stop', [TenantImpersonationController::class, 'destroy'])->name('impersonation.stop');
 });
 
 // Role-based access routes

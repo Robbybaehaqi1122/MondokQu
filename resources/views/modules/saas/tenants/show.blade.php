@@ -110,6 +110,7 @@
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Status</th>
+                                <th class="w-1">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -120,10 +121,23 @@
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->getRoleNames()->implode(', ') ?: 'Tanpa role' }}</td>
                                     <td>{{ str($user->status)->headline() }}</td>
+                                    <td>
+                                        @if (! $user->isSuperAdmin() && $user->status === \App\Models\User::STATUS_ACTIVE)
+                                            <form method="POST" action="{{ route('saas.tenants.users.impersonate', [$tenant, $user]) }}">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-primary" onclick="return confirm('Login sebagai {{ $user->name }} untuk troubleshooting tenant ini?')">
+                                                    <i class="ti ti-login-2 me-1"></i>
+                                                    Login sebagai
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="text-secondary small">Tidak tersedia</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-secondary">Belum ada user yang terhubung ke tenant ini.</td>
+                                    <td colspan="6" class="text-secondary">Belum ada user yang terhubung ke tenant ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>

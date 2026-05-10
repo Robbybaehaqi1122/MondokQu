@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TenantImpersonationController;
 use App\Modules\Saas\Controllers\BillingNoteController;
 use App\Modules\Saas\Controllers\SaasDashboardController;
 use App\Modules\Saas\Controllers\SubscriptionHistoryController;
@@ -21,6 +22,8 @@ Route::middleware(['auth', 'password_change_required', 'verified', 'role:Superad
         ->name('saas.tenants.store');
     Route::get('/saas/tenants/{tenant}', [TenantManagementController::class, 'show'])
         ->name('saas.tenants.show');
+    Route::post('/saas/tenants/{tenant}/users/{user}/impersonate', [TenantImpersonationController::class, 'store'])
+        ->name('saas.tenants.users.impersonate');
     Route::patch('/saas/tenants/{tenant}/subscription', [TenantManagementController::class, 'updateSubscription'])
         ->name('saas.tenants.update-subscription');
     Route::delete('/saas/tenants/{tenant}', [TenantManagementController::class, 'destroy'])

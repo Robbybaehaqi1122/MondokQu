@@ -35,6 +35,25 @@
 
                 <div class="page-body">
                     <div class="container-xl">
+                        @if (session('impersonation.impersonator_id'))
+                            <div class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3" role="alert">
+                                <div>
+                                    <div class="fw-semibold">Mode Impersonation Aktif</div>
+                                    <div>
+                                        Anda sedang login sebagai {{ Auth::user()->name }} untuk tenant {{ session('impersonation.tenant_name') }}.
+                                        Sesi ini dimulai oleh {{ session('impersonation.impersonator_name') }}.
+                                    </div>
+                                </div>
+                                <form method="POST" action="{{ route('impersonation.stop') }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="ti ti-logout me-1"></i>
+                                        Kembali ke Superadmin
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+
                         @if (session('success') || session('error'))
                             <div class="toast-container position-fixed top-0 end-0 p-3 auth-toast-container" style="z-index: 1080;">
                                 <div class="toast auth-toast {{ session('error') ? 'auth-toast-danger' : 'auth-toast-success' }}" role="alert" aria-live="assertive" aria-atomic="true" data-login-toast>
