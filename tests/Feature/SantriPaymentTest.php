@@ -140,6 +140,31 @@ test('payment amount can not exceed invoice outstanding amount', function () {
     expect(SantriPayment::query()->where('santri_invoice_id', $invoice->id)->exists())->toBeFalse();
 });
 
+test('payment store rechecks outstanding amount inside a locked transaction', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 0,
+        'status' => SantriInvoice::STATUS_PENDING,
+    ]);
+
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 80000,
+    ]);
+
+    $response = $this->actingAs($admin)->post(route('santri.payments.payments.store', $invoice), [
+        'amount' => 30000,
+        'paid_at' => now()->format('Y-m-d H:i:s'),
+        'payment_method' => 'cash',
+        'paying_invoice_id' => $invoice->id,
+    ]);
+
+    $response->assertSessionHasErrors('amount', null, 'recordPayment');
+    expect(SantriPayment::query()->where('santri_invoice_id', $invoice->id)->count())->toBe(1);
+});
+
 test('admin can update an invoice before or after payment within paid amount rules', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo(['view pembayaran', 'update pembayaran']);
@@ -263,4 +288,32 @@ test('historical payment can be corrected and deleted with dedicated permission'
     expect(SantriPayment::query()->whereKey($payment->id)->exists())->toBeFalse();
     expect((float) $invoice->paid_amount)->toBe(0.0);
     expect($invoice->status)->toBe(SantriInvoice::STATUS_PENDING);
+});
+
+test('payment update rechecks invoice total inside a locked transaction', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'edit historical pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 0,
+        'status' => SantriInvoice::STATUS_PENDING,
+    ]);
+    $payment = SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 20000,
+    ]);
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 90000,
+    ]);
+
+    $response = $this->actingAs($admin)->patch(route('santri.payments.payments.update', $payment), [
+        'amount' => 30000,
+        'paid_at' => now()->format('Y-m-d H:i:s'),
+        'payment_method' => 'qris',
+        'editing_payment_id' => $payment->id,
+        'editing_payment_invoice_id' => $invoice->id,
+    ]);
+
+    $response->assertSessionHasErrors('amount', null, 'updatePayment');
+    expect((float) $payment->fresh()->amount)->toBe(20000.0);
 });

@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class SantriPaymentController extends Controller
@@ -277,24 +278,40 @@ class SantriPaymentController extends Controller
     {
         $validated = $request->validated();
         $currentUser = $request->user();
-        $invoice = SantriInvoice::query()
-            ->visibleTo($currentUser)
-            ->with('santri')
-            ->findOrFail($invoice->id);
 
-        $payment = SantriPayment::query()->create([
-            'tenant_id' => $invoice->tenant_id,
-            'santri_invoice_id' => $invoice->id,
-            'santri_id' => $invoice->santri_id,
-            'paid_at' => Carbon::parse($validated['paid_at']),
-            'amount' => $validated['amount'],
-            'payment_method' => $validated['payment_method'],
-            'reference_number' => $validated['reference_number'] ?? null,
-            'note' => $validated['note'] ?? null,
-            'recorded_by' => $currentUser?->id,
-        ]);
+        [$invoice, $payment] = DB::transaction(function () use ($currentUser, $invoice, $validated): array {
+            $lockedInvoice = SantriInvoice::query()
+                ->visibleTo($currentUser)
+                ->with('santri')
+                ->lockForUpdate()
+                ->findOrFail($invoice->id);
 
-        $invoice->refreshPaymentStatus();
+            $recordedTotal = (float) $lockedInvoice->payments()->sum('amount');
+            $maxAllowedAmount = max(0, (float) $lockedInvoice->amount - $recordedTotal);
+
+            if ((float) $validated['amount'] > $maxAllowedAmount) {
+                throw $this->paymentValidationException(
+                    'Nominal pembayaran melebihi sisa tagihan.',
+                    'recordPayment'
+                );
+            }
+
+            $payment = SantriPayment::query()->create([
+                'tenant_id' => $lockedInvoice->tenant_id,
+                'santri_invoice_id' => $lockedInvoice->id,
+                'santri_id' => $lockedInvoice->santri_id,
+                'paid_at' => Carbon::parse($validated['paid_at']),
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'reference_number' => $validated['reference_number'] ?? null,
+                'note' => $validated['note'] ?? null,
+                'recorded_by' => $currentUser?->id,
+            ]);
+
+            $lockedInvoice->refreshPaymentStatus();
+
+            return [$lockedInvoice->fresh(['santri']), $payment];
+        });
 
         $this->activityLogger->log(
             action: 'santri_payment_recorded',
@@ -325,20 +342,39 @@ class SantriPaymentController extends Controller
     {
         $validated = $request->validated();
         $currentUser = $request->user();
-        $payment = SantriPayment::query()
-            ->visibleTo($currentUser)
-            ->with(['invoice.santri'])
-            ->findOrFail($payment->id);
-        $previousValues = $payment->only([
-            'paid_at',
-            'amount',
-            'payment_method',
-            'reference_number',
-            'note',
-        ]);
 
-        DB::transaction(function () use ($payment, $validated): void {
-            $payment->forceFill([
+        [$payment, $invoice, $previousValues] = DB::transaction(function () use ($currentUser, $payment, $validated): array {
+            $lockedPayment = SantriPayment::query()
+                ->visibleTo($currentUser)
+                ->lockForUpdate()
+                ->findOrFail($payment->id);
+
+            $lockedInvoice = SantriInvoice::query()
+                ->visibleTo($currentUser)
+                ->with('santri')
+                ->lockForUpdate()
+                ->findOrFail($lockedPayment->santri_invoice_id);
+
+            $previousValues = $lockedPayment->only([
+                'paid_at',
+                'amount',
+                'payment_method',
+                'reference_number',
+                'note',
+            ]);
+            $otherPaymentTotal = (float) $lockedInvoice->payments()
+                ->whereKeyNot($lockedPayment->id)
+                ->sum('amount');
+            $maxAllowedAmount = max(0, (float) $lockedInvoice->amount - $otherPaymentTotal);
+
+            if ((float) $validated['amount'] > $maxAllowedAmount) {
+                throw $this->paymentValidationException(
+                    'Nominal koreksi melebihi sisa tagihan setelah pembayaran lain.',
+                    'updatePayment'
+                );
+            }
+
+            $lockedPayment->forceFill([
                 'paid_at' => Carbon::parse($validated['paid_at']),
                 'amount' => $validated['amount'],
                 'payment_method' => $validated['payment_method'],
@@ -346,10 +382,10 @@ class SantriPaymentController extends Controller
                 'note' => $validated['note'] ?? null,
             ])->save();
 
-            $payment->invoice?->refreshPaymentStatus();
-        });
+            $lockedInvoice->refreshPaymentStatus();
 
-        $invoice = $payment->invoice?->fresh();
+            return [$lockedPayment->fresh(['invoice.santri']), $lockedInvoice->fresh(), $previousValues];
+        });
 
         $this->activityLogger->log(
             action: 'santri_payment_corrected',
@@ -407,9 +443,20 @@ class SantriPaymentController extends Controller
             userAgent: $request->userAgent()
         );
 
-        DB::transaction(function () use ($payment, $invoice): void {
-            $payment->delete();
-            $invoice?->refreshPaymentStatus();
+        DB::transaction(function () use ($currentUser, $invoice, $payment): void {
+            $lockedInvoice = $invoice
+                ? SantriInvoice::query()
+                    ->visibleTo($currentUser)
+                    ->lockForUpdate()
+                    ->findOrFail($invoice->id)
+                : null;
+            $lockedPayment = SantriPayment::query()
+                ->visibleTo($currentUser)
+                ->lockForUpdate()
+                ->findOrFail($payment->id);
+
+            $lockedPayment->delete();
+            $lockedInvoice?->refreshPaymentStatus();
         });
 
         return redirect()
@@ -522,5 +569,15 @@ class SantriPaymentController extends Controller
             ['value' => SantriInvoice::STATUS_PAID, 'label' => 'Lunas'],
             ['value' => 'overdue', 'label' => 'Tunggakan'],
         ];
+    }
+
+    protected function paymentValidationException(string $message, string $errorBag): ValidationException
+    {
+        $exception = ValidationException::withMessages([
+            'amount' => $message,
+        ]);
+        $exception->errorBag = $errorBag;
+
+        return $exception;
     }
 }
