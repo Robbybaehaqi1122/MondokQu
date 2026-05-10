@@ -196,6 +196,26 @@ test('santri list is scoped to the current tenant', function () {
     $response->assertDontSee('Santri Tenant Lain');
 });
 
+test('santri model queries are scoped to the current tenant by default', function () {
+    $pengurus = tenantUser('Pengurus');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    Santri::factory()->forTenant($pengurus->tenant)->create([
+        'full_name' => 'Santri Query Tenant Sendiri',
+    ]);
+
+    Santri::factory()->forTenant($otherTenant)->create([
+        'full_name' => 'Santri Query Tenant Lain',
+    ]);
+
+    $this->actingAs($pengurus);
+
+    expect(Santri::query()->pluck('full_name')->all())
+        ->toBe(['Santri Query Tenant Sendiri']);
+
+    expect(Santri::query()->withoutTenantScope()->count())->toBe(2);
+});
+
 test('user can not view santri detail from another tenant', function () {
     $pengurus = tenantUser('Pengurus');
     $pengurus->givePermissionTo('view santri');
@@ -206,7 +226,7 @@ test('user can not view santri detail from another tenant', function () {
         ->actingAs($pengurus)
         ->get(route('santri.show', $otherSantri));
 
-    $response->assertForbidden();
+    $response->assertNotFound();
 });
 
 test('nis can be reused by different tenants but remains unique within one tenant', function () {
@@ -245,7 +265,7 @@ test('nis can be reused by different tenants but remains unique within one tenan
 
     $response->assertRedirect(route('santri.index', absolute: false));
     $response->assertSessionHasErrors(['nis'], null, 'createSantri');
-    expect(Santri::query()->where('nis', 'NIS-SAMA')->count())->toBe(2);
+    expect(Santri::query()->withoutTenantScope()->where('nis', 'NIS-SAMA')->count())->toBe(2);
 });
 
 test('user with permission can create santri', function () {

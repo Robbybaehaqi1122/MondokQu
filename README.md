@@ -115,6 +115,61 @@ php artisan test tests/Feature/Saas/TenantManagementTest.php
 
 Test memakai SQLite in-memory sesuai `phpunit.xml`, jadi tidak menyentuh database lokal `.env`.
 
+## Catatan Internal Teknis
+
+### Multi-tenancy Global Scope
+
+Model yang memiliki data milik tenant memakai trait `App\Models\Concerns\BelongsToTenant`. Trait ini memasang global scope tenant secara otomatis:
+
+- User tenant biasa hanya melihat data dengan `tenant_id` miliknya.
+- Superadmin tetap bisa melihat data lintas tenant.
+- Query tanpa user login tidak mengembalikan data tenant.
+- Jika alur internal benar-benar perlu lintas tenant, gunakan `withoutTenantScope()` secara eksplisit.
+
+Contoh:
+
+```php
+Santri::query()->get(); // otomatis tenant aktif
+Santri::query()->withoutTenantScope()->get(); // hanya untuk alur tepercaya
+```
+
+Catatan: validasi database seperti `Rule::unique()` tetap perlu filter `tenant_id` eksplisit, karena rule tersebut memakai database query builder, bukan Eloquent global scope.
+
+### Lifecycle Subscription Otomatis
+
+Command berikut menyelaraskan status tenant yang sudah melewati masa akses:
+
+```bash
+php artisan saas:expire-subscriptions
+```
+
+Perilaku command:
+
+- Tenant `trial` dengan `trial_ends_at` yang sudah lewat menjadi `expired`.
+- Tenant `active` dengan `subscription_ends_at` yang sudah lewat masuk `grace` sesuai `SAAS_GRACE_DAYS`.
+- Tenant `grace` dengan `grace_ends_at` yang sudah lewat menjadi `expired`.
+- Setiap perubahan dicatat ke subscription history dan activity log.
+
+Scheduler Laravel sudah mendaftarkan command ini setiap hari pukul `00:30` di `routes/console.php`. Agar scheduler berjalan di server, pasang cron berikut:
+
+```cron
+* * * * * cd /path/to/mondok-qu && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Ganti `/path/to/mondok-qu` dengan path aplikasi di server.
+
+### Validasi Nomor Telepon Indonesia
+
+Validasi nomor telepon Indonesia dipusatkan di rule `App\Rules\IndonesiaPhoneNumber`. Gunakan rule ini untuk field yang harus menerima nomor Indonesia dengan awalan `0`, `62`, atau `+62`.
+
+Contoh:
+
+```php
+'guardian_phone_number' => ['nullable', 'string', 'max:20', new IndonesiaPhoneNumber],
+```
+
+Jika format nomor berubah, ubah regex di rule tersebut saja.
+
 ## Catatan `.env` Penting
 
 Nilai lokal boleh berbeda, tapi beberapa key ini penting untuk Mondok Qu:

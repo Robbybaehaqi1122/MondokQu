@@ -3,14 +3,13 @@
 namespace App\Http\Requests\Santri;
 
 use App\Models\Santri;
+use App\Rules\IndonesiaPhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 
 class UpdateSantriRequest extends FormRequest
 {
-    protected const INDONESIAN_PHONE_REGEX = '/^(?:\+62|62|0)[0-9]{8,15}$/';
-
     /**
      * The named error bag for validation errors.
      *
@@ -56,8 +55,8 @@ class UpdateSantriRequest extends FormRequest
             'guardian_name' => ['nullable', 'string', 'max:255', 'required_with:guardian_phone_number'],
             'father_name' => ['required', 'string', 'max:255'],
             'mother_name' => ['required', 'string', 'max:255'],
-            'guardian_phone_number' => ['nullable', 'string', 'max:20', 'regex:'.self::INDONESIAN_PHONE_REGEX, 'required_with:guardian_name'],
-            'emergency_contact' => ['required', 'string', 'max:20', 'regex:'.self::INDONESIAN_PHONE_REGEX],
+            'guardian_phone_number' => ['nullable', 'string', 'max:20', new IndonesiaPhoneNumber('No. HP wali / penanggung jawab harus berupa nomor yang valid, diawali 0, 62, atau +62 dan hanya berisi angka setelah kode awal.'), 'required_with:guardian_name'],
+            'emergency_contact' => ['required', 'string', 'max:20', new IndonesiaPhoneNumber('Kontak darurat harus berupa nomor yang valid, diawali 0, 62, atau +62 dan hanya berisi angka setelah kode awal.')],
             'entry_date' => ['required', 'date', 'after_or_equal:birth_date', 'before_or_equal:today'],
             'entry_year' => ['required', 'integer', 'digits:4', 'min:1900', 'max:'.now()->year],
             'room_name' => ['required', 'string', 'max:255'],
@@ -98,10 +97,8 @@ class UpdateSantriRequest extends FormRequest
             'mother_name.required' => 'Nama ibu wajib diisi.',
             'guardian_phone_number.required_with' => 'No. HP wali / penanggung jawab wajib diisi jika nama wali / penanggung jawab diisi.',
             'guardian_phone_number.max' => 'No. HP wali maksimal 20 karakter.',
-            'guardian_phone_number.regex' => 'No. HP wali / penanggung jawab harus berupa nomor yang valid, diawali 0, 62, atau +62 dan hanya berisi angka setelah kode awal.',
             'emergency_contact.required' => 'Kontak darurat wajib diisi.',
             'emergency_contact.max' => 'Kontak darurat maksimal 20 karakter.',
-            'emergency_contact.regex' => 'Kontak darurat harus berupa nomor yang valid, diawali 0, 62, atau +62 dan hanya berisi angka setelah kode awal.',
             'entry_date.required' => 'Tanggal masuk wajib diisi.',
             'entry_date.after_or_equal' => 'Tanggal masuk tidak boleh lebih awal dari tanggal lahir.',
             'entry_date.before_or_equal' => 'Tanggal masuk tidak boleh melebihi hari ini.',

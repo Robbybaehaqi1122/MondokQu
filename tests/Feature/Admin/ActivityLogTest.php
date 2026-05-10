@@ -74,7 +74,7 @@ test('creating a user writes an activity log entry', function () {
         'password_confirmation' => 'password',
     ]);
 
-    $log = ActivityLog::query()->latest()->first();
+    $log = ActivityLog::query()->withoutTenantScope()->latest()->first();
 
     expect($log)->not->toBeNull();
     expect($log->action)->toBe('user_created');
@@ -158,7 +158,7 @@ test('failed login writes an activity log entry', function () {
         'password' => 'salah-total',
     ]);
 
-    $log = ActivityLog::query()->latest()->first();
+    $log = ActivityLog::query()->withoutTenantScope()->latest()->first();
 
     expect($log)->not->toBeNull();
     expect($log->action)->toBe('login_failed');
@@ -172,7 +172,7 @@ test('failed login for tenant user writes a tenant scoped activity log entry', f
         'password' => 'salah-total',
     ]);
 
-    $log = ActivityLog::query()->latest()->first();
+    $log = ActivityLog::query()->withoutTenantScope()->latest()->first();
 
     expect($log)->not->toBeNull();
     expect($log->action)->toBe('login_failed');

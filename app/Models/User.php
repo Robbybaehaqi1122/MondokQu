@@ -17,6 +17,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
     /** @use HasFactory<UserFactory> */
     use BelongsToTenant, HasFactory, HasRoles, MustVerifyEmail, Notifiable;
 
+    /**
+     * User queries must remain available during authentication and superadmin operations.
+     */
+    protected bool $usesTenantGlobalScope = false;
+
     public const STATUS_ACTIVE = 'active';
 
     public const STATUS_INACTIVE = 'inactive';

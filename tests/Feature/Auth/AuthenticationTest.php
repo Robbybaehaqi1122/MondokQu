@@ -119,7 +119,7 @@ test('users can not authenticate with invalid password', function () {
     ]);
 
     $this->assertGuest();
-    $log = ActivityLog::query()->latest()->first();
+    $log = ActivityLog::query()->withoutTenantScope()->latest()->first();
 
     expect($log)->not->toBeNull();
     expect($log->action)->toBe('login_failed');
@@ -140,7 +140,7 @@ test('inactive users can not authenticate', function () {
     $this->assertGuest();
     $response->assertRedirect('/login');
     $response->assertSessionHasErrors('login');
-    expect(ActivityLog::query()->latest()->first()->properties['reason'])->toBe('account_inactive');
+    expect(ActivityLog::query()->withoutTenantScope()->latest()->first()->properties['reason'])->toBe('account_inactive');
 });
 
 test('suspended users can not authenticate', function () {
@@ -156,7 +156,7 @@ test('suspended users can not authenticate', function () {
     $this->assertGuest();
     $response->assertRedirect('/login');
     $response->assertSessionHasErrors('login');
-    expect(ActivityLog::query()->latest()->first()->properties['reason'])->toBe('account_suspended');
+    expect(ActivityLog::query()->withoutTenantScope()->latest()->first()->properties['reason'])->toBe('account_suspended');
 });
 
 test('users can logout', function () {

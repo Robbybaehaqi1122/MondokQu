@@ -6,13 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
+use App\Modules\Saas\Actions\DeleteTenantAction;
 use App\Modules\Saas\Actions\UpdateTenantSubscriptionAction;
 use App\Modules\Saas\Requests\DeleteTenantRequest;
 use App\Modules\Saas\Requests\StoreTenantRequest;
 use App\Modules\Saas\Requests\UpdateTenantSubscriptionRequest;
 use App\Services\ActivityLogger;
-use App\Services\SantriPhotoUploader;
-use App\Services\UserAvatarUploader;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,9 +22,7 @@ class TenantManagementController extends Controller
 {
     public function __construct(
         protected ActivityLogger $activityLogger,
-        protected SendEmailVerificationNotificationAction $sendVerificationNotification,
-        protected SantriPhotoUploader $santriPhotoUploader,
-        protected UserAvatarUploader $userAvatarUploader
+        protected SendEmailVerificationNotificationAction $sendVerificationNotification
     ) {}
 
     /**
@@ -247,90 +244,28 @@ class TenantManagementController extends Controller
     /**
      * Permanently delete a tenant and its tenant-owned operational data.
      */
-    public function destroy(DeleteTenantRequest $request, Tenant $tenant): RedirectResponse
-    {
+    public function destroy(
+        DeleteTenantRequest $request,
+        Tenant $tenant,
+        DeleteTenantAction $deleteTenant
+    ): RedirectResponse {
         abort_unless($request->user()?->isSuperAdmin(), 403);
 
-        if ($tenant->users()->whereKey($request->user()->id)->exists()) {
-            return back()
-                ->with('error', 'Tenant ini memuat akun yang sedang Anda gunakan, sehingga tidak bisa dihapus permanen.');
-        }
-
-        $snapshot = [
-            'tenant_id' => $tenant->id,
-            'tenant_name' => $tenant->name,
-            'tenant_slug' => $tenant->slug,
-            'subscription_status' => $tenant->subscription_status,
-            'users_count' => $tenant->users()->count(),
-            'santris_count' => $tenant->santris()->count(),
-            'activity_logs_count' => $tenant->activityLogs()->count(),
-            'billing_notes_count' => $tenant->billingNotes()->count(),
-            'subscription_histories_count' => $tenant->subscriptionHistories()->count(),
-            'delete_reason' => $request->validated('delete_reason'),
-        ];
-
-        $santriPhotoPaths = $tenant->santris()
-            ->whereNotNull('photo_path')
-            ->pluck('photo_path')
-            ->all();
-        $userAvatarPaths = $tenant->users()
-            ->whereNotNull('avatar_path')
-            ->pluck('avatar_path')
-            ->all();
-
-        $userIds = $tenant->users()->pluck('id')->all();
-        $userEmails = $tenant->users()
-            ->whereNotNull('email')
-            ->pluck('email')
-            ->all();
-
-        DB::transaction(function () use ($tenant, $userEmails, $userIds): void {
-            DB::table('sessions')
-                ->when($userIds !== [], fn ($query) => $query->whereIn('user_id', $userIds))
-                ->when($userIds === [], fn ($query) => $query->whereRaw('1 = 0'))
-                ->delete();
-
-            DB::table('password_reset_tokens')
-                ->when($userEmails !== [], fn ($query) => $query->whereIn('email', $userEmails))
-                ->when($userEmails === [], fn ($query) => $query->whereRaw('1 = 0'))
-                ->delete();
-
-            $tenant->forceFill(['owner_id' => null])->save();
-
-            $tenant->activityLogs()->delete();
-            $tenant->billingNotes()->delete();
-            $tenant->subscriptionHistories()->delete();
-            $tenant->santris()->delete();
-
-            User::query()
-                ->whereIn('id', $userIds)
-                ->get()
-                ->each
-                ->delete();
-
-            $tenant->delete();
-        });
-
-        foreach ($santriPhotoPaths as $path) {
-            $this->santriPhotoUploader->deleteIfManaged($path);
-        }
-
-        foreach ($userAvatarPaths as $path) {
-            $this->userAvatarUploader->deleteIfManaged($path);
-        }
-
-        $this->activityLogger->log(
-            action: 'tenant_deleted_permanently',
+        $result = $deleteTenant->handle(
+            tenant: $tenant,
             actor: $request->user(),
-            target: $tenant,
-            description: 'Tenant dihapus permanen dari panel SaaS.',
-            properties: $snapshot,
+            deleteReason: $request->validated('delete_reason'),
             ipAddress: $request->ip(),
             userAgent: $request->userAgent()
         );
 
+        if (! $result['deleted']) {
+            return back()
+                ->with('error', $result['message']);
+        }
+
         return redirect()
             ->route('saas.tenants.index')
-            ->with('success', 'Tenant '.$snapshot['tenant_name'].' berhasil dihapus permanen.');
+            ->with('success', $result['message']);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Tenant;
 use App\Models\TenantBillingNote;
 use App\Models\TenantSubscriptionHistory;
 use App\Models\User;
+use App\Modules\Saas\Actions\DeleteTenantAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
@@ -667,6 +668,45 @@ test('superadmin can permanently delete a tenant with exact slug confirmation', 
     expect(Tenant::query()->whereKey($otherTenant->id)->exists())->toBeTrue();
     expect(User::query()->whereKey($otherUser->id)->exists())->toBeTrue();
     expect(Santri::query()->whereKey($otherSantri->id)->exists())->toBeTrue();
+});
+
+test('delete tenant action can run without an authenticated request context', function () {
+    $superadmin = User::factory()->create(['name' => 'CLI Deleter']);
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->activeSubscription()->create([
+        'name' => 'Pondok CLI Delete',
+        'slug' => 'pondok-cli-delete',
+    ]);
+    $tenantUser = User::factory()->forTenant($tenant)->create();
+    $santri = Santri::factory()->forTenant($tenant)->create([
+        'created_by' => $tenantUser->id,
+    ]);
+
+    ActivityLog::query()->create([
+        'tenant_id' => $tenant->id,
+        'actor_id' => $tenantUser->id,
+        'actor_name' => $tenantUser->name,
+        'action' => 'tenant_user_activity',
+        'description' => 'Aktivitas tenant dari action delete.',
+        'target_name' => 'Tenant action delete test',
+        'ip_address' => '127.0.0.1',
+    ]);
+
+    $result = app(DeleteTenantAction::class)->handle(
+        tenant: $tenant,
+        actor: $superadmin,
+        deleteReason: 'Dihapus dari command line.',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Pest CLI'
+    );
+
+    expect($result['deleted'])->toBeTrue();
+    expect(Tenant::query()->whereKey($tenant->id)->exists())->toBeFalse();
+    expect(User::query()->whereKey($tenantUser->id)->exists())->toBeFalse();
+    expect(Santri::query()->withoutTenantScope()->whereKey($santri->id)->exists())->toBeFalse();
+    expect(ActivityLog::query()->withoutTenantScope()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
+    expect(ActivityLog::query()->withoutTenantScope()->where('action', 'tenant_deleted_permanently')->exists())->toBeTrue();
 });
 
 test('tenant permanent delete requires exact slug confirmation', function () {

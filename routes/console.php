@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schedule;
 use Spatie\Permission\Models\Role;
 
 Artisan::command('inspire', function () {
@@ -43,3 +44,8 @@ Artisan::command('app:create-admin', function () {
 
     return 0;
 })->purpose('Membuat akun superadmin internal');
+
+Schedule::command('saas:expire-subscriptions')
+    ->dailyAt('00:30')
+    ->withoutOverlapping()
+    ->onOneServer();
