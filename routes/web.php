@@ -11,6 +11,7 @@ use App\Http\Controllers\SantriManagementController;
 use App\Http\Controllers\SantriPaymentController;
 use App\Http\Controllers\SubscriptionStatusController;
 use App\Http\Controllers\TenantImpersonationController;
+use App\Http\Controllers\WaliSantriDashboardController;
 use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::patch('/admin/users/{user}', [UserManagementController::class, 'updateProfile'])->name('admin.users.update');
     Route::patch('/admin/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('admin.users.update-role');
     Route::patch('/admin/users/{user}/status', [UserManagementController::class, 'updateStatus'])->name('admin.users.update-status');
+    Route::patch('/admin/users/{user}/guardian-santri', [UserManagementController::class, 'updateGuardianSantri'])->name('admin.users.update-guardian-santri');
     Route::post('/admin/users/{user}/email/resend-verification', [UserManagementController::class, 'resendVerification'])->name('admin.users.resend-verification');
     Route::patch('/admin/users/{user}/email/verify', [UserManagementController::class, 'verifyEmail'])->name('admin.users.verify-email');
     Route::patch('/admin/users/{user}/password', [UserManagementController::class, 'updatePassword'])->name('admin.users.update-password');
@@ -151,8 +153,8 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/bendahara/laporan', fn () => view('bendahara.laporan'))->name('bendahara.laporan');
 });
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Wali Santri'])->group(function () {
-    Route::get('/wali-santri', fn () => view('dashboard'))->name('wali-santri.dashboard');
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Wali Santri|view portal wali'])->group(function () {
+    Route::get('/wali-santri', [WaliSantriDashboardController::class, 'index'])->name('wali-santri.dashboard');
 });
 
 require base_path('app/Modules/Auth/Routes/web.php');

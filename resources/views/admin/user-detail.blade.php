@@ -26,6 +26,9 @@
         $isVerified = $userDetail->hasVerifiedEmail();
         $isActive = $userDetail->status === \App\Models\User::STATUS_ACTIVE;
         $statusLabel = $statusLabels[$userDetail->status] ?? ucfirst($userDetail->status);
+        $selectedGuardianSantriIds = collect(old('santri_ids', $linkedGuardianSantriIds ?? []))
+            ->map(fn ($santriId) => (int) $santriId)
+            ->all();
     @endphp
 
     <x-slot name="header">
@@ -342,6 +345,91 @@
                 </div>
             </div>
         </div>
+
+        @if ($userDetail->hasRole('Wali Santri'))
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">Relasi Wali Santri</h3>
+                            <div class="text-secondary small mt-1">Tautkan akun wali dengan data santri dalam tenant yang sama.</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if ($canManageTargetUser)
+                            <form method="POST" action="{{ route('admin.users.update-guardian-santri', $userDetail) }}">
+                                @csrf
+                                @method('PATCH')
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="guardian_relationship" class="form-label">Hubungan</label>
+                                        <input
+                                            id="guardian_relationship"
+                                            name="relationship"
+                                            type="text"
+                                            class="form-control @if($errors->guardianSantri->has('relationship')) is-invalid @endif"
+                                            value="{{ old('relationship', $guardianRelationship ?: 'Wali') }}"
+                                            placeholder="Ayah, Ibu, atau Wali"
+                                        >
+                                        @if ($errors->guardianSantri->has('relationship'))
+                                            <div class="invalid-feedback">{{ $errors->guardianSantri->first('relationship') }}</div>
+                                        @endif
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">Santri Terhubung</label>
+                                        @if ($errors->guardianSantri->has('santri_ids'))
+                                            <div class="alert alert-danger py-2 mb-2">{{ $errors->guardianSantri->first('santri_ids') }}</div>
+                                        @endif
+
+                                        <div class="list-group list-group-flush border rounded">
+                                            @forelse ($guardianSantriOptions as $santriOption)
+                                                <label class="list-group-item d-flex align-items-start gap-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        name="santri_ids[]"
+                                                        value="{{ $santriOption->id }}"
+                                                        class="form-check-input mt-1"
+                                                        @checked(in_array((int) $santriOption->id, $selectedGuardianSantriIds, true))
+                                                    >
+                                                    <span class="flex-fill">
+                                                        <span class="fw-semibold d-block">{{ $santriOption->full_name }}</span>
+                                                        <span class="text-secondary small">
+                                                            NIS {{ $santriOption->nis }} · {{ $santriOption->room_name ?: 'Kamar belum diatur' }} · {{ $santriOption->statusLabel() }}
+                                                        </span>
+                                                    </span>
+                                                </label>
+                                            @empty
+                                                <div class="list-group-item text-secondary">Belum ada data santri pada tenant ini.</div>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ti ti-device-floppy me-1"></i>
+                                        Simpan Relasi
+                                    </button>
+                                </div>
+                            </form>
+                        @else
+                            @forelse ($userDetail->guardianSantris as $linkedSantri)
+                                <div class="d-flex flex-column flex-md-row justify-content-md-between gap-1 mb-2">
+                                    <div>
+                                        <div class="fw-semibold">{{ $linkedSantri->full_name }}</div>
+                                        <div class="text-secondary small">NIS {{ $linkedSantri->nis }} · {{ $linkedSantri->room_name ?: 'Kamar belum diatur' }}</div>
+                                    </div>
+                                    <span class="badge bg-indigo-lt text-indigo align-self-start">{{ $linkedSantri->pivot?->relationship ?: 'Wali' }}</span>
+                                </div>
+                            @empty
+                                <div class="text-secondary">Belum ada santri yang terhubung dengan akun wali ini.</div>
+                            @endforelse
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="col-12">
             <div class="card">

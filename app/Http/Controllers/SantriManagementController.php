@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Santri\StoreSantriRequest;
 use App\Http\Requests\Santri\UpdateSantriRequest;
 use App\Models\Santri;
+use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\SantriPhotoUploader;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -36,11 +38,18 @@ class SantriManagementController extends Controller
         $baseQuery = Santri::query()->visibleTo($currentUser);
 
         $santris = (clone $baseQuery)
-            ->with('creator')
+            ->with(['creator', 'guardians'])
             ->tap(fn (Builder $builder) => $this->applySantriFilters($builder, $query, $selectedStatus, $selectedGender))
             ->orderBy('full_name')
             ->paginate(10)
             ->withQueryString();
+        $tenantIds = $santris->getCollection()
+            ->pluck('tenant_id')
+            ->push($currentUser?->tenant_id)
+            ->filter()
+            ->unique()
+            ->values();
+        $guardianUserOptionsByTenant = $this->guardianUserOptionsByTenant($currentUser, $tenantIds);
 
         return view('santri.index', [
             'allSantriCount' => (clone $baseQuery)->count(),
@@ -51,6 +60,7 @@ class SantriManagementController extends Controller
             ],
             'genders' => $this->genderOptions(),
             'canCreateSantri' => $currentUser?->can('create', Santri::class) ?? false,
+            'guardianUserOptionsByTenant' => $guardianUserOptionsByTenant,
             'statuses' => $this->statusOptions(),
             'santris' => $santris,
         ]);
@@ -85,6 +95,7 @@ class SantriManagementController extends Controller
                 'Nama Ibu',
                 'Nama Wali',
                 'Nomor HP Wali',
+                'Akun Wali Portal',
                 'Kontak Darurat',
                 'Tanggal Masuk',
                 'Angkatan',
@@ -94,6 +105,7 @@ class SantriManagementController extends Controller
 
             Santri::query()
                 ->visibleTo($currentUser)
+                ->with('guardians')
                 ->tap(fn (Builder $builder) => $this->applySantriFilters($builder, $query, $selectedStatus, $selectedGender))
                 ->orderBy('full_name')
                 ->chunk(500, function (Collection $santris) use ($handle): void {
@@ -110,6 +122,7 @@ class SantriManagementController extends Controller
                             $santri->mother_name,
                             $santri->guardian_name,
                             $santri->guardian_phone_number,
+                            $santri->guardians->pluck('name')->implode('; '),
                             $santri->emergency_contact,
                             $santri->entry_date?->toDateString(),
                             $santri->entry_year,
@@ -132,7 +145,7 @@ class SantriManagementController extends Controller
     {
         $this->authorize('view', $santri);
 
-        $santri->load('creator');
+        $santri->load(['creator', 'guardians']);
 
         return view('santri.show', [
             'canDeleteSantri' => request()->user()?->can('delete', $santri) ?? false,
@@ -148,6 +161,7 @@ class SantriManagementController extends Controller
         $this->authorize('create', Santri::class);
 
         $validated = $request->validated();
+        $guardianUserIds = $this->resolveGuardianUserIds($request, (int) $request->user()?->tenant_id, 'createSantri');
 
         $santri = Santri::query()->create([
             'tenant_id' => $request->user()?->tenant_id,
@@ -170,6 +184,7 @@ class SantriManagementController extends Controller
             'photo_path' => $this->santriPhotoUploader->store($request->file('photo')),
             'created_by' => $request->user()?->id,
         ]);
+        $this->syncGuardianUsers($santri, $guardianUserIds);
 
         $this->activityLogger->log(
             action: 'santri_created',
@@ -181,6 +196,7 @@ class SantriManagementController extends Controller
                 'status' => $santri->status,
                 'room_name' => $santri->room_name,
                 'entry_year' => $santri->entry_year,
+                'guardian_user_ids' => $guardianUserIds->all(),
             ],
             ipAddress: $request->ip(),
             userAgent: $request->userAgent()
@@ -199,6 +215,7 @@ class SantriManagementController extends Controller
         $this->authorize('update', $santri);
 
         $validated = $request->validated();
+        $guardianUserIds = $this->resolveGuardianUserIds($request, (int) $santri->tenant_id, 'updateSantri');
         $previousValues = $santri->only([
             'nis',
             'full_name',
@@ -218,6 +235,11 @@ class SantriManagementController extends Controller
             'status',
             'photo_path',
         ]);
+        $previousGuardianUserIds = $santri->guardians()
+            ->pluck('users.id')
+            ->map(fn ($userId) => (int) $userId)
+            ->values()
+            ->all();
 
         if ($request->boolean('delete_photo') && ! $request->file('photo')) {
             $this->santriPhotoUploader->deleteIfManaged($santri->photo_path);
@@ -245,6 +267,7 @@ class SantriManagementController extends Controller
             'status' => $validated['status'],
             'photo_path' => $photoPath,
         ]);
+        $this->syncGuardianUsers($santri, $guardianUserIds);
 
         $this->activityLogger->log(
             action: 'santri_updated',
@@ -272,6 +295,10 @@ class SantriManagementController extends Controller
                     'status',
                     'photo_path',
                 ]),
+                'guardian_user_ids' => [
+                    'before' => $previousGuardianUserIds,
+                    'after' => $guardianUserIds->all(),
+                ],
             ],
             ipAddress: $request->ip(),
             userAgent: $request->userAgent()
@@ -362,10 +389,100 @@ class SantriManagementController extends Controller
                         ->orWhere('guardian_phone_number', 'like', "%{$query}%")
                         ->orWhere('father_name', 'like', "%{$query}%")
                         ->orWhere('mother_name', 'like', "%{$query}%")
-                        ->orWhere('room_name', 'like', "%{$query}%");
+                        ->orWhere('room_name', 'like', "%{$query}%")
+                        ->orWhereHas('guardians', function ($guardianQuery) use ($query) {
+                            $guardianQuery
+                                ->where('name', 'like', "%{$query}%")
+                                ->orWhere('username', 'like', "%{$query}%")
+                                ->orWhere('email', 'like', "%{$query}%");
+                        });
                 });
             })
             ->when($selectedStatus !== '', fn ($builder) => $builder->where('status', $selectedStatus))
             ->when($selectedGender !== '', fn ($builder) => $builder->where('gender', $selectedGender));
+    }
+
+    /**
+     * Build selectable wali portal users grouped by tenant.
+     */
+    protected function guardianUserOptionsByTenant(?User $currentUser, Collection $tenantIds): Collection
+    {
+        if (! $currentUser || $tenantIds->isEmpty()) {
+            return collect();
+        }
+
+        return User::query()
+            ->visibleTo($currentUser)
+            ->whereIn('tenant_id', $tenantIds)
+            ->whereHas('roles', fn ($query) => $query->where('name', 'Wali Santri'))
+            ->orderBy('name')
+            ->get(['id', 'tenant_id', 'name', 'username', 'email'])
+            ->groupBy('tenant_id');
+    }
+
+    /**
+     * Resolve and validate wali portal users from the santri form.
+     */
+    protected function resolveGuardianUserIds(Request $request, int $tenantId, string $errorBag): Collection
+    {
+        $requestedUserIds = collect($request->input('guardian_user_ids', []))
+            ->filter(fn ($userId) => $userId !== null && $userId !== '')
+            ->map(fn ($userId) => (int) $userId)
+            ->unique()
+            ->values();
+
+        if ($requestedUserIds->isEmpty()) {
+            return collect();
+        }
+
+        $validUserIds = User::query()
+            ->visibleTo($request->user())
+            ->where('tenant_id', $tenantId)
+            ->whereIn('id', $requestedUserIds)
+            ->whereHas('roles', fn ($query) => $query->where('name', 'Wali Santri'))
+            ->pluck('id')
+            ->map(fn ($userId) => (int) $userId)
+            ->values();
+
+        if ($validUserIds->count() !== $requestedUserIds->count()) {
+            throw $this->guardianUserValidationException(
+                'Pilih akun wali santri dari tenant pondok yang sama.',
+                $errorBag
+            );
+        }
+
+        return $validUserIds;
+    }
+
+    /**
+     * Sync wali portal users to the selected santri.
+     */
+    protected function syncGuardianUsers(Santri $santri, Collection $guardianUserIds): void
+    {
+        $existingRelationships = $santri->guardianLinks()
+            ->pluck('relationship', 'user_id');
+        $existingPrimaryFlags = $santri->guardianLinks()
+            ->pluck('is_primary', 'user_id');
+        $syncPayload = $guardianUserIds
+            ->mapWithKeys(fn (int $userId) => [
+                $userId => [
+                    'tenant_id' => $santri->tenant_id,
+                    'relationship' => $existingRelationships->get($userId) ?: 'Wali',
+                    'is_primary' => (bool) ($existingPrimaryFlags->get($userId) ?? false),
+                ],
+            ])
+            ->all();
+
+        $santri->guardians()->sync($syncPayload);
+    }
+
+    protected function guardianUserValidationException(string $message, string $errorBag): ValidationException
+    {
+        $exception = ValidationException::withMessages([
+            'guardian_user_ids' => $message,
+        ]);
+        $exception->errorBag = $errorBag;
+
+        return $exception;
     }
 }

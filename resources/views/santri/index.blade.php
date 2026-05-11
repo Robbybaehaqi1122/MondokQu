@@ -11,6 +11,8 @@
             'male' => 'bg-blue-lt text-blue',
             'female' => 'bg-pink-lt text-pink',
         ];
+
+        $createGuardianUserOptions = $guardianUserOptionsByTenant->get(auth()->user()?->tenant_id, collect());
     @endphp
 
     <x-slot name="header">
@@ -149,6 +151,13 @@
                                     <td>
                                         <div class="fw-medium">{{ $managedSantri->guardian_name ?: '-' }}</div>
                                         <div class="text-secondary small mt-1">{{ $managedSantri->guardian_phone_number ?: 'Belum diisi' }}</div>
+                                        @if ($managedSantri->guardians->isNotEmpty())
+                                            <div class="mt-2 d-flex flex-wrap gap-1">
+                                                @foreach ($managedSantri->guardians as $guardianUser)
+                                                    <span class="badge bg-indigo-lt text-indigo">{{ $guardianUser->name }}</span>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
                                         <div>{{ optional($managedSantri->entry_date)->translatedFormat('d M Y') }}</div>
@@ -220,6 +229,10 @@
                                                                     'santriItem' => $managedSantri,
                                                                     'genders' => $genders,
                                                                     'statuses' => $statuses,
+                                                                    'guardianUserOptions' => $guardianUserOptionsByTenant->get($managedSantri->tenant_id, collect()),
+                                                                    'selectedGuardianUserIds' => ((int) old('editing_santri_id') === (int) $managedSantri->id)
+                                                                        ? old('guardian_user_ids', [])
+                                                                        : $managedSantri->guardians->pluck('id')->all(),
                                                                     'errorsBag' => $errors->updateSantri,
                                                                 ])
                                                             </div>
@@ -274,6 +287,8 @@
                                 'santriItem' => null,
                                 'genders' => $genders,
                                 'statuses' => $statuses,
+                                'guardianUserOptions' => $createGuardianUserOptions,
+                                'selectedGuardianUserIds' => $errors->createSantri->any() ? old('guardian_user_ids', []) : [],
                                 'errorsBag' => $errors->createSantri,
                             ])
                         </div>

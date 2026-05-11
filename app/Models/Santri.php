@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Santri extends Model
@@ -94,6 +95,24 @@ class Santri extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(SantriPayment::class);
+    }
+
+    /**
+     * Get guardian link records for this santri.
+     */
+    public function guardianLinks(): HasMany
+    {
+        return $this->hasMany(SantriGuardian::class);
+    }
+
+    /**
+     * Get wali user accounts attached to this santri.
+     */
+    public function guardians(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'santri_guardians')
+            ->withPivot(['tenant_id', 'relationship', 'is_primary'])
+            ->withTimestamps();
     }
 
     /**

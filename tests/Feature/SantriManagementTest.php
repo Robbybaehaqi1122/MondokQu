@@ -13,6 +13,7 @@ beforeEach(function () {
     Role::findOrCreate('Admin', 'web');
     Role::findOrCreate('Pengurus', 'web');
     Role::findOrCreate('Musyrif/Ustadz', 'web');
+    Role::findOrCreate('Wali Santri', 'web');
 
     Permission::findOrCreate('view santri', 'web');
     Permission::findOrCreate('create santri', 'web');
@@ -371,6 +372,60 @@ test('user with permission can create santri', function () {
     }
 });
 
+test('user can create santri with wali portal account', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view santri', 'create santri']);
+    $wali = User::factory()->forTenant($admin->tenant)->create([
+        'name' => 'Wali Portal Ahmad',
+    ]);
+    $wali->assignRole('Wali Santri');
+
+    $response = $this
+        ->actingAs($admin)
+        ->post(route('santri.store'), [
+            'nis' => 'NIS-WALI-001',
+            'full_name' => 'Ahmad Portal Wali',
+            'gender' => Santri::GENDER_MALE,
+            'birth_place' => 'Bandung',
+            'birth_date' => '2012-01-10',
+            'address' => 'Alamat Wali',
+            'guardian_name' => 'Bapak Portal',
+            'father_name' => 'Ayah Portal',
+            'mother_name' => 'Ibu Portal',
+            'guardian_phone_number' => '081234567890',
+            'emergency_contact' => '081234567891',
+            'entry_date' => '2024-01-01',
+            'entry_year' => 2024,
+            'room_name' => 'Asrama A1',
+            'status' => Santri::STATUS_ACTIVE,
+            'guardian_user_ids' => [$wali->id],
+        ]);
+
+    $response->assertRedirect(route('santri.index', absolute: false));
+
+    $santri = Santri::query()->where('nis', 'NIS-WALI-001')->first();
+
+    expect($santri)->not->toBeNull();
+    $this->assertDatabaseHas('santri_guardians', [
+        'tenant_id' => $admin->tenant_id,
+        'santri_id' => $santri->id,
+        'user_id' => $wali->id,
+        'relationship' => 'Wali',
+    ]);
+
+    $this
+        ->actingAs($admin)
+        ->get(route('santri.index'))
+        ->assertOk()
+        ->assertSee('Wali Portal Ahmad');
+
+    $this
+        ->actingAs($admin)
+        ->get(route('santri.show', $santri))
+        ->assertOk()
+        ->assertSee('Wali Portal Ahmad');
+});
+
 test('santri can not be created with entry date before birth date', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
@@ -694,6 +749,110 @@ test('user with permission can update santri', function () {
         expect($santri->photo_path)->toStartWith('santri-photos/');
         Storage::disk('public')->assertExists($santri->photo_path);
     }
+});
+
+test('user can update wali portal accounts from santri management', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view santri', 'update santri']);
+    $oldWali = User::factory()->forTenant($admin->tenant)->create([
+        'name' => 'Wali Lama',
+    ]);
+    $oldWali->assignRole('Wali Santri');
+    $newWali = User::factory()->forTenant($admin->tenant)->create([
+        'name' => 'Wali Baru',
+    ]);
+    $newWali->assignRole('Wali Santri');
+    $santri = Santri::factory()->forTenant($admin->tenant)->create([
+        'nis' => 'NIS-WALI-EDIT',
+        'full_name' => 'Santri Relasi Wali',
+        'guardian_name' => 'Wali Teks',
+        'guardian_phone_number' => '081234567890',
+    ]);
+    $santri->guardians()->attach($oldWali->id, [
+        'tenant_id' => $admin->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->patch(route('santri.update', $santri), [
+            'nis' => 'NIS-WALI-EDIT',
+            'full_name' => 'Santri Relasi Wali',
+            'gender' => $santri->gender,
+            'birth_place' => $santri->birth_place,
+            'birth_date' => $santri->birth_date->toDateString(),
+            'address' => $santri->address,
+            'guardian_name' => 'Wali Teks',
+            'father_name' => $santri->father_name,
+            'mother_name' => $santri->mother_name,
+            'guardian_phone_number' => '081234567890',
+            'emergency_contact' => $santri->emergency_contact,
+            'entry_date' => $santri->entry_date->toDateString(),
+            'entry_year' => $santri->entry_year,
+            'room_name' => $santri->room_name,
+            'notes' => $santri->notes,
+            'status' => $santri->status,
+            'guardian_user_ids' => [$newWali->id],
+            'editing_santri_id' => $santri->id,
+        ]);
+
+    $response->assertRedirect(route('santri.index', absolute: false));
+
+    $this->assertDatabaseMissing('santri_guardians', [
+        'santri_id' => $santri->id,
+        'user_id' => $oldWali->id,
+    ]);
+    $this->assertDatabaseHas('santri_guardians', [
+        'tenant_id' => $admin->tenant_id,
+        'santri_id' => $santri->id,
+        'user_id' => $newWali->id,
+    ]);
+});
+
+test('santri can not be linked to wali account from another tenant', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view santri', 'update santri']);
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+    $otherWali = User::factory()->forTenant($otherTenant)->create([
+        'name' => 'Wali Tenant Lain',
+    ]);
+    $otherWali->assignRole('Wali Santri');
+    $santri = Santri::factory()->forTenant($admin->tenant)->create([
+        'nis' => 'NIS-WALI-TENANT',
+        'guardian_name' => 'Wali Teks',
+        'guardian_phone_number' => '081234567890',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->from(route('santri.index'))
+        ->patch(route('santri.update', $santri), [
+            'nis' => $santri->nis,
+            'full_name' => $santri->full_name,
+            'gender' => $santri->gender,
+            'birth_place' => $santri->birth_place,
+            'birth_date' => $santri->birth_date->toDateString(),
+            'address' => $santri->address,
+            'guardian_name' => $santri->guardian_name,
+            'father_name' => $santri->father_name,
+            'mother_name' => $santri->mother_name,
+            'guardian_phone_number' => $santri->guardian_phone_number,
+            'emergency_contact' => $santri->emergency_contact,
+            'entry_date' => $santri->entry_date->toDateString(),
+            'entry_year' => $santri->entry_year,
+            'room_name' => $santri->room_name,
+            'notes' => $santri->notes,
+            'status' => $santri->status,
+            'guardian_user_ids' => [$otherWali->id],
+            'editing_santri_id' => $santri->id,
+        ]);
+
+    $response->assertRedirect(route('santri.index', absolute: false));
+    $response->assertSessionHasErrors('guardian_user_ids', null, 'updateSantri');
+    $this->assertDatabaseMissing('santri_guardians', [
+        'santri_id' => $santri->id,
+        'user_id' => $otherWali->id,
+    ]);
 });
 
 test('user with permission can delete santri', function () {

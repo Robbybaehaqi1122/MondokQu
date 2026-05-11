@@ -34,7 +34,7 @@ class UserPolicy
             return Response::allow();
         }
 
-        if (! $actor->can('view user details')) {
+        if (! $actor->can('view user details') && ! ($actor->hasRole('Admin') && $actor->can('view users'))) {
             return Response::deny('Anda tidak memiliki akses ke detail user.');
         }
 

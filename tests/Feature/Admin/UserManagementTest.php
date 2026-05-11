@@ -115,6 +115,29 @@ test('admin can view a user detail page with activity history', function () {
     $response->assertSee('Login Success');
 });
 
+test('admin can view wali santri detail with user list permission fallback', function () {
+    $adminRole = Role::findByName('Admin', 'web');
+    $adminRole->syncPermissions([
+        Permission::findByName('view users', 'web'),
+        Permission::findByName('update users', 'web'),
+    ]);
+
+    $admin = tenantUser('Admin');
+    $tenant = $admin->tenant;
+    $wali = User::factory()->forTenant($tenant)->create([
+        'name' => 'Wali Detail Santri',
+    ]);
+    $wali->assignRole('Wali Santri');
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('admin.users.show', $wali));
+
+    $response->assertOk();
+    $response->assertSee('Wali Detail Santri');
+    $response->assertSee('Relasi Wali Santri');
+});
+
 test('admin can not view a user detail from another tenant', function () {
     $admin = tenantUser('Admin');
     $otherTenant = Tenant::factory()->activeSubscription()->create();

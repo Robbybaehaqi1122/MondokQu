@@ -1,6 +1,10 @@
 @php
     $isCreateForm = $santriItem === null;
     $errorBagInstance = $errorsBag ?? $errors;
+    $guardianOptions = $guardianUserOptions ?? collect();
+    $selectedGuardianUserIds = collect($selectedGuardianUserIds ?? old('guardian_user_ids', []))
+        ->map(fn ($guardianUserId) => (int) $guardianUserId)
+        ->all();
 @endphp
 
 <div class="row g-3">
@@ -180,6 +184,38 @@
             <div class="invalid-feedback">{{ $errorBagInstance->first('emergency_contact') }}</div>
         @else
             <div class="form-hint mt-2">Bisa diisi nomor wali cadangan atau keluarga terdekat.</div>
+        @endif
+    </div>
+
+    <div class="col-12">
+        <label class="form-label">Akun Wali Portal</label>
+        @if ($guardianOptions->isNotEmpty())
+            <div class="list-group list-group-flush border rounded">
+                @foreach ($guardianOptions as $guardianUser)
+                    <label class="list-group-item d-flex align-items-start gap-3">
+                        <input
+                            type="checkbox"
+                            name="guardian_user_ids[]"
+                            value="{{ $guardianUser->id }}"
+                            class="form-check-input mt-1 @if($errorBagInstance->has('guardian_user_ids')) is-invalid @endif"
+                            @checked(in_array((int) $guardianUser->id, $selectedGuardianUserIds, true))
+                        >
+                        <span class="flex-fill">
+                            <span class="fw-semibold d-block">{{ $guardianUser->name }}</span>
+                            <span class="text-secondary small">{{ '@'.$guardianUser->username }} &middot; {{ $guardianUser->email }}</span>
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+            @if ($errorBagInstance->has('guardian_user_ids'))
+                <div class="invalid-feedback d-block">{{ $errorBagInstance->first('guardian_user_ids') }}</div>
+            @else
+                <div class="form-hint mt-2">Opsional. Akun yang dipilih akan melihat santri ini di Portal Wali Santri.</div>
+            @endif
+        @else
+            <div class="alert alert-secondary mb-0">
+                Belum ada user role Wali Santri pada tenant ini.
+            </div>
         @endif
     </div>
 

@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
+use App\Http\Requests\Admin\UpdateGuardianSantriRequest;
 use App\Http\Requests\Admin\UpdateUserProfileRequest;
 use App\Http\Requests\Admin\UpdateUserRoleRequest;
 use App\Http\Requests\Admin\UpdateUserStatusRequest;
 use App\Models\ActivityLog;
+use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ActivityLogger;
@@ -113,7 +115,18 @@ class UserManagementController extends Controller
         $this->authorize('view', $user);
 
         $currentUser = $request->user();
-        $user->load(['roles', 'creator', 'tenant']);
+        $user->load(['roles', 'creator', 'tenant', 'guardianSantris']);
+        $canManageTargetUser = $currentUser?->can('update', $user) ?? false;
+
+        $guardianSantriOptions = collect();
+        if ($user->hasRole('Wali Santri') && $user->tenant_id && $canManageTargetUser) {
+            $guardianSantriOptions = Santri::query()
+                ->visibleTo($currentUser)
+                ->forTenant($user->tenant_id)
+                ->orderBy('full_name')
+                ->limit(250)
+                ->get(['id', 'tenant_id', 'nis', 'full_name', 'room_name', 'status']);
+        }
 
         $activityLogs = ActivityLog::query()
             ->with('actor')
@@ -143,9 +156,12 @@ class UserManagementController extends Controller
 
         return view('admin.user-detail', [
             'activityLogs' => $activityLogs,
-            'canManageTargetUser' => $currentUser?->can('update', $user) ?? false,
+            'canManageTargetUser' => $canManageTargetUser,
             'canDeleteUser' => $currentUser?->can('delete', $user) ?? false,
             'canManageRoles' => $currentUser?->can('updateRole', $user) ?? false,
+            'guardianRelationship' => $user->guardianSantris->first()?->pivot?->relationship,
+            'guardianSantriOptions' => $guardianSantriOptions,
+            'linkedGuardianSantriIds' => $user->guardianSantris->pluck('id')->all(),
             'roleHistory' => $roleHistory,
             'roles' => Role::query()->orderBy('name')->get(),
             'statuses' => User::availableStatuses(),
@@ -286,6 +302,91 @@ class UserManagementController extends Controller
         return redirect()
             ->route('admin.users')
             ->with('success', 'Status user berhasil diperbarui.');
+    }
+
+    /**
+     * Update santri links for a wali santri account.
+     */
+    public function updateGuardianSantri(UpdateGuardianSantriRequest $request, User $user): RedirectResponse
+    {
+        $authorization = Gate::inspect('update', $user);
+        if ($authorization->denied()) {
+            return redirect()
+                ->route('admin.users')
+                ->with('error', $authorization->message());
+        }
+
+        if (! $user->hasRole('Wali Santri')) {
+            return redirect()
+                ->route('admin.users.show', $user)
+                ->with('error', 'Relasi wali santri hanya dapat diatur untuk user dengan role Wali Santri.');
+        }
+
+        if (! $user->tenant_id) {
+            return redirect()
+                ->route('admin.users.show', $user)
+                ->with('error', 'Akun wali harus terhubung ke tenant pondok sebelum dapat ditautkan ke santri.');
+        }
+
+        $validated = $request->validated();
+        $requestedSantriIds = collect($validated['santri_ids'] ?? [])
+            ->map(fn ($santriId) => (int) $santriId)
+            ->unique()
+            ->values();
+
+        $validSantriIds = Santri::query()
+            ->visibleTo($request->user())
+            ->forTenant($user->tenant_id)
+            ->whereIn('id', $requestedSantriIds)
+            ->pluck('id')
+            ->map(fn ($santriId) => (int) $santriId)
+            ->values();
+
+        if ($validSantriIds->count() !== $requestedSantriIds->count()) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'santri_ids' => 'Pilih santri yang masih berada dalam tenant pondok yang sama.',
+                ], 'guardianSantri');
+        }
+
+        $relationship = trim((string) ($validated['relationship'] ?? '')) ?: 'Wali';
+        $previousSantriIds = $user->guardianSantris()
+            ->pluck('santris.id')
+            ->map(fn ($santriId) => (int) $santriId)
+            ->values()
+            ->all();
+        $syncPayload = $validSantriIds
+            ->mapWithKeys(fn (int $santriId) => [
+                $santriId => [
+                    'tenant_id' => $user->tenant_id,
+                    'relationship' => $relationship,
+                    'is_primary' => false,
+                ],
+            ])
+            ->all();
+
+        $user->guardianSantris()->sync($syncPayload);
+
+        $this->activityLogger->log(
+            action: 'guardian_santri_updated',
+            actor: $request->user(),
+            target: $user,
+            description: 'Relasi wali santri diperbarui dari panel admin.',
+            properties: [
+                'relationship' => $relationship,
+                'santri_ids' => [
+                    'before' => $previousSantriIds,
+                    'after' => $validSantriIds->all(),
+                ],
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return redirect()
+            ->route('admin.users.show', $user)
+            ->with('success', 'Relasi wali santri berhasil diperbarui.');
     }
 
     /**

@@ -88,6 +88,16 @@
                                             <div class="fw-semibold mt-2">{{ $santri->guardian_phone_number ?: '-' }}</div>
                                         </div>
                                         <div class="user-detail-meta-card">
+                                            <div class="text-secondary small text-uppercase fw-bold">Akun Wali Portal</div>
+                                            <div class="fw-semibold mt-2">
+                                                @forelse ($santri->guardians as $guardianUser)
+                                                    <span class="badge bg-indigo-lt text-indigo me-1 mb-1">{{ $guardianUser->name }}</span>
+                                                @empty
+                                                    -
+                                                @endforelse
+                                            </div>
+                                        </div>
+                                        <div class="user-detail-meta-card">
                                             <div class="text-secondary small text-uppercase fw-bold">Diinput Oleh</div>
                                             <div class="fw-semibold mt-2">{{ $santri->creator?->name ?? 'System' }}</div>
                                         </div>
@@ -189,6 +199,16 @@
                     <div class="user-detail-info-row">
                         <span>No. HP Wali / Penanggung Jawab</span>
                         <strong class="user-detail-info-value">{{ $santri->guardian_phone_number ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>Akun Wali Portal</span>
+                        <strong class="user-detail-info-value">
+                            @forelse ($santri->guardians as $guardianUser)
+                                <span class="badge bg-indigo-lt text-indigo me-1 mb-1">{{ $guardianUser->name }}</span>
+                            @empty
+                                -
+                            @endforelse
+                        </strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Kontak Darurat</span>
