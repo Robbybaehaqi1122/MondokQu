@@ -10,6 +10,7 @@ use App\Models\SantriPayment;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
@@ -22,7 +23,28 @@ class AdminDashboardController extends Controller
     {
         $currentUser = request()->user();
         $tenant = $currentUser?->tenant;
+        $cachedData = $this->dashboardCacheTtl() > 0
+            ? Cache::remember(
+                $this->dashboardCacheKey($currentUser),
+                now()->addSeconds($this->dashboardCacheTtl()),
+                fn (): array => $this->buildCachedDashboardData($currentUser)
+            )
+            : $this->buildCachedDashboardData($currentUser);
 
+        return view('admin.dashboard', [
+            'tenantSummary' => $this->buildTenantSummary($tenant, $currentUser?->isSuperAdmin() ?? false),
+            'tenantLifecycleNotice' => $this->buildTenantLifecycleNotice($tenant, $currentUser?->isSuperAdmin() ?? false),
+            ...$cachedData,
+        ]);
+    }
+
+    /**
+     * Build dashboard data that is safe to cache for a short period.
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildCachedDashboardData(?User $currentUser): array
+    {
         $roles = Role::query()
             ->withCount([
                 'users' => fn ($query) => $query->visibleTo($currentUser),
@@ -36,9 +58,7 @@ class AdminDashboardController extends Controller
         $paymentBaseQuery = SantriPayment::query()->visibleTo($currentUser);
         $userBaseQuery = User::query()->visibleTo($currentUser);
 
-        return view('admin.dashboard', [
-            'tenantSummary' => $this->buildTenantSummary($tenant, $currentUser?->isSuperAdmin() ?? false),
-            'tenantLifecycleNotice' => $this->buildTenantLifecycleNotice($tenant, $currentUser?->isSuperAdmin() ?? false),
+        return [
             'loginCountToday' => ActivityLog::query()
                 ->visibleTo($currentUser)
                 ->where('action', 'login_success')
@@ -98,7 +118,27 @@ class AdminDashboardController extends Controller
                     ->whereDate('due_date', '<', now()->toDateString())
                     ->count(),
             ],
+        ];
+    }
+
+    protected function dashboardCacheKey(?User $currentUser): string
+    {
+        $scope = $currentUser?->isSuperAdmin()
+            ? 'platform'
+            : 'tenant:'.($currentUser?->tenant_id ?? 'none');
+
+        return implode(':', [
+            'admin-dashboard',
+            $scope,
+            now()->format('Y-m-d'),
+            now()->format('o-W'),
+            now()->format('Y-m'),
         ]);
+    }
+
+    protected function dashboardCacheTtl(): int
+    {
+        return max(0, (int) config('cache.dashboard_ttl_seconds', 300));
     }
 
     /**

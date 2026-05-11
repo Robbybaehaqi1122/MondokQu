@@ -19,6 +19,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Dashboard Cache TTL
+    |--------------------------------------------------------------------------
+    |
+    | Admin dashboard statistics run several aggregate queries. Keep them cached
+    | briefly so busy tenants can open the dashboard without repeating the same
+    | counts and sums on every request. Set to 0 to disable this cache.
+    |
+    */
+
+    'dashboard_ttl_seconds' => env('DASHBOARD_CACHE_TTL_SECONDS', 300),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |

@@ -7,10 +7,12 @@ use App\Http\Requests\Santri\UpdateSantriRequest;
 use App\Models\Santri;
 use App\Services\ActivityLogger;
 use App\Services\SantriPhotoUploader;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SantriManagementController extends Controller
 {
@@ -35,20 +37,7 @@ class SantriManagementController extends Controller
 
         $santris = (clone $baseQuery)
             ->with('creator')
-            ->when($query !== '', function ($builder) use ($query) {
-                $builder->where(function ($santriQuery) use ($query) {
-                    $santriQuery
-                        ->where('nis', 'like', "%{$query}%")
-                        ->orWhere('full_name', 'like', "%{$query}%")
-                        ->orWhere('guardian_name', 'like', "%{$query}%")
-                        ->orWhere('guardian_phone_number', 'like', "%{$query}%")
-                        ->orWhere('father_name', 'like', "%{$query}%")
-                        ->orWhere('mother_name', 'like', "%{$query}%")
-                        ->orWhere('room_name', 'like', "%{$query}%");
-                });
-            })
-            ->when($selectedStatus !== '', fn ($builder) => $builder->where('status', $selectedStatus))
-            ->when($selectedGender !== '', fn ($builder) => $builder->where('gender', $selectedGender))
+            ->tap(fn (Builder $builder) => $this->applySantriFilters($builder, $query, $selectedStatus, $selectedGender))
             ->orderBy('full_name')
             ->paginate(10)
             ->withQueryString();
@@ -64,6 +53,75 @@ class SantriManagementController extends Controller
             'canCreateSantri' => $currentUser?->can('create', Santri::class) ?? false,
             'statuses' => $this->statusOptions(),
             'santris' => $santris,
+        ]);
+    }
+
+    /**
+     * Export filtered santri data as CSV.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $this->authorize('viewAny', Santri::class);
+
+        $currentUser = $request->user();
+        $query = trim((string) $request->string('q'));
+        $selectedStatus = trim((string) $request->string('status'));
+        $selectedGender = trim((string) $request->string('gender'));
+        $filename = 'data-santri-'.now()->format('Ymd-His').'.csv';
+
+        return response()->streamDownload(function () use ($currentUser, $query, $selectedStatus, $selectedGender): void {
+            $handle = fopen('php://output', 'w');
+
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, [
+                'NIS',
+                'Nama Lengkap',
+                'Jenis Kelamin',
+                'Status',
+                'Tempat Lahir',
+                'Tanggal Lahir',
+                'Alamat',
+                'Nama Ayah',
+                'Nama Ibu',
+                'Nama Wali',
+                'Nomor HP Wali',
+                'Kontak Darurat',
+                'Tanggal Masuk',
+                'Angkatan',
+                'Kamar',
+                'Catatan',
+            ]);
+
+            Santri::query()
+                ->visibleTo($currentUser)
+                ->tap(fn (Builder $builder) => $this->applySantriFilters($builder, $query, $selectedStatus, $selectedGender))
+                ->orderBy('full_name')
+                ->chunk(500, function (Collection $santris) use ($handle): void {
+                    foreach ($santris as $santri) {
+                        fputcsv($handle, [
+                            $santri->nis,
+                            $santri->full_name,
+                            $santri->genderLabel(),
+                            $santri->statusLabel(),
+                            $santri->birth_place,
+                            $santri->birth_date?->toDateString(),
+                            $santri->address,
+                            $santri->father_name,
+                            $santri->mother_name,
+                            $santri->guardian_name,
+                            $santri->guardian_phone_number,
+                            $santri->emergency_contact,
+                            $santri->entry_date?->toDateString(),
+                            $santri->entry_year,
+                            $santri->room_name,
+                            $santri->notes,
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
     }
 
@@ -290,5 +348,24 @@ class SantriManagementController extends Controller
                     default => ucfirst($gender),
                 },
             ]);
+    }
+
+    protected function applySantriFilters(Builder $builder, string $query, string $selectedStatus, string $selectedGender): void
+    {
+        $builder
+            ->when($query !== '', function ($builder) use ($query) {
+                $builder->where(function ($santriQuery) use ($query) {
+                    $santriQuery
+                        ->where('nis', 'like', "%{$query}%")
+                        ->orWhere('full_name', 'like', "%{$query}%")
+                        ->orWhere('guardian_name', 'like', "%{$query}%")
+                        ->orWhere('guardian_phone_number', 'like', "%{$query}%")
+                        ->orWhere('father_name', 'like', "%{$query}%")
+                        ->orWhere('mother_name', 'like', "%{$query}%")
+                        ->orWhere('room_name', 'like', "%{$query}%");
+                });
+            })
+            ->when($selectedStatus !== '', fn ($builder) => $builder->where('status', $selectedStatus))
+            ->when($selectedGender !== '', fn ($builder) => $builder->where('gender', $selectedGender));
     }
 }

@@ -6,9 +6,12 @@ use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
+    Cache::flush();
+
     Role::findOrCreate('Superadmin', 'web');
     Role::findOrCreate('Admin', 'web');
     Role::findOrCreate('Pengurus', 'web');
@@ -169,6 +172,40 @@ test('admin dashboard shows monitoring statistics', function () {
     expect($response->viewData('entryYearDistribution')->first()['santri_count'])->toBe(2);
     expect($response->viewData('recentUsers'))->toHaveCount(3);
     expect($response->viewData('recentSantri'))->toHaveCount(3);
+});
+
+test('admin dashboard caches aggregate statistics briefly', function () {
+    config(['cache.dashboard_ttl_seconds' => 300]);
+
+    $admin = tenantUser('Admin');
+
+    Santri::factory()->forTenant($admin->tenant)->create([
+        'full_name' => 'Santri Cache Pertama',
+    ]);
+
+    $firstResponse = $this
+        ->actingAs($admin)
+        ->get(route('admin.dashboard'));
+
+    expect($firstResponse->viewData('santriStats')['total_santri'])->toBe(1);
+
+    Santri::factory()->forTenant($admin->tenant)->create([
+        'full_name' => 'Santri Cache Kedua',
+    ]);
+
+    $cachedResponse = $this
+        ->actingAs($admin)
+        ->get(route('admin.dashboard'));
+
+    expect($cachedResponse->viewData('santriStats')['total_santri'])->toBe(1);
+
+    Cache::flush();
+
+    $freshResponse = $this
+        ->actingAs($admin)
+        ->get(route('admin.dashboard'));
+
+    expect($freshResponse->viewData('santriStats')['total_santri'])->toBe(2);
 });
 
 test('admin dashboard shows trial warning when tenant trial is near expiry', function () {

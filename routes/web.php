@@ -107,11 +107,16 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::get('/laporan', [SantriPaymentController::class, 'reports'])
             ->middleware('permission:view laporan keuangan')
             ->name('reports');
+
+        Route::get('/laporan/export', [SantriPaymentController::class, 'exportReports'])
+            ->middleware('permission:view laporan keuangan')
+            ->name('reports.export');
     });
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:view santri'])->group(function () {
     Route::get('/santri', [SantriManagementController::class, 'index'])->name('santri.index');
+    Route::get('/santri/export', [SantriManagementController::class, 'export'])->name('santri.export');
     Route::get('/santri/{santri}', [SantriManagementController::class, 'show'])->name('santri.show');
 });
 

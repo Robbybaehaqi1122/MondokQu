@@ -196,6 +196,51 @@ test('santri list is scoped to the current tenant', function () {
     $response->assertDontSee('Santri Tenant Lain');
 });
 
+test('user can export filtered santri data scoped to current tenant', function () {
+    $pengurus = tenantUser('Pengurus');
+    $pengurus->givePermissionTo('view santri');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    Santri::factory()->forTenant($pengurus->tenant)->create([
+        'nis' => 'EXP001',
+        'full_name' => 'Export Ahmad',
+        'gender' => Santri::GENDER_MALE,
+        'status' => Santri::STATUS_ACTIVE,
+    ]);
+
+    Santri::factory()->forTenant($pengurus->tenant)->create([
+        'nis' => 'EXP002',
+        'full_name' => 'Export Aisyah',
+        'gender' => Santri::GENDER_FEMALE,
+        'status' => Santri::STATUS_ALUMNI,
+    ]);
+
+    Santri::factory()->forTenant($otherTenant)->create([
+        'nis' => 'EXP999',
+        'full_name' => 'Export Tenant Lain',
+        'gender' => Santri::GENDER_MALE,
+        'status' => Santri::STATUS_ACTIVE,
+    ]);
+
+    $response = $this
+        ->actingAs($pengurus)
+        ->get(route('santri.export', [
+            'q' => 'Export',
+            'gender' => Santri::GENDER_MALE,
+            'status' => Santri::STATUS_ACTIVE,
+        ]));
+
+    $response->assertOk();
+    $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    $csv = $response->streamedContent();
+
+    expect($csv)->toContain('Export Ahmad');
+    expect($csv)->toContain('EXP001');
+    expect($csv)->not->toContain('Export Aisyah');
+    expect($csv)->not->toContain('Export Tenant Lain');
+});
+
 test('santri model queries are scoped to the current tenant by default', function () {
     $pengurus = tenantUser('Pengurus');
     $otherTenant = Tenant::factory()->activeSubscription()->create();

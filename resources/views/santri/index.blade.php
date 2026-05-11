@@ -32,8 +32,16 @@
                             </div>
                         </div>
 
-                        @if ($canCreateSantri)
-                            <div class="d-flex align-items-center">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a
+                                href="{{ route('santri.export', request()->only(['q', 'gender', 'status'])) }}"
+                                class="btn btn-outline-primary"
+                            >
+                                <i class="ti ti-download me-1"></i>
+                                Export CSV
+                            </a>
+
+                            @if ($canCreateSantri)
                                 <button
                                     type="button"
                                     class="btn btn-primary"
@@ -44,8 +52,8 @@
                                     <i class="ti ti-user-plus me-1"></i>
                                     Tambah Santri
                                 </button>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
                 </div>
 

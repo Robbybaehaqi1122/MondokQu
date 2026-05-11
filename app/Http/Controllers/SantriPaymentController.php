@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SantriPaymentController extends Controller
 {
@@ -469,19 +470,9 @@ class SantriPaymentController extends Controller
      */
     public function reports(Request $request): View
     {
-        $validated = $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
+        [$dateFrom, $dateTo] = $this->reportDateRange($request);
 
         $currentUser = $request->user();
-        $dateFrom = isset($validated['date_from'])
-            ? Carbon::parse($validated['date_from'])->startOfDay()
-            : now()->startOfMonth();
-        $dateTo = isset($validated['date_to'])
-            ? Carbon::parse($validated['date_to'])->endOfDay()
-            : now()->endOfMonth();
-
         $paymentBaseQuery = SantriPayment::query()
             ->visibleTo($currentUser)
             ->whereBetween('paid_at', [$dateFrom, $dateTo]);
@@ -508,6 +499,65 @@ class SantriPaymentController extends Controller
                 ->latest('paid_at')
                 ->paginate(15)
                 ->withQueryString(),
+        ]);
+    }
+
+    /**
+     * Export filtered payment report as CSV.
+     */
+    public function exportReports(Request $request): StreamedResponse
+    {
+        [$dateFrom, $dateTo] = $this->reportDateRange($request);
+
+        $currentUser = $request->user();
+        $filename = 'laporan-pembayaran-'
+            .$dateFrom->toDateString()
+            .'-sd-'
+            .$dateTo->toDateString()
+            .'.csv';
+
+        return response()->streamDownload(function () use ($currentUser, $dateFrom, $dateTo): void {
+            $handle = fopen('php://output', 'w');
+
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, [
+                'Tanggal Bayar',
+                'Nomor Invoice',
+                'Judul Tagihan',
+                'Nama Santri',
+                'NIS',
+                'Metode Pembayaran',
+                'Nomor Referensi',
+                'Nominal',
+                'Dicatat Oleh',
+                'Catatan',
+            ]);
+
+            SantriPayment::query()
+                ->visibleTo($currentUser)
+                ->with(['invoice', 'santri', 'recorder'])
+                ->whereBetween('paid_at', [$dateFrom, $dateTo])
+                ->latest('paid_at')
+                ->chunk(500, function ($payments) use ($handle): void {
+                    foreach ($payments as $payment) {
+                        fputcsv($handle, [
+                            $payment->paid_at?->format('Y-m-d H:i:s'),
+                            $payment->invoice?->invoice_number,
+                            $payment->invoice?->title,
+                            $payment->santri?->full_name,
+                            $payment->santri?->nis,
+                            Str::headline($payment->payment_method),
+                            $payment->reference_number,
+                            number_format((float) $payment->amount, 2, '.', ''),
+                            $payment->recorder?->name ?? 'System',
+                            $payment->note,
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
     }
 
@@ -569,6 +619,28 @@ class SantriPaymentController extends Controller
             ['value' => SantriInvoice::STATUS_PAID, 'label' => 'Lunas'],
             ['value' => 'overdue', 'label' => 'Tunggakan'],
         ];
+    }
+
+    /**
+     * Resolve and validate report date range.
+     *
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    protected function reportDateRange(Request $request): array
+    {
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $dateFrom = isset($validated['date_from'])
+            ? Carbon::parse($validated['date_from'])->startOfDay()
+            : now()->startOfMonth();
+        $dateTo = isset($validated['date_to'])
+            ? Carbon::parse($validated['date_to'])->endOfDay()
+            : now()->endOfMonth();
+
+        return [$dateFrom, $dateTo];
     }
 
     protected function paymentValidationException(string $message, string $errorBag): ValidationException

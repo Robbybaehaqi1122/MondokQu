@@ -3,6 +3,7 @@
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
+use App\Models\Tenant;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -45,6 +46,65 @@ test('admin can access santri payment reports page', function () {
 
     $response->assertOk();
     $response->assertSee('Laporan Bendahara');
+});
+
+test('admin can export payment report scoped to date range and tenant', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('view laporan keuangan');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    $santri = Santri::factory()->forTenant($admin->tenant)->create([
+        'nis' => 'PAYEXP001',
+        'full_name' => 'Pembayaran Export',
+    ]);
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'invoice_number' => 'INV-EXPORT-001',
+        'title' => 'SPP Export Mei',
+    ]);
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'paid_at' => '2026-05-05 10:15:00',
+        'amount' => 125000,
+        'payment_method' => 'qris',
+        'recorded_by' => $admin->id,
+    ]);
+
+    $oldInvoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'invoice_number' => 'INV-EXPORT-OLD',
+    ]);
+    SantriPayment::factory()->forInvoice($oldInvoice)->create([
+        'paid_at' => '2026-04-25 10:15:00',
+        'amount' => 50000,
+    ]);
+
+    $otherSantri = Santri::factory()->forTenant($otherTenant)->create([
+        'full_name' => 'Pembayaran Tenant Lain',
+    ]);
+    $otherInvoice = SantriInvoice::factory()->forSantri($otherSantri)->create([
+        'invoice_number' => 'INV-EXPORT-OTHER',
+    ]);
+    SantriPayment::factory()->forInvoice($otherInvoice)->create([
+        'paid_at' => '2026-05-06 10:15:00',
+        'amount' => 999000,
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('santri.payments.reports.export', [
+            'date_from' => '2026-05-01',
+            'date_to' => '2026-05-31',
+        ]));
+
+    $response->assertOk();
+    $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    $csv = $response->streamedContent();
+
+    expect($csv)->toContain('INV-EXPORT-001');
+    expect($csv)->toContain('Pembayaran Export');
+    expect($csv)->toContain('125000.00');
+    expect($csv)->not->toContain('INV-EXPORT-OLD');
+    expect($csv)->not->toContain('INV-EXPORT-OTHER');
+    expect($csv)->not->toContain('Pembayaran Tenant Lain');
 });
 
 test('bendahara can open payment module without santri management permission', function () {
