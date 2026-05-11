@@ -64,6 +64,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|view activity logs'])->group(function () {
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity-logs');
+    Route::get('/admin/activity-logs/export', [ActivityLogController::class, 'export'])->name('admin.activity-logs.export');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin'])->group(function () {
@@ -79,6 +80,10 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::get('/tagihan', [SantriPaymentController::class, 'invoices'])
             ->middleware('permission:view pembayaran')
             ->name('invoices');
+
+        Route::get('/tagihan/export', [SantriPaymentController::class, 'exportInvoices'])
+            ->middleware('permission:view pembayaran')
+            ->name('invoices.export');
 
         Route::post('/tagihan', [SantriPaymentController::class, 'storeInvoice'])
             ->middleware('permission:create pembayaran')

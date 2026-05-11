@@ -54,8 +54,14 @@
                     <div class="text-secondary small mt-2">Menampilkan {{ $invoices->total() }} tagihan berdasarkan filter aktif.</div>
                 </div>
 
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('santri.payments.index') }}" class="btn btn-outline-secondary">Overview</a>
+                    <a
+                        href="{{ route('santri.payments.invoices.export', request()->only(['q', 'status', 'santri'])) }}"
+                        class="btn btn-outline-primary"
+                    >
+                        Export CSV
+                    </a>
                     @if ($canCreateInvoice)
                         <button
                             type="button"

@@ -68,16 +68,26 @@
                             <p class="text-secondary mb-0">Menampilkan siapa melakukan apa, targetnya siapa, kapan terjadi.</p>
                         </div>
 
-                        @if ($canManageActivityLogs)
-                            <form method="POST" action="{{ route('admin.activity-logs.destroy-all') }}" onsubmit="return confirm('Yakin ingin menghapus semua log activity? Tindakan ini tidak bisa dibatalkan.')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger">
-                                    <i class="ti ti-trash me-1"></i>
-                                    Hapus Semua Log
-                                </button>
-                            </form>
-                        @endif
+                        <div class="d-flex flex-wrap gap-2">
+                            <a
+                                href="{{ route('admin.activity-logs.export', request()->only(['search', 'action', 'actor_id', 'date_from', 'date_to'])) }}"
+                                class="btn btn-outline-primary"
+                            >
+                                <i class="ti ti-download me-1"></i>
+                                Export CSV
+                            </a>
+
+                            @if ($canManageActivityLogs)
+                                <form method="POST" action="{{ route('admin.activity-logs.destroy-all') }}" onsubmit="return confirm('Yakin ingin menghapus semua log activity? Tindakan ini tidak bisa dibatalkan.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        <i class="ti ti-trash me-1"></i>
+                                        Hapus Semua Log
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                 </div>
                 <div class="card-body border-bottom">

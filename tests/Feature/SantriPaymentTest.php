@@ -38,6 +38,63 @@ test('admin can access santri invoice page', function () {
     $response->assertSee('Tagihan Santri');
 });
 
+test('admin can export filtered invoice list scoped to current tenant', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('view pembayaran');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    $santri = Santri::factory()->forTenant($admin->tenant)->create([
+        'nis' => 'INVEXP001',
+        'full_name' => 'Invoice Export',
+    ]);
+    SantriInvoice::factory()->forSantri($santri)->create([
+        'invoice_number' => 'INV-FILTER-001',
+        'title' => 'SPP Export Tunggakan',
+        'amount' => 500000,
+        'paid_amount' => 125000,
+        'status' => SantriInvoice::STATUS_PARTIAL,
+        'due_date' => now()->subDays(3),
+    ]);
+    SantriInvoice::factory()->forSantri($santri)->create([
+        'invoice_number' => 'INV-FILTER-PAID',
+        'title' => 'SPP Export Lunas',
+        'amount' => 300000,
+        'paid_amount' => 300000,
+        'status' => SantriInvoice::STATUS_PAID,
+        'due_date' => now()->subDays(3),
+    ]);
+
+    $otherSantri = Santri::factory()->forTenant($otherTenant)->create([
+        'full_name' => 'Invoice Tenant Lain',
+    ]);
+    SantriInvoice::factory()->forSantri($otherSantri)->create([
+        'invoice_number' => 'INV-FILTER-OTHER',
+        'title' => 'SPP Tenant Lain',
+        'status' => SantriInvoice::STATUS_PARTIAL,
+        'due_date' => now()->subDays(3),
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('santri.payments.invoices.export', [
+            'q' => 'Export',
+            'status' => 'overdue',
+            'santri' => $santri->id,
+        ]));
+
+    $response->assertOk();
+    $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    $csv = $response->streamedContent();
+
+    expect($csv)->toContain('INV-FILTER-001');
+    expect($csv)->toContain('Invoice Export');
+    expect($csv)->toContain('375000.00');
+    expect($csv)->not->toContain('INV-FILTER-PAID');
+    expect($csv)->not->toContain('INV-FILTER-OTHER');
+    expect($csv)->not->toContain('Invoice Tenant Lain');
+});
+
 test('admin can access santri payment reports page', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo('view laporan keuangan');

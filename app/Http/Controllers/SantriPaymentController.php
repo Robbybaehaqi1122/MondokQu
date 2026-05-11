@@ -66,32 +66,7 @@ class SantriPaymentController extends Controller
 
         $invoices = (clone $baseQuery)
             ->with(['santri', 'payments.recorder'])
-            ->when($search !== '', function ($builder) use ($search) {
-                $builder->where(function ($invoiceQuery) use ($search) {
-                    $invoiceQuery
-                        ->where('invoice_number', 'like', "%{$search}%")
-                        ->orWhere('title', 'like', "%{$search}%")
-                        ->orWhereHas('santri', function ($santriQuery) use ($search) {
-                            $santriQuery
-                                ->where('nis', 'like', "%{$search}%")
-                                ->orWhere('full_name', 'like', "%{$search}%");
-                        });
-                });
-            })
-            ->when($selectedStatus !== '', function ($builder) use ($selectedStatus) {
-                if ($selectedStatus === 'overdue') {
-                    $builder
-                        ->where('status', '!=', SantriInvoice::STATUS_PAID)
-                        ->whereDate('due_date', '<', now()->toDateString());
-
-                    return;
-                }
-
-                if (in_array($selectedStatus, SantriInvoice::availableStatuses(), true)) {
-                    $builder->where('status', $selectedStatus);
-                }
-            })
-            ->when($selectedSantriId !== '', fn ($builder) => $builder->where('santri_id', $selectedSantriId))
+            ->tap(fn ($builder) => $this->applyInvoiceFilters($builder, $search, $selectedStatus, $selectedSantriId))
             ->orderByRaw('CASE WHEN status = ? THEN 1 ELSE 0 END', [SantriInvoice::STATUS_PAID])
             ->orderBy('due_date')
             ->paginate(10)
@@ -116,6 +91,67 @@ class SantriPaymentController extends Controller
             'canRecordPayment' => $currentUser?->can('create pembayaran') ?? false,
             'canUpdateInvoice' => $currentUser?->can('update pembayaran') ?? false,
             'canEditHistoricalPayments' => $currentUser?->can('edit historical pembayaran') ?? false,
+        ]);
+    }
+
+    /**
+     * Export filtered invoice list as CSV.
+     */
+    public function exportInvoices(Request $request): StreamedResponse
+    {
+        $currentUser = $request->user();
+        $search = trim((string) $request->string('q'));
+        $selectedStatus = trim((string) $request->string('status'));
+        $selectedSantriId = trim((string) $request->string('santri'));
+        $filename = 'tagihan-santri-'.now()->format('Ymd-His').'.csv';
+
+        return response()->streamDownload(function () use ($currentUser, $search, $selectedStatus, $selectedSantriId): void {
+            $handle = fopen('php://output', 'w');
+
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, [
+                'Nomor Invoice',
+                'Judul Tagihan',
+                'Nama Santri',
+                'NIS',
+                'Periode Bulan',
+                'Periode Tahun',
+                'Jatuh Tempo',
+                'Nominal',
+                'Terbayar',
+                'Sisa Tagihan',
+                'Status',
+                'Catatan',
+            ]);
+
+            SantriInvoice::query()
+                ->visibleTo($currentUser)
+                ->with('santri')
+                ->tap(fn ($builder) => $this->applyInvoiceFilters($builder, $search, $selectedStatus, $selectedSantriId))
+                ->orderByRaw('CASE WHEN status = ? THEN 1 ELSE 0 END', [SantriInvoice::STATUS_PAID])
+                ->orderBy('due_date')
+                ->chunk(500, function ($invoices) use ($handle): void {
+                    foreach ($invoices as $invoice) {
+                        fputcsv($handle, [
+                            $invoice->invoice_number,
+                            $invoice->title,
+                            $invoice->santri?->full_name,
+                            $invoice->santri?->nis,
+                            $invoice->period_month,
+                            $invoice->period_year,
+                            $invoice->due_date?->toDateString(),
+                            number_format((float) $invoice->amount, 2, '.', ''),
+                            number_format((float) $invoice->paid_amount, 2, '.', ''),
+                            number_format($invoice->outstandingAmount(), 2, '.', ''),
+                            $invoice->statusLabel(),
+                            $invoice->notes,
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
     }
 
@@ -619,6 +655,37 @@ class SantriPaymentController extends Controller
             ['value' => SantriInvoice::STATUS_PAID, 'label' => 'Lunas'],
             ['value' => 'overdue', 'label' => 'Tunggakan'],
         ];
+    }
+
+    protected function applyInvoiceFilters($builder, string $search, string $selectedStatus, string $selectedSantriId): void
+    {
+        $builder
+            ->when($search !== '', function ($builder) use ($search) {
+                $builder->where(function ($invoiceQuery) use ($search) {
+                    $invoiceQuery
+                        ->where('invoice_number', 'like', "%{$search}%")
+                        ->orWhere('title', 'like', "%{$search}%")
+                        ->orWhereHas('santri', function ($santriQuery) use ($search) {
+                            $santriQuery
+                                ->where('nis', 'like', "%{$search}%")
+                                ->orWhere('full_name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($selectedStatus !== '', function ($builder) use ($selectedStatus) {
+                if ($selectedStatus === 'overdue') {
+                    $builder
+                        ->where('status', '!=', SantriInvoice::STATUS_PAID)
+                        ->whereDate('due_date', '<', now()->toDateString());
+
+                    return;
+                }
+
+                if (in_array($selectedStatus, SantriInvoice::availableStatuses(), true)) {
+                    $builder->where('status', $selectedStatus);
+                }
+            })
+            ->when($selectedSantriId !== '', fn ($builder) => $builder->where('santri_id', $selectedSantriId));
     }
 
     /**

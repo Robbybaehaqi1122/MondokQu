@@ -120,6 +120,66 @@ test('admin can view and filter tenant scoped activity logs', function () {
     $response->assertViewHas('logSummary', fn (array $summary): bool => $summary['total'] === 1 && $summary['filtered'] === 1);
 });
 
+test('admin can export filtered tenant scoped activity logs', function () {
+    $admin = tenantUser('Admin');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+    $otherUser = User::factory()->forTenant($otherTenant)->create();
+
+    ActivityLog::query()->create([
+        'tenant_id' => $admin->tenant_id,
+        'actor_id' => $admin->id,
+        'actor_name' => $admin->name,
+        'action' => 'santri_deleted',
+        'description' => 'Data santri dihapus dari sistem.',
+        'target_name' => 'Santri Export Tenant Sendiri',
+        'ip_address' => '127.0.0.1',
+        'properties' => ['nis' => 'AUDIT-001'],
+        'created_at' => '2026-05-11 09:00:00',
+        'updated_at' => '2026-05-11 09:00:00',
+    ]);
+    ActivityLog::query()->create([
+        'tenant_id' => $admin->tenant_id,
+        'actor_id' => $admin->id,
+        'actor_name' => $admin->name,
+        'action' => 'login_success',
+        'description' => 'Login berhasil ke aplikasi.',
+        'target_name' => 'Login Tenant Sendiri',
+        'ip_address' => '127.0.0.1',
+        'created_at' => '2026-05-11 10:00:00',
+        'updated_at' => '2026-05-11 10:00:00',
+    ]);
+    ActivityLog::query()->create([
+        'tenant_id' => $otherTenant->id,
+        'actor_id' => $otherUser->id,
+        'actor_name' => $otherUser->name,
+        'action' => 'santri_deleted',
+        'description' => 'Data santri tenant lain dihapus.',
+        'target_name' => 'Santri Export Tenant Lain',
+        'ip_address' => '127.0.0.1',
+        'created_at' => '2026-05-11 09:00:00',
+        'updated_at' => '2026-05-11 09:00:00',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('admin.activity-logs.export', [
+            'action' => 'santri_deleted',
+            'search' => 'Export',
+            'date_from' => '2026-05-11',
+            'date_to' => '2026-05-11',
+        ]));
+
+    $response->assertOk();
+    $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    $csv = $response->streamedContent();
+
+    expect($csv)->toContain('Santri Export Tenant Sendiri');
+    expect($csv)->toContain('AUDIT-001');
+    expect($csv)->not->toContain('Login Tenant Sendiri');
+    expect($csv)->not->toContain('Santri Export Tenant Lain');
+});
+
 test('admin can not delete tenant activity logs', function () {
     $admin = tenantUser('Admin');
 
