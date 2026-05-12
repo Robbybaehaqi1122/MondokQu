@@ -161,7 +161,7 @@
                         <h3 class="card-title">Tagihan Aktif</h3>
                     </div>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive d-none d-md-block">
                     <table class="table table-vcenter card-table">
                         <thead>
                             <tr>
@@ -170,6 +170,7 @@
                                 <th>Jatuh Tempo</th>
                                 <th>Sisa</th>
                                 <th>Status</th>
+                                <th class="w-1">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -190,14 +191,62 @@
                                             {{ $invoice->statusLabel() }}
                                         </span>
                                     </td>
+                                    <td>
+                                        <a href="{{ route('wali-santri.invoices.show', $invoice) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="ti ti-eye me-1"></i>
+                                            Detail
+                                        </a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-secondary">Tidak ada tagihan aktif untuk santri terhubung.</td>
+                                    <td colspan="6" class="text-secondary">Tidak ada tagihan aktif untuk santri terhubung.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <div class="wali-mobile-list d-md-none" data-mobile-invoice-list>
+                    @forelse ($upcomingInvoices as $invoice)
+                        @php
+                            $displayStatus = $invoice->isOverdue() ? 'overdue' : $invoice->status;
+                        @endphp
+
+                        <article class="wali-mobile-item" data-mobile-invoice-card>
+                            <div class="d-flex align-items-start justify-content-between gap-3">
+                                <div class="wali-mobile-title">
+                                    <div class="fw-semibold">{{ $invoice->title }}</div>
+                                    <div class="text-secondary small">{{ $invoice->invoice_number }}</div>
+                                </div>
+                                <span class="badge {{ $invoiceBadgeClasses[$displayStatus] ?? 'bg-secondary-lt text-secondary' }}">
+                                    {{ $invoice->statusLabel() }}
+                                </span>
+                            </div>
+
+                            <div class="wali-mobile-grid mt-3">
+                                <div class="wali-mobile-field">
+                                    <span>Santri</span>
+                                    <strong>{{ $invoice->santri?->full_name ?? '-' }}</strong>
+                                </div>
+                                <div class="wali-mobile-field">
+                                    <span>Jatuh Tempo</span>
+                                    <strong>{{ $invoice->due_date?->translatedFormat('d M Y') ?? '-' }}</strong>
+                                </div>
+                                <div class="wali-mobile-field wali-mobile-field-wide">
+                                    <span>Sisa Tagihan</span>
+                                    <strong>Rp {{ number_format($invoice->outstandingAmount(), 0, ',', '.') }}</strong>
+                                </div>
+                            </div>
+
+                            <a href="{{ route('wali-santri.invoices.show', $invoice) }}" class="btn btn-outline-primary w-100 mt-3">
+                                <i class="ti ti-eye me-1"></i>
+                                Detail Tagihan
+                            </a>
+                        </article>
+                    @empty
+                        <div class="text-secondary p-3">Tidak ada tagihan aktif untuk santri terhubung.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -209,20 +258,35 @@
                         <h3 class="card-title">Pembayaran Terakhir</h3>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body wali-payment-list" data-mobile-payment-list>
                     @forelse ($recentPayments as $payment)
-                        <div class="d-flex align-items-start gap-3 mb-3">
+                        <div class="wali-payment-item d-flex align-items-start gap-3" data-mobile-payment-card>
                             <span class="avatar avatar-sm bg-success-lt text-success">
                                 <i class="ti ti-check"></i>
                             </span>
-                            <div class="flex-fill">
+                            <div class="flex-fill min-width-0">
                                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-1">
-                                    <div class="fw-semibold">Rp {{ number_format((float) $payment->amount, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format((float) $payment->amount, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">{{ $payment->paid_at?->translatedFormat('d M Y') }}</div>
                                 </div>
-                                <div class="text-secondary small mt-1">
-                                    {{ $payment->santri?->full_name ?? '-' }} - {{ $payment->invoice?->title ?? 'Tanpa tagihan' }}
+                                <div class="wali-payment-meta text-secondary small mt-1">
+                                    <span>{{ $payment->santri?->full_name ?? '-' }}</span>
+                                    <span>{{ $payment->invoice?->title ?? 'Tanpa tagihan' }}</span>
                                 </div>
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    <span class="badge bg-success-lt text-success">
+                                        {{ $payment->payment_method ? str($payment->payment_method)->headline() : 'Pembayaran' }}
+                                    </span>
+                                    @if ($payment->reference_number)
+                                        <span class="badge bg-secondary-lt text-secondary">{{ $payment->reference_number }}</span>
+                                    @endif
+                                </div>
+                                @if ($payment->invoice)
+                                    <a href="{{ route('wali-santri.invoices.show', $payment->invoice) }}" class="btn btn-outline-primary btn-sm mt-3">
+                                        <i class="ti ti-eye me-1"></i>
+                                        Detail Tagihan
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     @empty

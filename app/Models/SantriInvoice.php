@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\SantriInvoiceFactory;
+use DomainException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -125,8 +126,12 @@ class SantriInvoice extends Model
         $paidAmount = (float) $this->payments()->sum('amount');
         $invoiceAmount = (float) $this->amount;
 
+        if ($paidAmount > $invoiceAmount) {
+            throw new DomainException('Total pembayaran tidak boleh melebihi nominal tagihan.');
+        }
+
         $this->forceFill([
-            'paid_amount' => min($paidAmount, $invoiceAmount),
+            'paid_amount' => $paidAmount,
             'status' => match (true) {
                 $paidAmount >= $invoiceAmount => self::STATUS_PAID,
                 $paidAmount > 0 => self::STATUS_PARTIAL,

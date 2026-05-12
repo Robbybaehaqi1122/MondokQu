@@ -125,7 +125,7 @@ test('admin can export filtered tenant scoped activity logs', function () {
     $otherTenant = Tenant::factory()->activeSubscription()->create();
     $otherUser = User::factory()->forTenant($otherTenant)->create();
 
-    ActivityLog::query()->create([
+    ActivityLog::unguarded(fn () => ActivityLog::query()->create([
         'tenant_id' => $admin->tenant_id,
         'actor_id' => $admin->id,
         'actor_name' => $admin->name,
@@ -136,8 +136,8 @@ test('admin can export filtered tenant scoped activity logs', function () {
         'properties' => ['nis' => 'AUDIT-001'],
         'created_at' => '2026-05-11 09:00:00',
         'updated_at' => '2026-05-11 09:00:00',
-    ]);
-    ActivityLog::query()->create([
+    ]));
+    ActivityLog::unguarded(fn () => ActivityLog::query()->create([
         'tenant_id' => $admin->tenant_id,
         'actor_id' => $admin->id,
         'actor_name' => $admin->name,
@@ -147,8 +147,8 @@ test('admin can export filtered tenant scoped activity logs', function () {
         'ip_address' => '127.0.0.1',
         'created_at' => '2026-05-11 10:00:00',
         'updated_at' => '2026-05-11 10:00:00',
-    ]);
-    ActivityLog::query()->create([
+    ]));
+    ActivityLog::unguarded(fn () => ActivityLog::query()->create([
         'tenant_id' => $otherTenant->id,
         'actor_id' => $otherUser->id,
         'actor_name' => $otherUser->name,
@@ -158,7 +158,7 @@ test('admin can export filtered tenant scoped activity logs', function () {
         'ip_address' => '127.0.0.1',
         'created_at' => '2026-05-11 09:00:00',
         'updated_at' => '2026-05-11 09:00:00',
-    ]);
+    ]));
 
     $response = $this
         ->actingAs($admin)

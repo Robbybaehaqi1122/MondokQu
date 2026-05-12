@@ -75,6 +75,37 @@ class WaliSantriDashboardController extends Controller
     }
 
     /**
+     * Display an invoice detail for a linked santri.
+     */
+    public function showInvoice(Request $request, SantriInvoice $invoice): View
+    {
+        $currentUser = $request->user();
+        $santriIds = $currentUser
+            ->guardianSantris()
+            ->pluck('santris.id');
+
+        abort_if($santriIds->isEmpty(), 404);
+
+        $invoice = SantriInvoice::query()
+            ->visibleTo($currentUser)
+            ->with([
+                'santri',
+                'payments' => fn ($query) => $query
+                    ->with('recorder')
+                    ->latest('paid_at')
+                    ->latest('id'),
+            ])
+            ->whereKey($invoice->id)
+            ->whereIn('santri_id', $santriIds)
+            ->firstOrFail();
+
+        return view('wali-santri.invoice-show', [
+            'invoice' => $invoice,
+            'payments' => $invoice->payments,
+        ]);
+    }
+
+    /**
      * Build financial summary for all linked santri.
      */
     protected function buildSummary($invoiceBaseQuery, $paymentBaseQuery, int $childrenCount): array

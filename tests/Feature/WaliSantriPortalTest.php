@@ -68,6 +68,11 @@ test('wali santri dashboard shows only linked santri and payment summary', funct
     $response->assertSee('Ayah');
     $response->assertSee('SPP Mei Wali');
     $response->assertSee('Rp 350.000');
+    $response->assertSee('data-mobile-invoice-list', false);
+    $response->assertSee('data-mobile-invoice-card', false);
+    $response->assertSee('data-mobile-payment-list', false);
+    $response->assertSee('data-mobile-payment-card', false);
+    $response->assertSee(route('wali-santri.invoices.show', $invoice), false);
     $response->assertDontSee('Santri Tidak Terhubung');
     $response->assertDontSee('Santri Tenant Lain');
     $response->assertDontSee('Tagihan Tidak Terlihat');
@@ -82,6 +87,81 @@ test('dashboard route redirects wali santri to portal', function () {
         ->get(route('dashboard'));
 
     $response->assertRedirect(route('wali-santri.dashboard', absolute: false));
+});
+
+test('wali santri can view linked invoice detail with payment history', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'nis' => 'WALI-DETAIL',
+        'full_name' => 'Fatimah Anak Wali',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ibu',
+    ]);
+
+    $invoice = SantriInvoice::factory()->forSantri($linkedSantri)->create([
+        'invoice_number' => 'INV-WALI-DETAIL',
+        'title' => 'SPP Detail Wali',
+        'amount' => 500000,
+        'paid_amount' => 150000,
+        'status' => SantriInvoice::STATUS_PARTIAL,
+        'notes' => 'Dibayarkan sebelum akhir bulan.',
+    ]);
+
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 100000,
+        'payment_method' => 'transfer bank',
+        'reference_number' => 'REF-WALI-1',
+        'note' => 'Pembayaran awal wali',
+        'paid_at' => now()->subDays(2),
+    ]);
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 50000,
+        'payment_method' => 'cash',
+        'reference_number' => 'REF-WALI-2',
+        'paid_at' => now()->subDay(),
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.invoices.show', $invoice));
+
+    $response->assertOk();
+    $response->assertSee('Detail Tagihan');
+    $response->assertSee('SPP Detail Wali');
+    $response->assertSee('INV-WALI-DETAIL');
+    $response->assertSee('Fatimah Anak Wali');
+    $response->assertSee('Rp 500.000');
+    $response->assertSee('Rp 150.000');
+    $response->assertSee('Rp 350.000');
+    $response->assertSee('Transfer Bank');
+    $response->assertSee('Cash');
+    $response->assertSee('REF-WALI-1');
+    $response->assertSee('Pembayaran awal wali');
+    $response->assertSee('Dibayarkan sebelum akhir bulan.');
+});
+
+test('wali santri can not view invoice detail for unlinked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $invoice = SantriInvoice::factory()->forSantri($unlinkedSantri)->create([
+        'title' => 'Tagihan Santri Lain',
+        'amount' => 250000,
+    ]);
+
+    $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.invoices.show', $invoice))
+        ->assertNotFound();
 });
 
 test('admin can attach santri to wali account from user detail', function () {

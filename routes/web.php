@@ -155,6 +155,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Wali Santri|view portal wali'])->group(function () {
     Route::get('/wali-santri', [WaliSantriDashboardController::class, 'index'])->name('wali-santri.dashboard');
+    Route::get('/wali-santri/tagihan/{invoice}', [WaliSantriDashboardController::class, 'showInvoice'])->name('wali-santri.invoices.show');
 });
 
 require base_path('app/Modules/Auth/Routes/web.php');

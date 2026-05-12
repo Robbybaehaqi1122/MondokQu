@@ -4,6 +4,7 @@ use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Models\Tenant;
+use Illuminate\Database\QueryException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -433,4 +434,66 @@ test('payment update rechecks invoice total inside a locked transaction', functi
 
     $response->assertSessionHasErrors('amount', null, 'updatePayment');
     expect((float) $payment->fresh()->amount)->toBe(20000.0);
+});
+
+test('database rejects invalid invoice balances', function () {
+    $admin = tenantUser('Admin');
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+
+    expect(fn () => SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 125000,
+    ]))->toThrow(QueryException::class);
+
+    expect(fn () => SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 0,
+        'paid_amount' => 0,
+    ]))->toThrow(QueryException::class);
+
+    expect(fn () => SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => -1000,
+    ]))->toThrow(QueryException::class);
+
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 50000,
+        'status' => SantriInvoice::STATUS_PARTIAL,
+    ]);
+
+    expect(fn () => $invoice->forceFill(['amount' => 40000])->save())
+        ->toThrow(QueryException::class);
+});
+
+test('database rejects non positive payment amounts', function () {
+    $admin = tenantUser('Admin');
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create();
+
+    expect(fn () => SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 0,
+    ]))->toThrow(QueryException::class);
+
+    expect(fn () => SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => -1000,
+    ]))->toThrow(QueryException::class);
+});
+
+test('invoice payment refresh refuses overpaid ledgers', function () {
+    $admin = tenantUser('Admin');
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 0,
+        'status' => SantriInvoice::STATUS_PENDING,
+    ]);
+
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 125000,
+    ]);
+
+    $this->actingAs($admin);
+
+    expect(fn () => $invoice->refreshPaymentStatus())
+        ->toThrow(DomainException::class, 'Total pembayaran tidak boleh melebihi nominal tagihan.');
 });
