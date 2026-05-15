@@ -54,6 +54,29 @@ test('tenant user on trial can still access the application', function () {
     $response->assertOk();
 });
 
+test('tenant queued for deletion is blocked with deletion guidance', function () {
+    $tenant = Tenant::factory()->activeSubscription()->create([
+        'name' => 'Pondok Dalam Penghapusan',
+        'subscription_status' => Tenant::SUBSCRIPTION_DELETING,
+    ]);
+    $user = User::factory()->forTenant($tenant)->create();
+    $user->assignRole('Pengurus');
+    $user->givePermissionTo('view santri');
+
+    $this
+        ->actingAs($user)
+        ->get(route('santri.index'))
+        ->assertRedirect(route('subscription.expired', absolute: false));
+
+    $response = $this
+        ->actingAs($user)
+        ->get(route('subscription.expired'));
+
+    $response->assertOk();
+    $response->assertSee('Dalam Penghapusan');
+    $response->assertSee('Akses operasional diblokir selama proses penghapusan data berjalan di background queue.');
+});
+
 test('non superadmin user without tenant is redirected away from tenant operations', function () {
     $user = User::factory()->create();
     $user->assignRole('Pengurus');

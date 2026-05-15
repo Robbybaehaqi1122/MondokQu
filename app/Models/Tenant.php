@@ -19,6 +19,8 @@ class Tenant extends Model
 
     public const SUBSCRIPTION_EXPIRED = 'expired';
 
+    public const SUBSCRIPTION_DELETING = 'deleting';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -153,10 +155,34 @@ class Tenant extends Model
     }
 
     /**
+     * Determine whether the tenant is queued for permanent deletion.
+     */
+    public function isDeleting(): bool
+    {
+        return $this->subscription_status === self::SUBSCRIPTION_DELETING;
+    }
+
+    /**
      * Determine whether the tenant already requires payment.
      */
     public function requiresPayment(): bool
     {
         return ! $this->hasAccess();
+    }
+
+    /**
+     * Get tenant subscription lifecycle statuses.
+     *
+     * @return array<int, string>
+     */
+    public static function subscriptionStatuses(): array
+    {
+        return [
+            self::SUBSCRIPTION_TRIAL,
+            self::SUBSCRIPTION_ACTIVE,
+            self::SUBSCRIPTION_GRACE,
+            self::SUBSCRIPTION_EXPIRED,
+            self::SUBSCRIPTION_DELETING,
+        ];
     }
 }

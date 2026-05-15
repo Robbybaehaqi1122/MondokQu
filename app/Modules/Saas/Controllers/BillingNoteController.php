@@ -57,7 +57,7 @@ class BillingNoteController extends Controller
             })
             ->when(in_array($paymentMethod, ['transfer bank', 'cash', 'e-wallet', 'qris', 'lainnya'], true), fn ($query) => $query->where('payment_method', $paymentMethod))
             ->when($tenantId > 0, fn ($query) => $query->where('tenant_id', $tenantId))
-            ->when(in_array($tenantStatus, [Tenant::SUBSCRIPTION_TRIAL, Tenant::SUBSCRIPTION_ACTIVE, Tenant::SUBSCRIPTION_GRACE, Tenant::SUBSCRIPTION_EXPIRED], true), fn ($query) => $query->whereHas('tenant', function ($tenantQuery) use ($tenantStatus) {
+            ->when(in_array($tenantStatus, Tenant::subscriptionStatuses(), true), fn ($query) => $query->whereHas('tenant', function ($tenantQuery) use ($tenantStatus) {
                 $tenantQuery->where('subscription_status', $tenantStatus);
             }))
             ->when($paidFrom !== '', fn ($query) => $query->whereDate('paid_at', '>=', $paidFrom))
@@ -81,6 +81,7 @@ class BillingNoteController extends Controller
         return view('modules.saas.billing-notes.index', [
             'billingNotes' => $billingNotes,
             'tenants' => Tenant::query()
+                ->where('subscription_status', '!=', Tenant::SUBSCRIPTION_DELETING)
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug']),
             'summary' => [
@@ -91,6 +92,7 @@ class BillingNoteController extends Controller
                     Tenant::SUBSCRIPTION_TRIAL => $statusCounts[Tenant::SUBSCRIPTION_TRIAL] ?? 0,
                     Tenant::SUBSCRIPTION_GRACE => $statusCounts[Tenant::SUBSCRIPTION_GRACE] ?? 0,
                     Tenant::SUBSCRIPTION_EXPIRED => $statusCounts[Tenant::SUBSCRIPTION_EXPIRED] ?? 0,
+                    Tenant::SUBSCRIPTION_DELETING => $statusCounts[Tenant::SUBSCRIPTION_DELETING] ?? 0,
                 ],
             ],
             'filters' => [

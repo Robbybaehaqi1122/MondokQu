@@ -29,6 +29,7 @@ class SaasDashboardController extends Controller
                 'active_tenants' => Tenant::query()->where('subscription_status', Tenant::SUBSCRIPTION_ACTIVE)->count(),
                 'grace_tenants' => Tenant::query()->where('subscription_status', Tenant::SUBSCRIPTION_GRACE)->count(),
                 'expired_tenants' => Tenant::query()->where('subscription_status', Tenant::SUBSCRIPTION_EXPIRED)->count(),
+                'deleting_tenants' => Tenant::query()->where('subscription_status', Tenant::SUBSCRIPTION_DELETING)->count(),
                 'platform_users' => User::query()->count(),
             ],
         ]);

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Saas\Requests;
 
+use App\Models\Tenant;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
@@ -49,6 +50,20 @@ class StoreBillingNoteRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator): void {
+            $tenantId = $this->input('tenant_id');
+
+            if (! is_scalar($tenantId)) {
+                return;
+            }
+
+            $tenant = Tenant::query()->find($tenantId);
+
+            if ($tenant?->isDeleting()) {
+                $validator->errors()->add('tenant_id', 'Tenant sedang dihapus sehingga tidak dapat menerima billing note baru.');
+
+                return;
+            }
+
             if (! $this->boolean('apply_subscription') || ! $this->filled('period_ends_at')) {
                 return;
             }

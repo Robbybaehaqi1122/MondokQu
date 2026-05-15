@@ -23,10 +23,16 @@
                 <h2 class="page-title">Detail Tagihan</h2>
                 <div class="text-secondary mt-1">{{ $invoice->invoice_number }} - {{ $invoice->santri?->full_name ?? '-' }}</div>
             </div>
-            <a href="{{ route('wali-santri.dashboard') }}" class="btn btn-outline-secondary">
-                <i class="ti ti-arrow-left me-1"></i>
-                Kembali
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('wali-santri.invoices.receipt', $invoice) }}" class="btn btn-primary" target="_blank" rel="noopener">
+                    <i class="ti ti-printer me-1"></i>
+                    Cetak
+                </a>
+                <a href="{{ route('wali-santri.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="ti ti-arrow-left me-1"></i>
+                    Kembali
+                </a>
+            </div>
         </div>
     </x-slot>
 

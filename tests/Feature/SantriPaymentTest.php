@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\SantriPaymentController;
+use App\Http\Requests\Santri\UpdateSantriInvoiceRequest;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Models\Tenant;
+use App\Services\ActivityLogger;
 use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -340,6 +344,46 @@ test('invoice amount can not be reduced below recorded payments', function () {
     ]);
 
     $response->assertSessionHasErrors('amount', null, 'updateInvoice');
+    expect((float) $invoice->fresh()->amount)->toBe(100000.0);
+});
+
+test('invoice update rechecks paid amount inside a locked transaction', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'update pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($santri)->create([
+        'amount' => 100000,
+        'paid_amount' => 0,
+        'status' => SantriInvoice::STATUS_PENDING,
+    ]);
+
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 80000,
+    ]);
+
+    $request = Mockery::mock(UpdateSantriInvoiceRequest::class);
+    $request->shouldReceive('validated')->once()->andReturn([
+        'santri_id' => $santri->id,
+        'title' => $invoice->title,
+        'period_month' => $invoice->period_month,
+        'period_year' => $invoice->period_year,
+        'due_date' => $invoice->due_date->toDateString(),
+        'amount' => 75000,
+        'notes' => $invoice->notes,
+    ]);
+    $request->shouldReceive('user')->once()->andReturn($admin);
+
+    $this->actingAs($admin);
+
+    try {
+        (new SantriPaymentController(new ActivityLogger))->updateInvoice($request, $invoice);
+
+        $this->fail('Expected invoice update validation to fail.');
+    } catch (ValidationException $exception) {
+        expect($exception->errorBag)->toBe('updateInvoice');
+        expect($exception->errors())->toHaveKey('amount');
+    }
+
     expect((float) $invoice->fresh()->amount)->toBe(100000.0);
 });
 

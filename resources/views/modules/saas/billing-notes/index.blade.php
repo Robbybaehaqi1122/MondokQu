@@ -108,6 +108,7 @@
                                     <option value="{{ Tenant::SUBSCRIPTION_TRIAL }}" @selected(($filters['tenant_status'] ?? '') === Tenant::SUBSCRIPTION_TRIAL)>Trial</option>
                                     <option value="{{ Tenant::SUBSCRIPTION_GRACE }}" @selected(($filters['tenant_status'] ?? '') === Tenant::SUBSCRIPTION_GRACE)>Grace</option>
                                     <option value="{{ Tenant::SUBSCRIPTION_EXPIRED }}" @selected(($filters['tenant_status'] ?? '') === Tenant::SUBSCRIPTION_EXPIRED)>Expired</option>
+                                    <option value="{{ Tenant::SUBSCRIPTION_DELETING }}" @selected(($filters['tenant_status'] ?? '') === Tenant::SUBSCRIPTION_DELETING)>Deleting</option>
                                 </select>
                             </div>
                             <div class="col-md-6 col-lg-3 col-xl-2">
@@ -171,6 +172,7 @@
                                                     Tenant::SUBSCRIPTION_TRIAL => 'Trial',
                                                     Tenant::SUBSCRIPTION_GRACE => 'Grace',
                                                     Tenant::SUBSCRIPTION_EXPIRED => 'Expired',
+                                                    Tenant::SUBSCRIPTION_DELETING => 'Deleting',
                                                     default => 'Tidak diketahui',
                                                 };
                                                 $statusBadge = match ($tenantStatus) {
@@ -178,6 +180,7 @@
                                                     Tenant::SUBSCRIPTION_TRIAL => 'bg-info-lt text-info',
                                                     Tenant::SUBSCRIPTION_GRACE => 'bg-warning-lt text-warning',
                                                     Tenant::SUBSCRIPTION_EXPIRED => 'bg-danger-lt text-danger',
+                                                    Tenant::SUBSCRIPTION_DELETING => 'bg-danger text-white',
                                                     default => 'bg-secondary-lt text-secondary',
                                                 };
                                             @endphp

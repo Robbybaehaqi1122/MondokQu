@@ -130,6 +130,7 @@ test('wali santri can view linked invoice detail with payment history', function
 
     $response->assertOk();
     $response->assertSee('Detail Tagihan');
+    $response->assertSee(route('wali-santri.invoices.receipt', $invoice), false);
     $response->assertSee('SPP Detail Wali');
     $response->assertSee('INV-WALI-DETAIL');
     $response->assertSee('Fatimah Anak Wali');
@@ -141,6 +142,54 @@ test('wali santri can view linked invoice detail with payment history', function
     $response->assertSee('REF-WALI-1');
     $response->assertSee('Pembayaran awal wali');
     $response->assertSee('Dibayarkan sebelum akhir bulan.');
+});
+
+test('wali santri can print linked invoice receipt', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'nis' => 'WALI-PRINT',
+        'full_name' => 'Hasan Anak Wali',
+        'room_name' => 'Asrama Print',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $invoice = SantriInvoice::factory()->forSantri($linkedSantri)->create([
+        'invoice_number' => 'INV-WALI-PRINT',
+        'title' => 'Kwitansi SPP Wali',
+        'amount' => 600000,
+        'paid_amount' => 600000,
+        'status' => SantriInvoice::STATUS_PAID,
+        'notes' => 'Lunas untuk periode berjalan.',
+    ]);
+
+    SantriPayment::factory()->forInvoice($invoice)->create([
+        'amount' => 600000,
+        'payment_method' => 'qris',
+        'reference_number' => 'QRIS-WALI-PRINT',
+        'note' => 'Pembayaran penuh',
+        'paid_at' => now()->subDay(),
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.invoices.receipt', $invoice));
+
+    $response->assertOk();
+    $response->assertSee('Bukti Pembayaran / Kwitansi');
+    $response->assertSee('INV-WALI-PRINT');
+    $response->assertSee('Kwitansi SPP Wali');
+    $response->assertSee('Hasan Anak Wali');
+    $response->assertSee('Asrama Print');
+    $response->assertSee('Rp 600.000');
+    $response->assertSee('Lunas');
+    $response->assertSee('Qris');
+    $response->assertSee('QRIS-WALI-PRINT');
+    $response->assertSee('Pembayaran penuh');
+    $response->assertSee('window.print()', false);
 });
 
 test('wali santri can not view invoice detail for unlinked santri', function () {
@@ -161,6 +210,27 @@ test('wali santri can not view invoice detail for unlinked santri', function () 
     $this
         ->actingAs($wali)
         ->get(route('wali-santri.invoices.show', $invoice))
+        ->assertNotFound();
+});
+
+test('wali santri can not print receipt for unlinked santri invoice', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $invoice = SantriInvoice::factory()->forSantri($unlinkedSantri)->create([
+        'title' => 'Kwitansi Santri Lain',
+        'amount' => 250000,
+    ]);
+
+    $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.invoices.receipt', $invoice))
         ->assertNotFound();
 });
 

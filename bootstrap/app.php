@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckImpersonation;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\EnsureTenantSubscriptionIsActive;
 use Illuminate\Foundation\Application;
@@ -16,7 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            CheckImpersonation::class,
+        ]);
+
         $middleware->alias([
+            'check_impersonation' => CheckImpersonation::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,

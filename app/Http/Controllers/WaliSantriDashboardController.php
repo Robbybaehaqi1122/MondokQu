@@ -79,27 +79,22 @@ class WaliSantriDashboardController extends Controller
      */
     public function showInvoice(Request $request, SantriInvoice $invoice): View
     {
-        $currentUser = $request->user();
-        $santriIds = $currentUser
-            ->guardianSantris()
-            ->pluck('santris.id');
-
-        abort_if($santriIds->isEmpty(), 404);
-
-        $invoice = SantriInvoice::query()
-            ->visibleTo($currentUser)
-            ->with([
-                'santri',
-                'payments' => fn ($query) => $query
-                    ->with('recorder')
-                    ->latest('paid_at')
-                    ->latest('id'),
-            ])
-            ->whereKey($invoice->id)
-            ->whereIn('santri_id', $santriIds)
-            ->firstOrFail();
+        $invoice = $this->resolveLinkedInvoice($request, $invoice);
 
         return view('wali-santri.invoice-show', [
+            'invoice' => $invoice,
+            'payments' => $invoice->payments,
+        ]);
+    }
+
+    /**
+     * Display a print-friendly receipt for a linked invoice.
+     */
+    public function printInvoice(Request $request, SantriInvoice $invoice): View
+    {
+        $invoice = $this->resolveLinkedInvoice($request, $invoice);
+
+        return view('wali-santri.invoice-receipt', [
             'invoice' => $invoice,
             'payments' => $invoice->payments,
         ]);
@@ -126,5 +121,32 @@ class WaliSantriDashboardController extends Controller
                 ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->sum('amount'),
         ];
+    }
+
+    /**
+     * Resolve an invoice that belongs to one of the current wali user's linked santri.
+     */
+    protected function resolveLinkedInvoice(Request $request, SantriInvoice $invoice): SantriInvoice
+    {
+        $currentUser = $request->user();
+        $santriIds = $currentUser
+            ->guardianSantris()
+            ->pluck('santris.id');
+
+        abort_if($santriIds->isEmpty(), 404);
+
+        return SantriInvoice::query()
+            ->visibleTo($currentUser)
+            ->with([
+                'santri',
+                'tenant',
+                'payments' => fn ($query) => $query
+                    ->with('recorder')
+                    ->latest('paid_at')
+                    ->latest('id'),
+            ])
+            ->whereKey($invoice->id)
+            ->whereIn('santri_id', $santriIds)
+            ->firstOrFail();
     }
 }

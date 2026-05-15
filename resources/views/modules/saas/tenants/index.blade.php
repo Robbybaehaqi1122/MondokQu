@@ -5,6 +5,7 @@
             'active' => 'bg-success-lt text-success',
             'grace' => 'bg-warning-lt text-warning',
             'expired' => 'bg-danger-lt text-danger',
+            'deleting' => 'bg-danger text-white',
         ];
     @endphp
 
@@ -60,6 +61,7 @@
                                     <option value="active" @selected(($filters['status'] ?? '') === 'active')>Active</option>
                                     <option value="grace" @selected(($filters['status'] ?? '') === 'grace')>Grace</option>
                                     <option value="expired" @selected(($filters['status'] ?? '') === 'expired')>Expired</option>
+                                    <option value="deleting" @selected(($filters['status'] ?? '') === 'deleting')>Deleting</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-6 col-lg-3 col-xl-2">
@@ -86,6 +88,7 @@
                         </thead>
                         <tbody>
                             @forelse ($tenants as $tenant)
+                                @php($tenantIsDeleting = $tenant->isDeleting())
                                 <tr>
                                     <td>
                                         <div class="fw-semibold">{{ $tenant->name }}</div>
@@ -118,6 +121,7 @@
                                                     class="btn btn-outline-primary btn-sm w-100"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#subscriptionControlModal{{ $tenant->id }}"
+                                                    @disabled($tenantIsDeleting)
                                                 >
                                                     Subscription Control
                                                 </button>
@@ -129,8 +133,9 @@
                                                     class="btn btn-outline-danger btn-sm w-100"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#deleteTenantModal{{ $tenant->id }}"
+                                                    @disabled($tenantIsDeleting)
                                                 >
-                                                    Hapus Permanen
+                                                    {{ $tenantIsDeleting ? 'Dalam Antrean' : 'Hapus Permanen' }}
                                                 </button>
                                             </div>
                                         </div>
@@ -357,9 +362,9 @@
                             @endif
 
                             <div class="alert alert-danger" role="alert">
-                                <div class="fw-semibold">Aksi ini menghapus data tenant secara permanen.</div>
+                                <div class="fw-semibold">Aksi ini menandai tenant untuk dihapus permanen.</div>
                                 <div class="mt-2">
-                                    Data user tenant, santri, activity log tenant, billing note, dan riwayat subscription tenant akan dihapus. Aksi ini tidak bisa dibatalkan.
+                                    Data user tenant, santri, activity log tenant, billing note, dan riwayat subscription tenant akan diproses oleh background queue. Aksi ini tidak bisa dibatalkan.
                                 </div>
                             </div>
 
@@ -426,8 +431,8 @@
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Hapus permanen tenant ini beserta data tenantnya?')">
-                                Hapus Permanen
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Masukkan tenant ini ke antrean penghapusan permanen?')">
+                                Masukkan Antrean Hapus
                             </button>
                         </div>
                     </form>

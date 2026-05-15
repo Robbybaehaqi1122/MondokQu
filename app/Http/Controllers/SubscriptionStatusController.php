@@ -71,6 +71,14 @@ class SubscriptionStatusController extends Controller
                 'detail' => 'Jika Anda tetap melihat halaman ini, minta admin platform memeriksa ulang status akun atau tenant Anda.',
                 'action' => 'Laporkan kondisi ini ke admin platform karena akses Anda seharusnya masih terbuka.',
             ],
+            Tenant::SUBSCRIPTION_DELETING => [
+                'title' => $tenant->name,
+                'badge' => 'Dalam Penghapusan',
+                'badge_color' => 'danger',
+                'description' => 'Tenant ini sedang masuk antrean penghapusan permanen.',
+                'detail' => 'Akses operasional diblokir selama proses penghapusan data berjalan di background queue.',
+                'action' => 'Hubungi admin platform jika penghapusan tenant ini perlu diverifikasi.',
+            ],
             default => [
                 'title' => $tenant->name,
                 'badge' => 'Status Tidak Diketahui',

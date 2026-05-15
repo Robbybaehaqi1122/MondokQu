@@ -53,6 +53,10 @@ class DeleteTenantRequest extends FormRequest
                 $validator->errors()->add('delete_tenant_id', 'Tenant yang akan dihapus tidak valid.');
             }
 
+            if ($tenant->isDeleting()) {
+                $validator->errors()->add('delete_tenant_id', 'Tenant ini sudah masuk antrean penghapusan.');
+            }
+
             if ((string) $this->input('tenant_delete_confirmation') !== $tenant->slug) {
                 $validator->errors()->add(
                     'tenant_delete_confirmation',

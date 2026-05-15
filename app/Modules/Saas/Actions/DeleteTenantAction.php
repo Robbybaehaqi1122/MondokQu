@@ -2,11 +2,19 @@
 
 namespace App\Modules\Saas\Actions;
 
+use App\Models\ActivityLog;
+use App\Models\Santri;
+use App\Models\SantriInvoice;
+use App\Models\SantriPayment;
 use App\Models\Tenant;
+use App\Models\TenantBillingNote;
+use App\Models\TenantSubscriptionHistory;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\SantriPhotoUploader;
 use App\Services\UserAvatarUploader;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class DeleteTenantAction
@@ -24,12 +32,12 @@ class DeleteTenantAction
      */
     public function handle(
         Tenant $tenant,
-        User $actor,
+        ?User $actor,
         ?string $deleteReason = null,
         ?string $ipAddress = null,
         ?string $userAgent = null
     ): array {
-        if ($this->tenantContainsUser($tenant, $actor)) {
+        if ($actor && $this->tenantContainsUser($tenant, $actor)) {
             return [
                 'deleted' => false,
                 'message' => 'Tenant ini memuat akun yang sedang Anda gunakan, sehingga tidak bisa dihapus permanen.',
@@ -53,32 +61,41 @@ class DeleteTenantAction
             ->pluck('email')
             ->all();
 
-        DB::transaction(function () use ($tenant, $userEmails, $userIds): void {
-            DB::table('sessions')
-                ->when($userIds !== [], fn ($query) => $query->whereIn('user_id', $userIds))
-                ->when($userIds === [], fn ($query) => $query->whereRaw('1 = 0'))
-                ->delete();
+        $this->deleteTableRowsByValues('sessions', 'user_id', $userIds);
+        $this->deleteTableRowsByValues('password_reset_tokens', 'email', $userEmails);
 
-            DB::table('password_reset_tokens')
-                ->when($userEmails !== [], fn ($query) => $query->whereIn('email', $userEmails))
-                ->when($userEmails === [], fn ($query) => $query->whereRaw('1 = 0'))
-                ->delete();
-
+        DB::transaction(function () use ($tenant): void {
             $tenant->forceFill(['owner_id' => null])->save();
+        });
 
-            $tenant->activityLogs()->withoutTenantScope()->delete();
-            $tenant->billingNotes()->delete();
-            $tenant->subscriptionHistories()->delete();
-            $tenant->santriPayments()->withoutTenantScope()->delete();
-            $tenant->santriInvoices()->withoutTenantScope()->delete();
-            $tenant->santris()->withoutTenantScope()->delete();
+        $this->deleteEloquentRowsInChunks(
+            ActivityLog::query()->withoutTenantScope()->where('tenant_id', $tenant->id)
+        );
+        $this->deleteEloquentRowsInChunks(
+            TenantBillingNote::query()->where('tenant_id', $tenant->id)
+        );
+        $this->deleteEloquentRowsInChunks(
+            TenantSubscriptionHistory::query()->where('tenant_id', $tenant->id)
+        );
+        $this->deleteEloquentRowsInChunks(
+            SantriPayment::query()->withoutTenantScope()->where('tenant_id', $tenant->id)
+        );
+        $this->deleteEloquentRowsInChunks(
+            SantriInvoice::query()->withoutTenantScope()->where('tenant_id', $tenant->id)
+        );
+        $this->deleteEloquentRowsInChunks(
+            Santri::query()->withoutTenantScope()->where('tenant_id', $tenant->id)
+        );
 
+        if ($userIds !== []) {
             User::query()
                 ->whereIn('id', $userIds)
-                ->get()
-                ->each
-                ->delete();
+                ->chunkById(500, function ($users): void {
+                    $users->each->delete();
+                });
+        }
 
+        DB::transaction(function () use ($tenant): void {
             $tenant->delete();
         });
 
@@ -133,5 +150,46 @@ class DeleteTenantAction
             'subscription_histories_count' => $tenant->subscriptionHistories()->count(),
             'delete_reason' => $deleteReason,
         ];
+    }
+
+    /**
+     * Delete table rows in bounded batches for large tenant cleanup jobs.
+     *
+     * @param  array<int, mixed>  $values
+     */
+    protected function deleteTableRowsByValues(string $table, string $column, array $values, int $chunkSize = 500): void
+    {
+        $values = array_values(array_filter($values, fn (mixed $value): bool => $value !== null && $value !== ''));
+
+        foreach (array_chunk($values, $chunkSize) as $chunk) {
+            DB::table($table)
+                ->whereIn($column, $chunk)
+                ->delete();
+        }
+    }
+
+    /**
+     * Delete model rows in bounded transactions so queue workers avoid giant locks.
+     *
+     * @param  Builder<Model>  $query
+     */
+    protected function deleteEloquentRowsInChunks(Builder $query, int $chunkSize = 500): void
+    {
+        do {
+            $ids = (clone $query)
+                ->orderBy($query->getModel()->getQualifiedKeyName())
+                ->limit($chunkSize)
+                ->pluck($query->getModel()->getKeyName());
+
+            if ($ids->isEmpty()) {
+                return;
+            }
+
+            DB::transaction(function () use ($ids, $query): void {
+                (clone $query)
+                    ->whereKey($ids->all())
+                    ->delete();
+            });
+        } while ($ids->count() === $chunkSize);
     }
 }

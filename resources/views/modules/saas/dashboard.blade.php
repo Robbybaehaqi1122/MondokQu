@@ -97,7 +97,17 @@
                                         <div class="text-secondary small mt-1">{{ $tenant->contact_email ?: '-' }}</div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-azure-lt text-azure">{{ str($tenant->subscription_status)->headline() }}</span>
+                                        @php
+                                            $statusBadgeClass = match ($tenant->subscription_status) {
+                                                \App\Models\Tenant::SUBSCRIPTION_ACTIVE => 'bg-success-lt text-success',
+                                                \App\Models\Tenant::SUBSCRIPTION_TRIAL => 'bg-azure-lt text-azure',
+                                                \App\Models\Tenant::SUBSCRIPTION_GRACE => 'bg-warning-lt text-warning',
+                                                \App\Models\Tenant::SUBSCRIPTION_EXPIRED => 'bg-danger-lt text-danger',
+                                                \App\Models\Tenant::SUBSCRIPTION_DELETING => 'bg-danger text-white',
+                                                default => 'bg-secondary-lt text-secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $statusBadgeClass }}">{{ str($tenant->subscription_status)->headline() }}</span>
                                     </td>
                                     <td>{{ $tenant->trial_ends_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>
                                     <td>{{ $tenant->subscription_ends_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>

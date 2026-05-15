@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
-use App\Modules\Saas\Actions\DeleteTenantAction;
 use App\Modules\Saas\Actions\UpdateTenantSubscriptionAction;
+use App\Modules\Saas\Jobs\DeleteTenantJob;
 use App\Modules\Saas\Requests\DeleteTenantRequest;
 use App\Modules\Saas\Requests\StoreTenantRequest;
 use App\Modules\Saas\Requests\UpdateTenantSubscriptionRequest;
@@ -48,12 +48,7 @@ class TenantManagementController extends Controller
                             ->orWhere('contact_phone_number', 'like', "%{$search}%");
                     });
                 })
-                ->when(in_array($status, [
-                    Tenant::SUBSCRIPTION_TRIAL,
-                    Tenant::SUBSCRIPTION_ACTIVE,
-                    Tenant::SUBSCRIPTION_GRACE,
-                    Tenant::SUBSCRIPTION_EXPIRED,
-                ], true), fn ($query) => $query->where('subscription_status', $status))
+                ->when(in_array($status, Tenant::subscriptionStatuses(), true), fn ($query) => $query->where('subscription_status', $status))
                 ->orderBy('name')
                 ->paginate(10)
                 ->withQueryString(),
@@ -178,13 +173,15 @@ class TenantManagementController extends Controller
             'accessSummary' => [
                 'has_access' => $tenant->hasAccess(),
                 'access_label' => $tenant->hasAccess() ? 'Akses Aktif' : 'Akses Diblokir',
-                'access_reason' => $tenant->onTrial()
+                'access_reason' => $tenant->isDeleting()
+                    ? 'Tenant sedang masuk antrean penghapusan permanen.'
+                    : ($tenant->onTrial()
                     ? 'Tenant masih dalam masa trial.'
                     : ($tenant->hasPaidSubscription()
                         ? 'Tenant memiliki subscription aktif.'
                         : ($tenant->onGracePeriod()
                             ? 'Tenant sedang berada di masa grace period.'
-                            : 'Tenant perlu pembayaran atau aktivasi ulang untuk mengakses aplikasi.')),
+                            : 'Tenant perlu pembayaran atau aktivasi ulang untuk mengakses aplikasi.'))),
             ],
             'recentUsers' => $tenant->users()
                 ->with('roles')
@@ -242,27 +239,83 @@ class TenantManagementController extends Controller
     }
 
     /**
-     * Permanently delete a tenant and its tenant-owned operational data.
+     * Queue a tenant and its tenant-owned operational data for permanent deletion.
      */
     public function destroy(
         DeleteTenantRequest $request,
-        Tenant $tenant,
-        DeleteTenantAction $deleteTenant
+        Tenant $tenant
     ): RedirectResponse {
         abort_unless($request->user()?->isSuperAdmin(), 403);
 
-        $result = $deleteTenant->handle(
-            tenant: $tenant,
-            actor: $request->user(),
-            deleteReason: $request->validated('delete_reason'),
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent()
-        );
+        $actor = $request->user();
+        $deleteReason = $request->validated('delete_reason');
+        $ipAddress = $request->ip();
+        $userAgent = $request->userAgent();
 
-        if (! $result['deleted']) {
+        $result = DB::transaction(function () use ($actor, $deleteReason, $ipAddress, $tenant, $userAgent): array {
+            $lockedTenant = Tenant::query()
+                ->lockForUpdate()
+                ->findOrFail($tenant->id);
+
+            if ($lockedTenant->isDeleting()) {
+                return [
+                    'queued' => false,
+                    'message' => 'Penghapusan tenant sudah masuk antrean dan sedang diproses.',
+                ];
+            }
+
+            if ($actor && $lockedTenant->users()->whereKey($actor->id)->exists()) {
+                return [
+                    'queued' => false,
+                    'message' => 'Tenant ini memuat akun yang sedang Anda gunakan, sehingga tidak bisa dihapus permanen.',
+                ];
+            }
+
+            $previousStatus = $lockedTenant->subscription_status;
+
+            $lockedTenant->forceFill([
+                'subscription_status' => Tenant::SUBSCRIPTION_DELETING,
+            ])->save();
+
+            $this->activityLogger->log(
+                action: 'tenant_delete_requested',
+                actor: $actor,
+                target: $lockedTenant,
+                description: 'Tenant ditandai untuk penghapusan permanen melalui background queue.',
+                properties: [
+                    'tenant_id' => $lockedTenant->id,
+                    'tenant_name' => $lockedTenant->name,
+                    'tenant_slug' => $lockedTenant->slug,
+                    'previous_subscription_status' => $previousStatus,
+                    'delete_reason' => $deleteReason,
+                ],
+                ipAddress: $ipAddress,
+                userAgent: $userAgent
+            );
+
+            return [
+                'queued' => true,
+                'tenant_id' => $lockedTenant->id,
+                'actor_id' => $actor?->id,
+                'delete_reason' => $deleteReason,
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+                'message' => 'Tenant '.$lockedTenant->name.' ditandai sedang dihapus. Proses penghapusan berjalan di background queue.',
+            ];
+        });
+
+        if (! $result['queued']) {
             return back()
                 ->with('error', $result['message']);
         }
+
+        DeleteTenantJob::dispatch(
+            $result['tenant_id'],
+            $result['actor_id'],
+            $result['delete_reason'],
+            $result['ip_address'],
+            $result['user_agent']
+        );
 
         return redirect()
             ->route('saas.tenants.index')

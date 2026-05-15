@@ -7,8 +7,10 @@ use App\Models\TenantBillingNote;
 use App\Models\TenantSubscriptionHistory;
 use App\Models\User;
 use App\Modules\Saas\Actions\DeleteTenantAction;
+use App\Modules\Saas\Jobs\DeleteTenantJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -579,6 +581,8 @@ test('billing note can not activate subscription with an expired billing period'
 });
 
 test('superadmin can permanently delete a tenant with exact slug confirmation', function () {
+    Queue::fake();
+
     $superadmin = User::factory()->create(['name' => 'Tenant Deleter']);
     $superadmin->assignRole('Superadmin');
 
@@ -655,19 +659,79 @@ test('superadmin can permanently delete a tenant with exact slug confirmation', 
     $response->assertRedirect(route('saas.tenants.index', absolute: false));
     $response->assertSessionHas('success');
 
-    expect(Tenant::query()->whereKey($tenant->id)->exists())->toBeFalse();
-    expect(User::query()->whereKey($tenantUser->id)->exists())->toBeFalse();
-    expect(Santri::query()->whereKey($santri->id)->exists())->toBeFalse();
-    expect(ActivityLog::query()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
-    expect(TenantBillingNote::query()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
-    expect(TenantSubscriptionHistory::query()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
-    expect(DB::table('sessions')->where('user_id', $tenantUser->id)->exists())->toBeFalse();
-    expect(DB::table('password_reset_tokens')->where('email', $tenantUser->email)->exists())->toBeFalse();
-    expect(ActivityLog::query()->where('action', 'tenant_deleted_permanently')->exists())->toBeTrue();
+    Queue::assertPushed(DeleteTenantJob::class, function (DeleteTenantJob $job) use ($superadmin, $tenant): bool {
+        return $job->tenantId === $tenant->id
+            && $job->actorId === $superadmin->id
+            && $job->deleteReason === 'Tenant demo tidak diperlukan lagi.';
+    });
+
+    expect($tenant->fresh()?->subscription_status)->toBe(Tenant::SUBSCRIPTION_DELETING);
+    expect(User::query()->whereKey($tenantUser->id)->exists())->toBeTrue();
+    expect(Santri::query()->whereKey($santri->id)->exists())->toBeTrue();
+    expect(ActivityLog::query()->where('action', 'tenant_delete_requested')->exists())->toBeTrue();
+    expect(ActivityLog::query()->where('action', 'tenant_deleted_permanently')->exists())->toBeFalse();
 
     expect(Tenant::query()->whereKey($otherTenant->id)->exists())->toBeTrue();
     expect(User::query()->whereKey($otherUser->id)->exists())->toBeTrue();
     expect(Santri::query()->whereKey($otherSantri->id)->exists())->toBeTrue();
+});
+
+test('queued tenant delete job permanently deletes tenant data', function () {
+    $superadmin = User::factory()->create(['name' => 'Tenant Delete Worker']);
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->activeSubscription()->create([
+        'name' => 'Pondok Worker Delete',
+        'slug' => 'pondok-worker-delete',
+        'subscription_status' => Tenant::SUBSCRIPTION_DELETING,
+    ]);
+    $tenantUser = User::factory()->forTenant($tenant)->create([
+        'email' => 'tenant-worker-delete@example.com',
+    ]);
+    $tenantUser->assignRole('Admin');
+    $santri = Santri::factory()->forTenant($tenant)->create([
+        'created_by' => $tenantUser->id,
+    ]);
+
+    ActivityLog::query()->create([
+        'tenant_id' => $tenant->id,
+        'actor_id' => $tenantUser->id,
+        'actor_name' => $tenantUser->name,
+        'action' => 'tenant_user_activity',
+        'description' => 'Aktivitas tenant yang diproses worker.',
+        'target_name' => 'Tenant worker delete test',
+        'ip_address' => '127.0.0.1',
+    ]);
+
+    DB::table('sessions')->insert([
+        'id' => 'tenant-worker-session',
+        'user_id' => $tenantUser->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'Pest',
+        'payload' => '',
+        'last_activity' => now()->timestamp,
+    ]);
+    DB::table('password_reset_tokens')->insert([
+        'email' => $tenantUser->email,
+        'token' => 'worker-delete-token',
+        'created_at' => now(),
+    ]);
+
+    (new DeleteTenantJob(
+        tenantId: $tenant->id,
+        actorId: $superadmin->id,
+        deleteReason: 'Dihapus oleh worker.',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Pest Worker'
+    ))->handle(app(DeleteTenantAction::class));
+
+    expect(Tenant::query()->whereKey($tenant->id)->exists())->toBeFalse();
+    expect(User::query()->whereKey($tenantUser->id)->exists())->toBeFalse();
+    expect(Santri::query()->withoutTenantScope()->whereKey($santri->id)->exists())->toBeFalse();
+    expect(ActivityLog::query()->withoutTenantScope()->where('tenant_id', $tenant->id)->exists())->toBeFalse();
+    expect(DB::table('sessions')->where('user_id', $tenantUser->id)->exists())->toBeFalse();
+    expect(DB::table('password_reset_tokens')->where('email', $tenantUser->email)->exists())->toBeFalse();
+    expect(ActivityLog::query()->withoutTenantScope()->where('action', 'tenant_deleted_permanently')->exists())->toBeTrue();
 });
 
 test('delete tenant action can run without an authenticated request context', function () {

@@ -1,4 +1,15 @@
 <x-app-layout>
+    @php
+        $statusBadgeClass = match ($tenant->subscription_status) {
+            \App\Models\Tenant::SUBSCRIPTION_ACTIVE => 'bg-success-lt text-success',
+            \App\Models\Tenant::SUBSCRIPTION_TRIAL => 'bg-azure-lt text-azure',
+            \App\Models\Tenant::SUBSCRIPTION_GRACE => 'bg-warning-lt text-warning',
+            \App\Models\Tenant::SUBSCRIPTION_EXPIRED => 'bg-danger-lt text-danger',
+            \App\Models\Tenant::SUBSCRIPTION_DELETING => 'bg-danger text-white',
+            default => 'bg-secondary-lt text-secondary',
+        };
+    @endphp
+
     <x-slot name="header">
         <div>
             <div class="text-secondary text-uppercase small fw-bold">SaaS</div>
@@ -38,7 +49,7 @@
                         <div class="col-md-6">
                             <div class="text-secondary small text-uppercase fw-bold">Status</div>
                             <div class="mt-1">
-                                <span class="badge bg-azure-lt text-azure">{{ str($tenant->subscription_status)->headline() }}</span>
+                                <span class="badge {{ $statusBadgeClass }}">{{ str($tenant->subscription_status)->headline() }}</span>
                             </div>
                         </div>
                         <div class="col-md-6">

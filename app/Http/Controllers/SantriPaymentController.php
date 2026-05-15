@@ -208,36 +208,60 @@ class SantriPaymentController extends Controller
     {
         $validated = $request->validated();
         $currentUser = $request->user();
-        $invoice = SantriInvoice::query()
-            ->visibleTo($currentUser)
-            ->findOrFail($invoice->id);
-        $santri = Santri::query()
-            ->visibleTo($currentUser)
-            ->where('tenant_id', $invoice->tenant_id)
-            ->findOrFail($validated['santri_id']);
-        $previousValues = $invoice->only([
-            'santri_id',
-            'title',
-            'period_month',
-            'period_year',
-            'due_date',
-            'amount',
-            'notes',
-            'status',
-            'paid_amount',
-        ]);
 
-        $invoice->forceFill([
-            'santri_id' => $santri->id,
-            'title' => $validated['title'],
-            'period_month' => $validated['period_month'] ?? null,
-            'period_year' => $validated['period_year'] ?? null,
-            'due_date' => $validated['due_date'],
-            'amount' => $validated['amount'],
-            'notes' => $validated['notes'] ?? null,
-        ])->save();
+        [$invoice, $santri, $previousValues] = DB::transaction(function () use ($currentUser, $invoice, $validated): array {
+            $lockedInvoice = SantriInvoice::query()
+                ->visibleTo($currentUser)
+                ->lockForUpdate()
+                ->findOrFail($invoice->id);
 
-        $invoice->refreshPaymentStatus();
+            $santri = Santri::query()
+                ->visibleTo($currentUser)
+                ->where('tenant_id', $lockedInvoice->tenant_id)
+                ->findOrFail($validated['santri_id']);
+
+            $paidAmount = (float) $lockedInvoice->payments()->sum('amount');
+
+            if ((float) $validated['amount'] < $paidAmount) {
+                throw $this->invoiceValidationException(
+                    'amount',
+                    'Nominal tagihan tidak boleh lebih kecil dari total pembayaran yang sudah dicatat.'
+                );
+            }
+
+            if ((int) $santri->id !== (int) $lockedInvoice->santri_id && $paidAmount > 0) {
+                throw $this->invoiceValidationException(
+                    'santri_id',
+                    'Santri pada tagihan yang sudah memiliki pembayaran tidak dapat diganti.'
+                );
+            }
+
+            $previousValues = $lockedInvoice->only([
+                'santri_id',
+                'title',
+                'period_month',
+                'period_year',
+                'due_date',
+                'amount',
+                'notes',
+                'status',
+                'paid_amount',
+            ]);
+
+            $lockedInvoice->forceFill([
+                'santri_id' => $santri->id,
+                'title' => $validated['title'],
+                'period_month' => $validated['period_month'] ?? null,
+                'period_year' => $validated['period_year'] ?? null,
+                'due_date' => $validated['due_date'],
+                'amount' => $validated['amount'],
+                'notes' => $validated['notes'] ?? null,
+            ])->save();
+
+            $lockedInvoice->refreshPaymentStatus();
+
+            return [$lockedInvoice->fresh(['santri']), $santri, $previousValues];
+        });
 
         $this->activityLogger->log(
             action: 'santri_invoice_updated',
@@ -716,6 +740,16 @@ class SantriPaymentController extends Controller
             'amount' => $message,
         ]);
         $exception->errorBag = $errorBag;
+
+        return $exception;
+    }
+
+    protected function invoiceValidationException(string $field, string $message): ValidationException
+    {
+        $exception = ValidationException::withMessages([
+            $field => $message,
+        ]);
+        $exception->errorBag = 'updateInvoice';
 
         return $exception;
     }

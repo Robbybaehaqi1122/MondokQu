@@ -90,3 +90,30 @@ test('superadmin can not impersonate a user from another tenant', function () {
     $this->assertAuthenticatedAs($superadmin);
     $this->assertFalse(session()->has('impersonation.impersonator_id'));
 });
+
+test('impersonation session is invalidated when impersonator loses superadmin role', function () {
+    $superadmin = User::factory()->create(['name' => 'Platform Support']);
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->activeSubscription()->create();
+    $tenantAdmin = User::factory()->forTenant($tenant)->create();
+    $tenantAdmin->assignRole('Admin');
+
+    $this
+        ->actingAs($superadmin)
+        ->post(route('saas.tenants.users.impersonate', [$tenant, $tenantAdmin]))
+        ->assertRedirect(route('dashboard', absolute: false));
+
+    $this->assertAuthenticatedAs($tenantAdmin);
+    $this->assertTrue(session()->has('impersonation.impersonator_id'));
+
+    $superadmin->removeRole('Superadmin');
+
+    $this
+        ->get(route('admin.dashboard'))
+        ->assertRedirect(route('login', absolute: false))
+        ->assertSessionHas('error', 'Sesi impersonation tidak valid karena akses Superadmin telah dicabut. Silakan login ulang.');
+
+    $this->assertGuest();
+    $this->assertFalse(session()->has('impersonation.impersonator_id'));
+});

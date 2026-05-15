@@ -2,6 +2,7 @@
 
 namespace App\Modules\Saas\Requests;
 
+use App\Models\Tenant;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTenantSubscriptionRequest extends FormRequest
@@ -43,7 +44,14 @@ class UpdateTenantSubscriptionRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator): void {
+            $tenant = $this->route('tenant');
             $action = $this->string('action')->toString();
+
+            if ($tenant instanceof Tenant && $tenant->isDeleting()) {
+                $validator->errors()->add('action', 'Subscription tenant tidak dapat diubah karena tenant sedang dihapus.');
+
+                return;
+            }
 
             if (in_array($action, ['activate_trial', 'extend_trial'], true) && ! $this->filled('trial_ends_at')) {
                 $validator->errors()->add('trial_ends_at', 'Silakan pilih tanggal akhir trial terlebih dahulu.');
