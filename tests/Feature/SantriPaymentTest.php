@@ -207,6 +207,38 @@ test('admin can create a santri invoice', function () {
     expect($invoice?->status)->toBe(SantriInvoice::STATUS_PENDING);
 });
 
+test('invoice period year allows configurable future planning window', function () {
+    config(['santri.invoice.period_year_future_limit' => 5]);
+
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+    $allowedYear = now()->year + 5;
+    $blockedYear = now()->year + 6;
+
+    $this->actingAs($admin)->post(route('santri.payments.invoices.store'), [
+        'santri_id' => $santri->id,
+        'title' => 'Perencanaan Tahun Ajaran',
+        'period_month' => 7,
+        'period_year' => $allowedYear,
+        'due_date' => now()->addMonth()->toDateString(),
+        'amount' => 350000,
+    ])->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    expect(SantriInvoice::query()->where('period_year', $allowedYear)->exists())->toBeTrue();
+
+    $response = $this->actingAs($admin)->post(route('santri.payments.invoices.store'), [
+        'santri_id' => $santri->id,
+        'title' => 'Tahun Terlalu Jauh',
+        'period_month' => 7,
+        'period_year' => $blockedYear,
+        'due_date' => now()->addMonth()->toDateString(),
+        'amount' => 350000,
+    ]);
+
+    $response->assertSessionHasErrors('period_year', null, 'createInvoice');
+});
+
 test('admin can record partial and full payments for an invoice', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);

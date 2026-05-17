@@ -1,5 +1,10 @@
 <x-app-layout>
     @php
+        $periodYearMin = (int) config('santri.invoice.period_year_min', 2000);
+        $periodYearMax = now()->year + max(1, (int) config('santri.invoice.period_year_future_limit', 5));
+    @endphp
+
+    @php
         $statusBadgeClasses = [
             'pending' => 'bg-warning-lt text-warning',
             'partial' => 'bg-azure-lt text-azure',
@@ -387,7 +392,7 @@
 
                                                             <div class="col-md-3">
                                                                 <label for="edit_period_year_{{ $invoice->id }}" class="form-label">Tahun</label>
-                                                                <input id="edit_period_year_{{ $invoice->id }}" name="period_year" type="number" min="2000" max="{{ now()->year + 1 }}" class="form-control @if(old('editing_invoice_id') == $invoice->id && $errors->updateInvoice->has('period_year')) is-invalid @endif" value="{{ old('editing_invoice_id') == $invoice->id ? old('period_year') : $invoice->period_year }}">
+                                                                <input id="edit_period_year_{{ $invoice->id }}" name="period_year" type="number" min="{{ $periodYearMin }}" max="{{ $periodYearMax }}" class="form-control @if(old('editing_invoice_id') == $invoice->id && $errors->updateInvoice->has('period_year')) is-invalid @endif" value="{{ old('editing_invoice_id') == $invoice->id ? old('period_year') : $invoice->period_year }}">
                                                                 @if (old('editing_invoice_id') == $invoice->id && $errors->updateInvoice->has('period_year'))
                                                                     <div class="invalid-feedback">{{ $errors->updateInvoice->first('period_year') }}</div>
                                                                 @endif
@@ -601,7 +606,7 @@
 
                                 <div class="col-md-3">
                                     <label for="period_year" class="form-label">Tahun</label>
-                                    <input id="period_year" name="period_year" type="number" min="2000" max="{{ now()->year + 1 }}" class="form-control @if($errors->createInvoice->has('period_year')) is-invalid @endif" value="{{ old('period_year', now()->year) }}">
+                                    <input id="period_year" name="period_year" type="number" min="{{ $periodYearMin }}" max="{{ $periodYearMax }}" class="form-control @if($errors->createInvoice->has('period_year')) is-invalid @endif" value="{{ old('period_year', now()->year) }}">
                                     @if ($errors->createInvoice->has('period_year'))
                                         <div class="invalid-feedback">{{ $errors->createInvoice->first('period_year') }}</div>
                                     @endif

@@ -31,6 +31,8 @@ class StoreSantriInvoiceRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
+        $periodYearMin = (int) config('santri.invoice.period_year_min', 2000);
+        $periodYearMax = now()->year + max(1, (int) config('santri.invoice.period_year_future_limit', 5));
 
         return [
             'santri_id' => [
@@ -41,7 +43,7 @@ class StoreSantriInvoiceRequest extends FormRequest
             ],
             'title' => ['required', 'string', 'max:255'],
             'period_month' => ['nullable', 'integer', 'min:1', 'max:12'],
-            'period_year' => ['nullable', 'integer', 'digits:4', 'min:2000', 'max:'.(now()->year + 1)],
+            'period_year' => ['nullable', 'integer', 'digits:4', 'min:'.$periodYearMin, 'max:'.$periodYearMax],
             'due_date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:1', 'max:999999999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
