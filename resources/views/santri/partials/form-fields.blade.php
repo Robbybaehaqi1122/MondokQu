@@ -259,7 +259,7 @@
             name="room_name"
             type="text"
             class="form-control @if($errorBagInstance->has('room_name')) is-invalid @endif"
-            value="{{ old('room_name', $santriItem?->room_name) }}"
+            value="{{ old('room_name', $santriItem?->displayRoomName('')) }}"
             placeholder="Contoh: Asrama A1"
             required
         >

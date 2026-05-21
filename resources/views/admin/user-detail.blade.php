@@ -395,7 +395,7 @@
                                                     <span class="flex-fill">
                                                         <span class="fw-semibold d-block">{{ $santriOption->full_name }}</span>
                                                         <span class="text-secondary small">
-                                                            NIS {{ $santriOption->nis }} · {{ $santriOption->room_name ?: 'Kamar belum diatur' }} · {{ $santriOption->statusLabel() }}
+                                                            NIS {{ $santriOption->nis }} · {{ $santriOption->displayRoomName('Kamar belum diatur') }} · {{ $santriOption->statusLabel() }}
                                                         </span>
                                                     </span>
                                                 </label>
@@ -418,7 +418,7 @@
                                 <div class="d-flex flex-column flex-md-row justify-content-md-between gap-1 mb-2">
                                     <div>
                                         <div class="fw-semibold">{{ $linkedSantri->full_name }}</div>
-                                        <div class="text-secondary small">NIS {{ $linkedSantri->nis }} · {{ $linkedSantri->room_name ?: 'Kamar belum diatur' }}</div>
+                                        <div class="text-secondary small">NIS {{ $linkedSantri->nis }} · {{ $linkedSantri->displayRoomName('Kamar belum diatur') }}</div>
                                     </div>
                                     <span class="badge bg-indigo-lt text-indigo align-self-start">{{ $linkedSantri->pivot?->relationship ?: 'Wali' }}</span>
                                 </div>

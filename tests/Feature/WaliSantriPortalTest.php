@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\LeaveRequest;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
@@ -87,6 +88,80 @@ test('dashboard route redirects wali santri to portal', function () {
         ->get(route('dashboard'));
 
     $response->assertRedirect(route('wali-santri.dashboard', absolute: false));
+});
+
+test('wali santri dashboard shows leave requests only for linked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'full_name' => 'Maryam Anak Wali',
+    ]);
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'full_name' => 'Santri Izin Tidak Terhubung',
+    ]);
+    $otherTenantSantri = Santri::factory()->forTenant($otherTenant)->create([
+        'full_name' => 'Santri Izin Tenant Lain',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ibu',
+    ]);
+
+    LeaveRequest::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'santri_id' => $linkedSantri->id,
+        'start_date' => now()->subDay()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'reason' => 'Izin pulang keluarga wali.',
+        'status' => LeaveRequest::STATUS_APPROVED,
+        'approved_by' => $wali->id,
+        'approved_at' => now(),
+        'created_by' => $wali->id,
+    ]);
+    LeaveRequest::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'santri_id' => $linkedSantri->id,
+        'start_date' => now()->addDays(3)->toDateString(),
+        'end_date' => now()->addDays(4)->toDateString(),
+        'reason' => 'Menunggu izin kegiatan keluarga.',
+        'status' => LeaveRequest::STATUS_PENDING,
+        'created_by' => $wali->id,
+    ]);
+    LeaveRequest::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'santri_id' => $unlinkedSantri->id,
+        'start_date' => now()->addDay()->toDateString(),
+        'end_date' => now()->addDays(2)->toDateString(),
+        'reason' => 'Izin santri tidak tertaut.',
+        'status' => LeaveRequest::STATUS_APPROVED,
+    ]);
+    LeaveRequest::query()->create([
+        'tenant_id' => $otherTenant->id,
+        'santri_id' => $otherTenantSantri->id,
+        'start_date' => now()->addDay()->toDateString(),
+        'end_date' => now()->addDays(2)->toDateString(),
+        'reason' => 'Izin tenant lain.',
+        'status' => LeaveRequest::STATUS_APPROVED,
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('Riwayat Izin Santri');
+    $response->assertSee('Ringkasan Izin');
+    $response->assertSee('Maryam Anak Wali');
+    $response->assertSee('Izin pulang keluarga wali.');
+    $response->assertSee('Menunggu izin kegiatan keluarga.');
+    $response->assertSee('Disetujui');
+    $response->assertSee('Menunggu');
+    $response->assertDontSee('Santri Izin Tidak Terhubung');
+    $response->assertDontSee('Izin santri tidak tertaut.');
+    $response->assertDontSee('Santri Izin Tenant Lain');
+    $response->assertDontSee('Izin tenant lain.');
 });
 
 test('wali santri can view linked invoice detail with payment history', function () {

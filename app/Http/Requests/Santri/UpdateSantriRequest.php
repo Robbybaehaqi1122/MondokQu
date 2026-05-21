@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Santri;
 
+use App\Http\Requests\Santri\Concerns\ValidatesGuardianUsers;
 use App\Models\Santri;
 use App\Rules\IndonesiaPhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,6 +11,8 @@ use Illuminate\Validation\Rules\File;
 
 class UpdateSantriRequest extends FormRequest
 {
+    use ValidatesGuardianUsers;
+
     /**
      * The named error bag for validation errors.
      *
@@ -23,6 +26,17 @@ class UpdateSantriRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('room_name')) {
+            $this->merge([
+                'room_name' => trim((string) $this->input('room_name')),
+            ]);
+        }
+
+        $this->normalizeGuardianUserIdsForValidation();
     }
 
     /**
@@ -60,7 +74,7 @@ class UpdateSantriRequest extends FormRequest
             'entry_date' => ['required', 'date', 'after_or_equal:birth_date', 'before_or_equal:today'],
             'entry_year' => ['required', 'integer', 'digits:4', 'min:1900', 'max:'.now()->year],
             'room_name' => ['required', 'string', 'max:255'],
-            'guardian_user_ids' => ['sometimes', 'array'],
+            'guardian_user_ids' => ['sometimes', 'array', $this->guardianUsersExistRule()],
             'guardian_user_ids.*' => ['integer', 'distinct'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'status' => ['required', 'string', Rule::in(Santri::availableStatuses())],
@@ -111,6 +125,7 @@ class UpdateSantriRequest extends FormRequest
             'entry_year.max' => 'Angkatan atau tahun masuk tidak boleh melebihi tahun ini.',
             'room_name.required' => 'Kamar atau asrama wajib diisi.',
             'guardian_user_ids.array' => 'Akun wali portal harus dipilih dari daftar yang tersedia.',
+            'guardian_user_ids.exists' => 'Pilih akun wali santri dari tenant pondok yang sama.',
             'guardian_user_ids.*.integer' => 'Akun wali portal tidak valid.',
             'guardian_user_ids.*.distinct' => 'Akun wali portal tidak boleh dipilih lebih dari sekali.',
             'notes.max' => 'Catatan singkat maksimal 1000 karakter.',

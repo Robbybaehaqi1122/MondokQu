@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
@@ -86,6 +87,7 @@ class AdminDashboardController extends Controller
                 ->limit(5)
                 ->get(),
             'recentSantri' => (clone $santriBaseQuery)
+                ->with('room')
                 ->latest()
                 ->limit(5)
                 ->get(),
@@ -235,8 +237,18 @@ class AdminDashboardController extends Controller
      */
     protected function buildRoomDistribution($query): Collection
     {
-        return $query
-            ->selectRaw("COALESCE(NULLIF(room_name, ''), 'Belum diatur') as room_name, COUNT(*) as santri_count")
+        $roomNameExpression = "COALESCE(NULLIF(rooms.name, ''), NULLIF(santris.room_name, ''), 'Belum diatur')";
+        $roomSourceQuery = $query
+            ->leftJoin('rooms', function ($join): void {
+                $join
+                    ->on('santris.room_id', '=', 'rooms.id')
+                    ->on('santris.tenant_id', '=', 'rooms.tenant_id');
+            })
+            ->selectRaw($roomNameExpression.' as room_name');
+
+        return DB::query()
+            ->fromSub($roomSourceQuery, 'room_source')
+            ->selectRaw('room_name, COUNT(*) as santri_count')
             ->groupBy('room_name')
             ->orderByDesc('santri_count')
             ->orderBy('room_name')

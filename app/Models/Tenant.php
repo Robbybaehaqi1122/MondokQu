@@ -80,6 +80,14 @@ class Tenant extends Model
     }
 
     /**
+     * Get rooms that belong to the tenant.
+     */
+    public function rooms(): HasMany
+    {
+        return $this->hasMany(Room::class);
+    }
+
+    /**
      * Get the activity logs that belong to the tenant.
      */
     public function activityLogs(): HasMany

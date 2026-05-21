@@ -2,14 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Santri\GenerateMonthlySantriInvoices;
+use App\Exports\SantriInvoiceCsvExport;
+use App\Exports\SantriPaymentReportCsvExport;
+use App\Http\Requests\Santri\GenerateMonthlySantriInvoicesRequest;
 use App\Http\Requests\Santri\StoreSantriInvoiceRequest;
 use App\Http\Requests\Santri\StoreSantriPaymentRequest;
 use App\Http\Requests\Santri\UpdateSantriInvoiceRequest;
 use App\Http\Requests\Santri\UpdateSantriPaymentRequest;
+use App\Jobs\GenerateMonthlySantriInvoicesJob;
+use App\Models\DataExport;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Services\ActivityLogger;
+use App\Services\DataExportManager;
+use App\Services\FinancialReportingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -21,9 +29,26 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SantriPaymentController extends Controller
 {
+    protected DataExportManager $dataExportManager;
+
+    protected FinancialReportingService $financialReportingService;
+
+    protected SantriInvoiceCsvExport $invoiceCsvExport;
+
+    protected SantriPaymentReportCsvExport $paymentReportCsvExport;
+
     public function __construct(
-        protected ActivityLogger $activityLogger
-    ) {}
+        protected ActivityLogger $activityLogger,
+        ?DataExportManager $dataExportManager = null,
+        ?FinancialReportingService $financialReportingService = null,
+        ?SantriInvoiceCsvExport $invoiceCsvExport = null,
+        ?SantriPaymentReportCsvExport $paymentReportCsvExport = null
+    ) {
+        $this->dataExportManager = $dataExportManager ?? new DataExportManager;
+        $this->financialReportingService = $financialReportingService ?? new FinancialReportingService;
+        $this->invoiceCsvExport = $invoiceCsvExport ?? new SantriInvoiceCsvExport;
+        $this->paymentReportCsvExport = $paymentReportCsvExport ?? new SantriPaymentReportCsvExport;
+    }
 
     /**
      * Display the santri payment module overview.
@@ -35,10 +60,12 @@ class SantriPaymentController extends Controller
         $paymentBaseQuery = SantriPayment::query()->visibleTo($currentUser);
 
         return view('santri.payments.index', [
-            'summary' => $this->buildInvoiceSummary(clone $invoiceBaseQuery),
-            'paidThisMonth' => (clone $paymentBaseQuery)
-                ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
-                ->sum('amount'),
+            'summary' => $this->financialReportingService->invoiceSummary(clone $invoiceBaseQuery),
+            'paidThisMonth' => $this->financialReportingService->paidBetween(
+                clone $paymentBaseQuery,
+                now()->startOfMonth(),
+                now()->endOfMonth()
+            ),
             'recentInvoices' => (clone $invoiceBaseQuery)
                 ->with('santri')
                 ->latest()
@@ -66,7 +93,7 @@ class SantriPaymentController extends Controller
 
         $invoices = (clone $baseQuery)
             ->with(['santri', 'payments.recorder'])
-            ->tap(fn ($builder) => $this->applyInvoiceFilters($builder, $search, $selectedStatus, $selectedSantriId))
+            ->withFilters($search, $selectedStatus, $selectedSantriId)
             ->orderByRaw('CASE WHEN status = ? THEN 1 ELSE 0 END', [SantriInvoice::STATUS_PAID])
             ->orderBy('due_date')
             ->paginate(10)
@@ -78,7 +105,7 @@ class SantriPaymentController extends Controller
                 'status' => $selectedStatus,
                 'santri' => $selectedSantriId,
             ],
-            'summary' => $this->buildInvoiceSummary(clone $baseQuery),
+            'summary' => $this->financialReportingService->invoiceSummary(clone $baseQuery),
             'invoices' => $invoices,
             'paymentMethods' => SantriPayment::paymentMethods(),
             'santris' => Santri::query()
@@ -91,68 +118,50 @@ class SantriPaymentController extends Controller
             'canRecordPayment' => $currentUser?->can('create pembayaran') ?? false,
             'canUpdateInvoice' => $currentUser?->can('update pembayaran') ?? false,
             'canEditHistoricalPayments' => $currentUser?->can('edit historical pembayaran') ?? false,
+            'dataExports' => DataExport::query()
+                ->visibleTo($currentUser)
+                ->forType(DataExport::TYPE_SANTRI_INVOICES)
+                ->latest()
+                ->limit(5)
+                ->get(),
         ]);
     }
 
     /**
      * Export filtered invoice list as CSV.
      */
-    public function exportInvoices(Request $request): StreamedResponse
+    public function exportInvoices(Request $request): RedirectResponse|StreamedResponse
     {
         $currentUser = $request->user();
         $search = trim((string) $request->string('q'));
         $selectedStatus = trim((string) $request->string('status'));
         $selectedSantriId = trim((string) $request->string('santri'));
-        $filename = 'tagihan-santri-'.now()->format('Ymd-His').'.csv';
+        $rowCount = $this->invoiceCsvExport->rowCount($currentUser, $search, $selectedStatus, $selectedSantriId);
 
-        return response()->streamDownload(function () use ($currentUser, $search, $selectedStatus, $selectedSantriId): void {
-            $handle = fopen('php://output', 'w');
+        if ($this->dataExportManager->shouldQueue($rowCount)) {
+            $this->dataExportManager->queue(
+                $currentUser,
+                DataExport::TYPE_SANTRI_INVOICES,
+                'Export Tagihan Santri',
+                $this->invoiceCsvExport->filename(),
+                [
+                    'q' => $search,
+                    'status' => $selectedStatus,
+                    'santri' => $selectedSantriId,
+                ],
+                $rowCount
+            );
 
-            fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, [
-                'Nomor Invoice',
-                'Judul Tagihan',
-                'Nama Santri',
-                'NIS',
-                'Periode Bulan',
-                'Periode Tahun',
-                'Jatuh Tempo',
-                'Nominal',
-                'Terbayar',
-                'Sisa Tagihan',
-                'Status',
-                'Catatan',
-            ]);
+            return redirect()
+                ->route('santri.payments.invoices', array_filter([
+                    'q' => $search,
+                    'status' => $selectedStatus,
+                    'santri' => $selectedSantriId,
+                ], fn ($value) => $value !== ''))
+                ->with('success', 'Export tagihan sedang diproses di background. Link download akan muncul di daftar export terbaru setelah selesai.');
+        }
 
-            SantriInvoice::query()
-                ->visibleTo($currentUser)
-                ->with('santri')
-                ->tap(fn ($builder) => $this->applyInvoiceFilters($builder, $search, $selectedStatus, $selectedSantriId))
-                ->orderByRaw('CASE WHEN status = ? THEN 1 ELSE 0 END', [SantriInvoice::STATUS_PAID])
-                ->orderBy('due_date')
-                ->chunk(500, function ($invoices) use ($handle): void {
-                    foreach ($invoices as $invoice) {
-                        fputcsv($handle, [
-                            $invoice->invoice_number,
-                            $invoice->title,
-                            $invoice->santri?->full_name,
-                            $invoice->santri?->nis,
-                            $invoice->period_month,
-                            $invoice->period_year,
-                            $invoice->due_date?->toDateString(),
-                            number_format((float) $invoice->amount, 2, '.', ''),
-                            number_format((float) $invoice->paid_amount, 2, '.', ''),
-                            number_format($invoice->outstandingAmount(), 2, '.', ''),
-                            $invoice->statusLabel(),
-                            $invoice->notes,
-                        ]);
-                    }
-                });
-
-            fclose($handle);
-        }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-        ]);
+        return $this->invoiceCsvExport->download($currentUser, $search, $selectedStatus, $selectedSantriId);
     }
 
     /**
@@ -199,6 +208,59 @@ class SantriPaymentController extends Controller
         return redirect()
             ->route('santri.payments.invoices')
             ->with('success', 'Tagihan santri berhasil dibuat.');
+    }
+
+    /**
+     * Preview or queue monthly invoice generation for all active santri.
+     */
+    public function generateMonthlyInvoices(
+        GenerateMonthlySantriInvoicesRequest $request,
+        GenerateMonthlySantriInvoices $generator
+    ): RedirectResponse {
+        $validated = $request->validated();
+        $currentUser = $request->user();
+        $tenantId = (int) $currentUser->tenant_id;
+
+        if (! $tenantId) {
+            return redirect()
+                ->route('santri.payments.invoices')
+                ->with('error', 'Generate tagihan bulanan hanya dapat dijalankan dari akun tenant pondok.');
+        }
+
+        if ($validated['mode'] === 'preview') {
+            $preview = $generator->handle(
+                tenantId: $tenantId,
+                title: $validated['title'],
+                periodMonth: (int) $validated['period_month'],
+                periodYear: (int) $validated['period_year'],
+                dueDate: $validated['due_date'],
+                amount: (float) $validated['amount'],
+                notes: $validated['notes'] ?? null,
+                createdBy: $currentUser?->id,
+                dryRun: true
+            );
+
+            return redirect()
+                ->route('santri.payments.invoices')
+                ->withInput($validated)
+                ->with('bulk_invoice_preview', $preview)
+                ->with('success', 'Preview tagihan bulanan siap. Periksa jumlah tagihan sebelum menjalankan generate.');
+        }
+
+        GenerateMonthlySantriInvoicesJob::dispatch(
+            $tenantId,
+            $validated['title'],
+            (int) $validated['period_month'],
+            (int) $validated['period_year'],
+            $validated['due_date'],
+            (float) $validated['amount'],
+            $validated['notes'] ?? null,
+            $currentUser?->id
+        );
+
+        return redirect()
+            ->route('santri.payments.invoices')
+            ->with('success', 'Generate tagihan bulanan sudah masuk antrean queue.');
     }
 
     /**
@@ -535,7 +597,7 @@ class SantriPaymentController extends Controller
         $currentUser = $request->user();
         $paymentBaseQuery = SantriPayment::query()
             ->visibleTo($currentUser)
-            ->whereBetween('paid_at', [$dateFrom, $dateTo]);
+            ->paidBetween($dateFrom, $dateTo);
         $invoiceBaseQuery = SantriInvoice::query()->visibleTo($currentUser);
 
         return view('santri.payments.reports', [
@@ -543,17 +605,9 @@ class SantriPaymentController extends Controller
                 'date_from' => $dateFrom->toDateString(),
                 'date_to' => $dateTo->toDateString(),
             ],
-            'summary' => $this->buildInvoiceSummary(clone $invoiceBaseQuery),
-            'reportSummary' => [
-                'received' => (clone $paymentBaseQuery)->sum('amount'),
-                'transactions' => (clone $paymentBaseQuery)->count(),
-                'average_payment' => (clone $paymentBaseQuery)->avg('amount') ?? 0,
-            ],
-            'methodTotals' => (clone $paymentBaseQuery)
-                ->selectRaw('payment_method, COUNT(*) as count, SUM(amount) as total')
-                ->groupBy('payment_method')
-                ->orderByDesc('total')
-                ->get(),
+            'summary' => $this->financialReportingService->invoiceSummary(clone $invoiceBaseQuery),
+            'reportSummary' => $this->financialReportingService->paymentSummary(clone $paymentBaseQuery),
+            'methodTotals' => $this->financialReportingService->paymentMethodTotals(clone $paymentBaseQuery),
             'recentPayments' => (clone $paymentBaseQuery)
                 ->with(['invoice', 'santri', 'recorder'])
                 ->latest('paid_at')
@@ -570,83 +624,8 @@ class SantriPaymentController extends Controller
         [$dateFrom, $dateTo] = $this->reportDateRange($request);
 
         $currentUser = $request->user();
-        $filename = 'laporan-pembayaran-'
-            .$dateFrom->toDateString()
-            .'-sd-'
-            .$dateTo->toDateString()
-            .'.csv';
 
-        return response()->streamDownload(function () use ($currentUser, $dateFrom, $dateTo): void {
-            $handle = fopen('php://output', 'w');
-
-            fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, [
-                'Tanggal Bayar',
-                'Nomor Invoice',
-                'Judul Tagihan',
-                'Nama Santri',
-                'NIS',
-                'Metode Pembayaran',
-                'Nomor Referensi',
-                'Nominal',
-                'Dicatat Oleh',
-                'Catatan',
-            ]);
-
-            SantriPayment::query()
-                ->visibleTo($currentUser)
-                ->with(['invoice', 'santri', 'recorder'])
-                ->whereBetween('paid_at', [$dateFrom, $dateTo])
-                ->latest('paid_at')
-                ->chunk(500, function ($payments) use ($handle): void {
-                    foreach ($payments as $payment) {
-                        fputcsv($handle, [
-                            $payment->paid_at?->format('Y-m-d H:i:s'),
-                            $payment->invoice?->invoice_number,
-                            $payment->invoice?->title,
-                            $payment->santri?->full_name,
-                            $payment->santri?->nis,
-                            Str::headline($payment->payment_method),
-                            $payment->reference_number,
-                            number_format((float) $payment->amount, 2, '.', ''),
-                            $payment->recorder?->name ?? 'System',
-                            $payment->note,
-                        ]);
-                    }
-                });
-
-            fclose($handle);
-        }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-        ]);
-    }
-
-    /**
-     * Build invoice summary stats.
-     */
-    protected function buildInvoiceSummary($query): array
-    {
-        $totalAmount = (clone $query)->sum('amount');
-        $paidAmount = (clone $query)->sum('paid_amount');
-
-        return [
-            'total_invoices' => (clone $query)->count(),
-            'paid_invoices' => (clone $query)->where('status', SantriInvoice::STATUS_PAID)->count(),
-            'pending_invoices' => (clone $query)->where('status', SantriInvoice::STATUS_PENDING)->count(),
-            'partial_invoices' => (clone $query)->where('status', SantriInvoice::STATUS_PARTIAL)->count(),
-            'overdue_invoices' => (clone $query)
-                ->where('status', '!=', SantriInvoice::STATUS_PAID)
-                ->whereDate('due_date', '<', now()->toDateString())
-                ->count(),
-            'total_amount' => $totalAmount,
-            'paid_amount' => $paidAmount,
-            'outstanding_amount' => max(0, (float) $totalAmount - (float) $paidAmount),
-            'overdue_amount' => (clone $query)
-                ->where('status', '!=', SantriInvoice::STATUS_PAID)
-                ->whereDate('due_date', '<', now()->toDateString())
-                ->selectRaw('COALESCE(SUM(amount - paid_amount), 0) as total')
-                ->value('total') ?? 0,
-        ];
+        return $this->paymentReportCsvExport->download($currentUser, $dateFrom, $dateTo);
     }
 
     /**
@@ -679,37 +658,6 @@ class SantriPaymentController extends Controller
             ['value' => SantriInvoice::STATUS_PAID, 'label' => 'Lunas'],
             ['value' => 'overdue', 'label' => 'Tunggakan'],
         ];
-    }
-
-    protected function applyInvoiceFilters($builder, string $search, string $selectedStatus, string $selectedSantriId): void
-    {
-        $builder
-            ->when($search !== '', function ($builder) use ($search) {
-                $builder->where(function ($invoiceQuery) use ($search) {
-                    $invoiceQuery
-                        ->where('invoice_number', 'like', "%{$search}%")
-                        ->orWhere('title', 'like', "%{$search}%")
-                        ->orWhereHas('santri', function ($santriQuery) use ($search) {
-                            $santriQuery
-                                ->where('nis', 'like', "%{$search}%")
-                                ->orWhere('full_name', 'like', "%{$search}%");
-                        });
-                });
-            })
-            ->when($selectedStatus !== '', function ($builder) use ($selectedStatus) {
-                if ($selectedStatus === 'overdue') {
-                    $builder
-                        ->where('status', '!=', SantriInvoice::STATUS_PAID)
-                        ->whereDate('due_date', '<', now()->toDateString());
-
-                    return;
-                }
-
-                if (in_array($selectedStatus, SantriInvoice::availableStatuses(), true)) {
-                    $builder->where('status', $selectedStatus);
-                }
-            })
-            ->when($selectedSantriId !== '', fn ($builder) => $builder->where('santri_id', $selectedSantriId));
     }
 
     /**

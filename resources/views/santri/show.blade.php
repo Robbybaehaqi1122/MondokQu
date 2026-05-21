@@ -77,7 +77,7 @@
                                         </div>
                                         <div class="user-detail-meta-card">
                                             <div class="text-secondary small text-uppercase fw-bold">Kamar / Asrama</div>
-                                            <div class="fw-semibold mt-2">{{ $santri->room_name ?: '-' }}</div>
+                                            <div class="fw-semibold mt-2">{{ $santri->displayRoomName() }}</div>
                                         </div>
                                         <div class="user-detail-meta-card">
                                             <div class="text-secondary small text-uppercase fw-bold">Wali / Penanggung Jawab</div>
@@ -168,7 +168,7 @@
                     </div>
                     <div class="user-detail-info-row">
                         <span>Kamar / Asrama</span>
-                        <strong class="user-detail-info-value">{{ $santri->room_name ?: '-' }}</strong>
+                        <strong class="user-detail-info-value">{{ $santri->displayRoomName() }}</strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Angkatan</span>

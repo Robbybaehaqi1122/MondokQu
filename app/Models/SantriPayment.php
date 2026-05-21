@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\SantriPaymentFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class SantriPayment extends Model
 {
@@ -89,5 +91,13 @@ class SantriPayment extends Model
     public function recorder(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
+    }
+
+    /**
+     * Limit payments to a paid_at date range.
+     */
+    public function scopePaidBetween(Builder $query, Carbon $dateFrom, Carbon $dateTo): Builder
+    {
+        return $query->whereBetween('paid_at', [$dateFrom, $dateTo]);
     }
 }

@@ -2,26 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SantriCsvExport;
 use App\Http\Requests\Santri\StoreSantriRequest;
 use App\Http\Requests\Santri\UpdateSantriRequest;
+use App\Models\DataExport;
+use App\Models\Room;
 use App\Models\Santri;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\DataExportManager;
 use App\Services\SantriPhotoUploader;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SantriManagementController extends Controller
 {
+    protected SantriCsvExport $santriCsvExport;
+
+    protected DataExportManager $dataExportManager;
+
     public function __construct(
         protected ActivityLogger $activityLogger,
-        protected SantriPhotoUploader $santriPhotoUploader
-    ) {}
+        protected SantriPhotoUploader $santriPhotoUploader,
+        ?DataExportManager $dataExportManager = null,
+        ?SantriCsvExport $santriCsvExport = null
+    ) {
+        $this->dataExportManager = $dataExportManager ?? new DataExportManager;
+        $this->santriCsvExport = $santriCsvExport ?? new SantriCsvExport;
+    }
 
     /**
      * Display the santri management panel.
@@ -38,8 +50,8 @@ class SantriManagementController extends Controller
         $baseQuery = Santri::query()->visibleTo($currentUser);
 
         $santris = (clone $baseQuery)
-            ->with(['creator', 'guardians'])
-            ->tap(fn (Builder $builder) => $this->applySantriFilters($builder, $query, $selectedStatus, $selectedGender))
+            ->with(['creator', 'guardians', 'room'])
+            ->withFilters($query, $selectedStatus, $selectedGender)
             ->orderBy('full_name')
             ->paginate(10)
             ->withQueryString();
@@ -61,6 +73,12 @@ class SantriManagementController extends Controller
             'genders' => $this->genderOptions(),
             'canCreateSantri' => $currentUser?->can('create', Santri::class) ?? false,
             'guardianUserOptionsByTenant' => $guardianUserOptionsByTenant,
+            'dataExports' => DataExport::query()
+                ->visibleTo($currentUser)
+                ->forType(DataExport::TYPE_SANTRI)
+                ->latest()
+                ->limit(5)
+                ->get(),
             'statuses' => $this->statusOptions(),
             'santris' => $santris,
         ]);
@@ -69,7 +87,7 @@ class SantriManagementController extends Controller
     /**
      * Export filtered santri data as CSV.
      */
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request): RedirectResponse|StreamedResponse
     {
         $this->authorize('viewAny', Santri::class);
 
@@ -77,65 +95,32 @@ class SantriManagementController extends Controller
         $query = trim((string) $request->string('q'));
         $selectedStatus = trim((string) $request->string('status'));
         $selectedGender = trim((string) $request->string('gender'));
-        $filename = 'data-santri-'.now()->format('Ymd-His').'.csv';
+        $rowCount = $this->santriCsvExport->rowCount($currentUser, $query, $selectedStatus, $selectedGender);
 
-        return response()->streamDownload(function () use ($currentUser, $query, $selectedStatus, $selectedGender): void {
-            $handle = fopen('php://output', 'w');
+        if ($this->dataExportManager->shouldQueue($rowCount)) {
+            $this->dataExportManager->queue(
+                $currentUser,
+                DataExport::TYPE_SANTRI,
+                'Export Data Santri',
+                $this->santriCsvExport->filename(),
+                [
+                    'q' => $query,
+                    'status' => $selectedStatus,
+                    'gender' => $selectedGender,
+                ],
+                $rowCount
+            );
 
-            fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, [
-                'NIS',
-                'Nama Lengkap',
-                'Jenis Kelamin',
-                'Status',
-                'Tempat Lahir',
-                'Tanggal Lahir',
-                'Alamat',
-                'Nama Ayah',
-                'Nama Ibu',
-                'Nama Wali',
-                'Nomor HP Wali',
-                'Akun Wali Portal',
-                'Kontak Darurat',
-                'Tanggal Masuk',
-                'Angkatan',
-                'Kamar',
-                'Catatan',
-            ]);
+            return redirect()
+                ->route('santri.index', array_filter([
+                    'q' => $query,
+                    'status' => $selectedStatus,
+                    'gender' => $selectedGender,
+                ], fn ($value) => $value !== ''))
+                ->with('success', 'Export data santri sedang diproses di background. Link download akan muncul di daftar export terbaru setelah selesai.');
+        }
 
-            Santri::query()
-                ->visibleTo($currentUser)
-                ->with('guardians')
-                ->tap(fn (Builder $builder) => $this->applySantriFilters($builder, $query, $selectedStatus, $selectedGender))
-                ->orderBy('full_name')
-                ->chunk(500, function (Collection $santris) use ($handle): void {
-                    foreach ($santris as $santri) {
-                        fputcsv($handle, [
-                            $santri->nis,
-                            $santri->full_name,
-                            $santri->genderLabel(),
-                            $santri->statusLabel(),
-                            $santri->birth_place,
-                            $santri->birth_date?->toDateString(),
-                            $santri->address,
-                            $santri->father_name,
-                            $santri->mother_name,
-                            $santri->guardian_name,
-                            $santri->guardian_phone_number,
-                            $santri->guardians->pluck('name')->implode('; '),
-                            $santri->emergency_contact,
-                            $santri->entry_date?->toDateString(),
-                            $santri->entry_year,
-                            $santri->room_name,
-                            $santri->notes,
-                        ]);
-                    }
-                });
-
-            fclose($handle);
-        }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-        ]);
+        return $this->santriCsvExport->download($currentUser, $query, $selectedStatus, $selectedGender);
     }
 
     /**
@@ -145,7 +130,7 @@ class SantriManagementController extends Controller
     {
         $this->authorize('view', $santri);
 
-        $santri->load(['creator', 'guardians']);
+        $santri->load(['creator', 'guardians', 'room']);
 
         return view('santri.show', [
             'canDeleteSantri' => request()->user()?->can('delete', $santri) ?? false,
@@ -161,30 +146,42 @@ class SantriManagementController extends Controller
         $this->authorize('create', Santri::class);
 
         $validated = $request->validated();
-        $guardianUserIds = $this->resolveGuardianUserIds($request, (int) $request->user()?->tenant_id, 'createSantri');
+        $tenantId = (int) $request->user()?->tenant_id;
+        $guardianUserIds = $request->guardianUserIds();
 
-        $santri = Santri::query()->create([
-            'tenant_id' => $request->user()?->tenant_id,
-            'nis' => $validated['nis'],
-            'full_name' => $validated['full_name'],
-            'gender' => $validated['gender'],
-            'birth_place' => $validated['birth_place'],
-            'birth_date' => $validated['birth_date'],
-            'address' => $validated['address'],
-            'guardian_name' => $validated['guardian_name'] ?: null,
-            'father_name' => $validated['father_name'],
-            'mother_name' => $validated['mother_name'],
-            'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
-            'emergency_contact' => $validated['emergency_contact'],
-            'entry_date' => $validated['entry_date'],
-            'entry_year' => $validated['entry_year'],
-            'room_name' => $validated['room_name'],
-            'notes' => $validated['notes'] ?? null,
-            'status' => $validated['status'],
-            'photo_path' => $this->santriPhotoUploader->store($request->file('photo')),
-            'created_by' => $request->user()?->id,
-        ]);
-        $this->syncGuardianUsers($santri, $guardianUserIds);
+        if (! $tenantId) {
+            abort(403);
+        }
+
+        $photoPath = $this->santriPhotoUploader->store($request->file('photo'));
+        $santri = DB::transaction(function () use ($tenantId, $validated, $photoPath, $request, $guardianUserIds): Santri {
+            $room = $this->resolveRoomForSantri($tenantId, $validated['room_name']);
+            $santri = Santri::query()->create([
+                'tenant_id' => $tenantId,
+                'nis' => $validated['nis'],
+                'full_name' => $validated['full_name'],
+                'gender' => $validated['gender'],
+                'birth_place' => $validated['birth_place'],
+                'birth_date' => $validated['birth_date'],
+                'address' => $validated['address'],
+                'guardian_name' => $validated['guardian_name'] ?: null,
+                'father_name' => $validated['father_name'],
+                'mother_name' => $validated['mother_name'],
+                'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
+                'emergency_contact' => $validated['emergency_contact'],
+                'entry_date' => $validated['entry_date'],
+                'entry_year' => $validated['entry_year'],
+                'room_id' => $room->id,
+                'room_name' => $room->name,
+                'notes' => $validated['notes'] ?? null,
+                'status' => $validated['status'],
+                'photo_path' => $photoPath,
+                'created_by' => $request->user()?->id,
+            ]);
+            $this->syncGuardianUsers($santri, $guardianUserIds);
+
+            return $santri->load('room');
+        });
 
         $this->activityLogger->log(
             action: 'santri_created',
@@ -194,7 +191,7 @@ class SantriManagementController extends Controller
             properties: [
                 'nis' => $santri->nis,
                 'status' => $santri->status,
-                'room_name' => $santri->room_name,
+                'room_name' => $santri->displayRoomName(''),
                 'entry_year' => $santri->entry_year,
                 'guardian_user_ids' => $guardianUserIds->all(),
             ],
@@ -215,7 +212,8 @@ class SantriManagementController extends Controller
         $this->authorize('update', $santri);
 
         $validated = $request->validated();
-        $guardianUserIds = $this->resolveGuardianUserIds($request, (int) $santri->tenant_id, 'updateSantri');
+        $guardianUserIds = $request->guardianUserIds();
+        $santri->loadMissing('room');
         $previousValues = $santri->only([
             'nis',
             'full_name',
@@ -230,6 +228,7 @@ class SantriManagementController extends Controller
             'emergency_contact',
             'entry_date',
             'entry_year',
+            'room_id',
             'room_name',
             'notes',
             'status',
@@ -248,26 +247,32 @@ class SantriManagementController extends Controller
             $photoPath = $this->santriPhotoUploader->store($request->file('photo'), $santri->photo_path);
         }
 
-        $santri->update([
-            'nis' => $validated['nis'],
-            'full_name' => $validated['full_name'],
-            'gender' => $validated['gender'],
-            'birth_place' => $validated['birth_place'],
-            'birth_date' => $validated['birth_date'],
-            'address' => $validated['address'],
-            'guardian_name' => $validated['guardian_name'] ?: null,
-            'father_name' => $validated['father_name'],
-            'mother_name' => $validated['mother_name'],
-            'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
-            'emergency_contact' => $validated['emergency_contact'],
-            'entry_date' => $validated['entry_date'],
-            'entry_year' => $validated['entry_year'],
-            'room_name' => $validated['room_name'],
-            'notes' => $validated['notes'] ?? null,
-            'status' => $validated['status'],
-            'photo_path' => $photoPath,
-        ]);
-        $this->syncGuardianUsers($santri, $guardianUserIds);
+        DB::transaction(function () use ($santri, $validated, $photoPath, $guardianUserIds): void {
+            $room = $this->resolveRoomForSantri((int) $santri->tenant_id, $validated['room_name']);
+
+            $santri->update([
+                'nis' => $validated['nis'],
+                'full_name' => $validated['full_name'],
+                'gender' => $validated['gender'],
+                'birth_place' => $validated['birth_place'],
+                'birth_date' => $validated['birth_date'],
+                'address' => $validated['address'],
+                'guardian_name' => $validated['guardian_name'] ?: null,
+                'father_name' => $validated['father_name'],
+                'mother_name' => $validated['mother_name'],
+                'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
+                'emergency_contact' => $validated['emergency_contact'],
+                'entry_date' => $validated['entry_date'],
+                'entry_year' => $validated['entry_year'],
+                'room_id' => $room->id,
+                'room_name' => $room->name,
+                'notes' => $validated['notes'] ?? null,
+                'status' => $validated['status'],
+                'photo_path' => $photoPath,
+            ]);
+            $this->syncGuardianUsers($santri, $guardianUserIds);
+        });
+        $santri->refresh()->load('room');
 
         $this->activityLogger->log(
             action: 'santri_updated',
@@ -290,6 +295,7 @@ class SantriManagementController extends Controller
                     'emergency_contact',
                     'entry_date',
                     'entry_year',
+                    'room_id',
                     'room_name',
                     'notes',
                     'status',
@@ -324,7 +330,7 @@ class SantriManagementController extends Controller
             properties: [
                 'nis' => $santri->nis,
                 'status' => $santri->status,
-                'room_name' => $santri->room_name,
+                'room_name' => $santri->displayRoomName(''),
                 'entry_year' => $santri->entry_year,
             ],
             ipAddress: $request->ip(),
@@ -377,31 +383,6 @@ class SantriManagementController extends Controller
             ]);
     }
 
-    protected function applySantriFilters(Builder $builder, string $query, string $selectedStatus, string $selectedGender): void
-    {
-        $builder
-            ->when($query !== '', function ($builder) use ($query) {
-                $builder->where(function ($santriQuery) use ($query) {
-                    $santriQuery
-                        ->where('nis', 'like', "%{$query}%")
-                        ->orWhere('full_name', 'like', "%{$query}%")
-                        ->orWhere('guardian_name', 'like', "%{$query}%")
-                        ->orWhere('guardian_phone_number', 'like', "%{$query}%")
-                        ->orWhere('father_name', 'like', "%{$query}%")
-                        ->orWhere('mother_name', 'like', "%{$query}%")
-                        ->orWhere('room_name', 'like', "%{$query}%")
-                        ->orWhereHas('guardians', function ($guardianQuery) use ($query) {
-                            $guardianQuery
-                                ->where('name', 'like', "%{$query}%")
-                                ->orWhere('username', 'like', "%{$query}%")
-                                ->orWhere('email', 'like', "%{$query}%");
-                        });
-                });
-            })
-            ->when($selectedStatus !== '', fn ($builder) => $builder->where('status', $selectedStatus))
-            ->when($selectedGender !== '', fn ($builder) => $builder->where('gender', $selectedGender));
-    }
-
     /**
      * Build selectable wali portal users grouped by tenant.
      */
@@ -418,40 +399,6 @@ class SantriManagementController extends Controller
             ->orderBy('name')
             ->get(['id', 'tenant_id', 'name', 'username', 'email'])
             ->groupBy('tenant_id');
-    }
-
-    /**
-     * Resolve and validate wali portal users from the santri form.
-     */
-    protected function resolveGuardianUserIds(Request $request, int $tenantId, string $errorBag): Collection
-    {
-        $requestedUserIds = collect($request->input('guardian_user_ids', []))
-            ->filter(fn ($userId) => $userId !== null && $userId !== '')
-            ->map(fn ($userId) => (int) $userId)
-            ->unique()
-            ->values();
-
-        if ($requestedUserIds->isEmpty()) {
-            return collect();
-        }
-
-        $validUserIds = User::query()
-            ->visibleTo($request->user())
-            ->where('tenant_id', $tenantId)
-            ->whereIn('id', $requestedUserIds)
-            ->whereHas('roles', fn ($query) => $query->where('name', 'Wali Santri'))
-            ->pluck('id')
-            ->map(fn ($userId) => (int) $userId)
-            ->values();
-
-        if ($validUserIds->count() !== $requestedUserIds->count()) {
-            throw $this->guardianUserValidationException(
-                'Pilih akun wali santri dari tenant pondok yang sama.',
-                $errorBag
-            );
-        }
-
-        return $validUserIds;
     }
 
     /**
@@ -476,13 +423,21 @@ class SantriManagementController extends Controller
         $santri->guardians()->sync($syncPayload);
     }
 
-    protected function guardianUserValidationException(string $message, string $errorBag): ValidationException
+    protected function resolveRoomForSantri(int $tenantId, string $roomName): Room
     {
-        $exception = ValidationException::withMessages([
-            'guardian_user_ids' => $message,
-        ]);
-        $exception->errorBag = $errorBag;
-
-        return $exception;
+        return Room::query()
+            ->withoutTenantScope()
+            ->firstOrCreate(
+                [
+                    'tenant_id' => $tenantId,
+                    'name' => trim($roomName),
+                ],
+                [
+                    'capacity' => null,
+                    'status' => Room::STATUS_ACTIVE,
+                    'description' => null,
+                    'created_by' => request()->user()?->id,
+                ]
+            );
     }
 }

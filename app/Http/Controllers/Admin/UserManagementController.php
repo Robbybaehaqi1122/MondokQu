@@ -115,7 +115,7 @@ class UserManagementController extends Controller
         $this->authorize('view', $user);
 
         $currentUser = $request->user();
-        $user->load(['roles', 'creator', 'tenant', 'guardianSantris']);
+        $user->load(['roles', 'creator', 'tenant', 'guardianSantris.room']);
         $canManageTargetUser = $currentUser?->can('update', $user) ?? false;
 
         $guardianSantriOptions = collect();
@@ -123,9 +123,10 @@ class UserManagementController extends Controller
             $guardianSantriOptions = Santri::query()
                 ->visibleTo($currentUser)
                 ->forTenant($user->tenant_id)
+                ->with('room')
                 ->orderBy('full_name')
                 ->limit(250)
-                ->get(['id', 'tenant_id', 'nis', 'full_name', 'room_name', 'status']);
+                ->get(['id', 'tenant_id', 'nis', 'full_name', 'room_id', 'room_name', 'status']);
         }
 
         $activityLogs = ActivityLog::query()

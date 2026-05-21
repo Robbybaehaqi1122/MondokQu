@@ -51,6 +51,23 @@
         </div>
     </div>
 
+    @if (session('bulk_invoice_preview'))
+        @php
+            $bulkPreview = session('bulk_invoice_preview');
+        @endphp
+        <div class="alert alert-info">
+            Preview generate tagihan bulanan:
+            <strong>{{ number_format($bulkPreview['created']) }}</strong> tagihan akan dibuat,
+            <strong>{{ number_format($bulkPreview['skipped']) }}</strong> dilewati karena sudah ada,
+            dari <strong>{{ number_format($bulkPreview['eligible']) }}</strong> santri aktif.
+        </div>
+    @endif
+
+    @include('exports.partials.status-list', [
+        'title' => 'Export Tagihan Terbaru',
+        'dataExports' => $dataExports,
+    ])
+
     <div class="card">
         <div class="card-header">
             <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-3 w-100">
@@ -68,6 +85,15 @@
                         Export CSV
                     </a>
                     @if ($canCreateInvoice)
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary"
+                            id="open-monthly-invoice-modal"
+                            data-bs-toggle="modal"
+                            data-bs-target="#monthlyInvoiceModal"
+                        >
+                            Generate Bulanan
+                        </button>
                         <button
                             type="button"
                             class="btn btn-primary"
@@ -550,6 +576,88 @@
     </div>
 
     @if ($canCreateInvoice)
+        <div class="modal modal-blur fade" id="monthlyInvoiceModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('santri.payments.invoices.monthly.generate') }}">
+                        @csrf
+
+                        <div class="modal-header">
+                            <div>
+                                <h5 class="modal-title">Generate Tagihan Bulanan</h5>
+                                <div class="text-secondary small mt-1">Membuat tagihan untuk semua santri aktif dan melewati data yang sudah ada.</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="monthly_title" class="form-label">Nama Tagihan</label>
+                                    <input id="monthly_title" name="title" type="text" class="form-control @if($errors->has('title')) is-invalid @endif" value="{{ old('title', 'SPP Bulanan') }}" required>
+                                    @if ($errors->has('title'))
+                                        <div class="invalid-feedback">{{ $errors->first('title') }}</div>
+                                    @endif
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="monthly_period_month" class="form-label">Bulan</label>
+                                    <select id="monthly_period_month" name="period_month" class="form-select @if($errors->has('period_month')) is-invalid @endif" required>
+                                        @foreach (range(1, 12) as $month)
+                                            <option value="{{ $month }}" @selected((string) old('period_month', now()->month) === (string) $month)>
+                                                {{ str_pad((string) $month, 2, '0', STR_PAD_LEFT) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @if ($errors->has('period_month'))
+                                        <div class="invalid-feedback">{{ $errors->first('period_month') }}</div>
+                                    @endif
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="monthly_period_year" class="form-label">Tahun</label>
+                                    <input id="monthly_period_year" name="period_year" type="number" min="{{ $periodYearMin }}" max="{{ $periodYearMax }}" class="form-control @if($errors->has('period_year')) is-invalid @endif" value="{{ old('period_year', now()->year) }}" required>
+                                    @if ($errors->has('period_year'))
+                                        <div class="invalid-feedback">{{ $errors->first('period_year') }}</div>
+                                    @endif
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="monthly_due_date" class="form-label">Jatuh Tempo</label>
+                                    <input id="monthly_due_date" name="due_date" type="date" class="form-control @if($errors->has('due_date')) is-invalid @endif" value="{{ old('due_date', now()->endOfMonth()->toDateString()) }}" required>
+                                    @if ($errors->has('due_date'))
+                                        <div class="invalid-feedback">{{ $errors->first('due_date') }}</div>
+                                    @endif
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="monthly_amount" class="form-label">Nominal per Santri</label>
+                                    <input id="monthly_amount" name="amount" type="number" min="1" step="1" class="form-control @if($errors->has('amount')) is-invalid @endif" value="{{ old('amount') }}" required>
+                                    @if ($errors->has('amount'))
+                                        <div class="invalid-feedback">{{ $errors->first('amount') }}</div>
+                                    @endif
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="monthly_notes" class="form-label">Catatan</label>
+                                    <textarea id="monthly_notes" name="notes" rows="3" class="form-control @if($errors->has('notes')) is-invalid @endif" placeholder="Opsional">{{ old('notes') }}</textarea>
+                                    @if ($errors->has('notes'))
+                                        <div class="invalid-feedback">{{ $errors->first('notes') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" name="mode" value="preview" class="btn btn-outline-primary">Preview</button>
+                            <button type="submit" name="mode" value="dispatch" class="btn btn-primary">Generate via Queue</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <div class="modal modal-blur fade" id="createInvoiceModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -650,6 +758,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            @if ($errors->any() && ! $errors->createInvoice->any() && ! $errors->recordPayment->any() && ! $errors->updateInvoice->any() && ! $errors->updatePayment->any())
+                document.getElementById('open-monthly-invoice-modal')?.click();
+            @endif
+
             @if ($errors->createInvoice->any())
                 document.getElementById('open-create-invoice-modal')?.click();
             @endif

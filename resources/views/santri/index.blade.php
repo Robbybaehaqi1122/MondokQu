@@ -22,6 +22,11 @@
         </div>
     </x-slot>
 
+    @include('exports.partials.status-list', [
+        'title' => 'Export Data Santri Terbaru',
+        'dataExports' => $dataExports,
+    ])
+
     <div class="row row-cards">
         <div class="col-12">
             <div class="card">
@@ -138,7 +143,7 @@
                                                     {{ $managedSantri->birth_place }}, {{ optional($managedSantri->birth_date)->translatedFormat('d M Y') }}
                                                 </div>
                                                 <div class="text-secondary small mt-1">
-                                                    {{ $managedSantri->room_name ?: 'Kamar belum diatur' }} • Angkatan {{ $managedSantri->entry_year ?? '-' }}
+                                                    {{ $managedSantri->displayRoomName('Kamar belum diatur') }} • Angkatan {{ $managedSantri->entry_year ?? '-' }}
                                                 </div>
                                             </div>
                                         </div>

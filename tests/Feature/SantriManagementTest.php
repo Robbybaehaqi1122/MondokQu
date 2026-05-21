@@ -1,9 +1,13 @@
 <?php
 
+use App\Models\Room;
+use App\Models\DataExport;
 use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Jobs\GenerateDataExportJob;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -175,6 +179,41 @@ test('user with view santri permission can search and filter santri', function (
     $response->assertDontSee('Aisyah Santri');
 });
 
+test('santri views prefer structured room relationship over stale legacy room name', function () {
+    $pengurus = tenantUser('Pengurus');
+    $pengurus->givePermissionTo('view santri');
+    $room = Room::factory()->forTenant($pengurus->tenant)->create([
+        'name' => 'Asrama Master Baru',
+    ]);
+    $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
+        'full_name' => 'Santri Kamar Relasi',
+        'room_id' => $room->id,
+        'room_name' => 'Asrama Lama Stale',
+    ]);
+
+    $this
+        ->actingAs($pengurus)
+        ->get(route('santri.index'))
+        ->assertOk()
+        ->assertSee('Asrama Master Baru')
+        ->assertDontSee('Asrama Lama Stale');
+
+    $this
+        ->actingAs($pengurus)
+        ->get(route('santri.show', $santri))
+        ->assertOk()
+        ->assertSee('Asrama Master Baru')
+        ->assertDontSee('Asrama Lama Stale');
+
+    $csv = $this
+        ->actingAs($pengurus)
+        ->get(route('santri.export'))
+        ->streamedContent();
+
+    expect($csv)->toContain('Asrama Master Baru');
+    expect($csv)->not->toContain('Asrama Lama Stale');
+});
+
 test('santri list is scoped to the current tenant', function () {
     $pengurus = tenantUser('Pengurus');
     $pengurus->givePermissionTo('view santri');
@@ -240,6 +279,71 @@ test('user can export filtered santri data scoped to current tenant', function (
     expect($csv)->toContain('EXP001');
     expect($csv)->not->toContain('Export Aisyah');
     expect($csv)->not->toContain('Export Tenant Lain');
+});
+
+test('large santri export is queued instead of streamed', function () {
+    config(['exports.inline_threshold' => 1]);
+    Queue::fake();
+
+    $pengurus = tenantUser('Pengurus');
+    $pengurus->givePermissionTo('view santri');
+
+    Santri::factory()->count(2)->forTenant($pengurus->tenant)->create([
+        'status' => Santri::STATUS_ACTIVE,
+    ]);
+
+    $response = $this
+        ->actingAs($pengurus)
+        ->get(route('santri.export'));
+
+    $response->assertRedirect(route('santri.index', absolute: false));
+    $response->assertSessionHas('success');
+
+    $export = DataExport::query()->first();
+
+    expect($export)->not->toBeNull();
+    expect($export?->type)->toBe(DataExport::TYPE_SANTRI);
+    expect($export?->status)->toBe(DataExport::STATUS_QUEUED);
+    expect($export?->row_count)->toBe(2);
+    expect($export?->user_id)->toBe($pengurus->id);
+
+    Queue::assertPushed(GenerateDataExportJob::class, fn (GenerateDataExportJob $job) => $job->dataExportId === $export?->id);
+});
+
+test('queued santri export job writes csv file', function () {
+    Storage::fake('local');
+
+    $pengurus = tenantUser('Pengurus');
+    $pengurus->givePermissionTo('view santri');
+
+    Santri::factory()->forTenant($pengurus->tenant)->create([
+        'nis' => 'JOB-EXP-001',
+        'full_name' => 'Santri Job Export',
+    ]);
+
+    $export = DataExport::query()->create([
+        'tenant_id' => $pengurus->tenant_id,
+        'user_id' => $pengurus->id,
+        'type' => DataExport::TYPE_SANTRI,
+        'name' => 'Export Data Santri',
+        'status' => DataExport::STATUS_QUEUED,
+        'disk' => 'local',
+        'filename' => 'data-santri-job.csv',
+        'filters' => [],
+        'row_count' => 1,
+    ]);
+
+    (new GenerateDataExportJob($export->id))->handle(app(\App\Services\ActivityLogger::class));
+
+    $export->refresh();
+
+    expect($export->status)->toBe(DataExport::STATUS_COMPLETED);
+    expect($export->path)->not->toBeNull();
+
+    Storage::disk('local')->assertExists($export->path);
+    expect(Storage::disk('local')->get($export->path))
+        ->toContain('JOB-EXP-001')
+        ->toContain('Santri Job Export');
 });
 
 test('santri model queries are scoped to the current tenant by default', function () {
@@ -362,6 +466,8 @@ test('user with permission can create santri', function () {
     expect($santri->father_name)->toBe('Fulan Senior');
     expect($santri->mother_name)->toBe('Ibu Fulan');
     expect($santri->room_name)->toBe('Asrama A1');
+    expect($santri->room_id)->not->toBeNull();
+    expect($santri->room?->name)->toBe('Asrama A1');
     expect($santri->entry_year)->toBe(2024);
 
     if ($photo) {
@@ -740,6 +846,8 @@ test('user with permission can update santri', function () {
     expect($santri->full_name)->toBe('Nama Baru');
     expect($santri->status)->toBe(Santri::STATUS_ALUMNI);
     expect($santri->room_name)->toBe('Asrama Putri 2');
+    expect($santri->room_id)->not->toBeNull();
+    expect($santri->room?->name)->toBe('Asrama Putri 2');
     expect($santri->entry_year)->toBe(2025);
     expect($santri->father_name)->toBe('Ayah Baru');
     expect($santri->mother_name)->toBe('Ibu Kandung Baru');

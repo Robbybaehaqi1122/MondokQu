@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\SantriInvoiceFactory;
 use DomainException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -99,6 +100,52 @@ class SantriInvoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(SantriPayment::class);
+    }
+
+    /**
+     * Apply filters used by invoice list and export.
+     */
+    public function scopeWithFilters(Builder $query, string $search = '', string $status = '', string $santriId = ''): Builder
+    {
+        $search = trim($search);
+        $status = trim($status);
+        $santriId = trim($santriId);
+
+        return $query
+            ->when($search !== '', function (Builder $query) use ($search): void {
+                $query->where(function (Builder $invoiceQuery) use ($search): void {
+                    $invoiceQuery
+                        ->where('invoice_number', 'like', "%{$search}%")
+                        ->orWhere('title', 'like', "%{$search}%")
+                        ->orWhereHas('santri', function (Builder $santriQuery) use ($search): void {
+                            $santriQuery
+                                ->where('nis', 'like', "%{$search}%")
+                                ->orWhere('full_name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($status !== '', function (Builder $query) use ($status): void {
+                if ($status === 'overdue') {
+                    $query->overdue();
+
+                    return;
+                }
+
+                if (in_array($status, self::availableStatuses(), true)) {
+                    $query->where('status', $status);
+                }
+            })
+            ->when($santriId !== '', fn (Builder $query) => $query->where('santri_id', $santriId));
+    }
+
+    /**
+     * Limit the query to invoices that are past due and not fully paid.
+     */
+    public function scopeOverdue(Builder $query): Builder
+    {
+        return $query
+            ->where('status', '!=', self::STATUS_PAID)
+            ->whereDate('due_date', '<', now()->toDateString());
     }
 
     /**

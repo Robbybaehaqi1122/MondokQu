@@ -360,7 +360,7 @@
                 </div>
                 <div class="box">
                     <span class="label">Kamar / Asrama</span>
-                    <span class="value">{{ $invoice->santri?->room_name ?: '-' }}</span>
+                    <span class="value">{{ $invoice->santri?->displayRoomName() ?? '-' }}</span>
                 </div>
                 <div class="box">
                     <span class="label">Status</span>

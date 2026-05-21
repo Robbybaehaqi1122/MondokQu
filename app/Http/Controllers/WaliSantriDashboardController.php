@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LeaveRequest;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class WaliSantriDashboardController extends Controller
         $currentUser = $request->user();
         $children = $currentUser
             ->guardianSantris()
+            ->with('room')
             ->orderBy('full_name')
             ->get();
         $santriIds = $children->pluck('id');
@@ -25,6 +27,9 @@ class WaliSantriDashboardController extends Controller
             ->visibleTo($currentUser)
             ->whereIn('santri_id', $santriIds);
         $paymentBaseQuery = SantriPayment::query()
+            ->visibleTo($currentUser)
+            ->whereIn('santri_id', $santriIds);
+        $leaveRequestBaseQuery = LeaveRequest::query()
             ->visibleTo($currentUser)
             ->whereIn('santri_id', $santriIds);
 
@@ -56,22 +61,56 @@ class WaliSantriDashboardController extends Controller
                 ];
             }),
             'recentPayments' => (clone $paymentBaseQuery)
-                ->with(['invoice', 'santri'])
+                ->with(['invoice', 'santri.room'])
                 ->latest('paid_at')
                 ->limit(6)
                 ->get(),
+            'recentLeaveRequests' => (clone $leaveRequestBaseQuery)
+                ->with('santri.room')
+                ->latest()
+                ->limit(8)
+                ->get(),
+            'leaveSummary' => $this->buildLeaveSummary(clone $leaveRequestBaseQuery),
             'summary' => $this->buildSummary(
                 clone $invoiceBaseQuery,
                 clone $paymentBaseQuery,
                 $children->count()
             ),
             'upcomingInvoices' => (clone $invoiceBaseQuery)
-                ->with('santri')
+                ->with('santri.room')
                 ->where('status', '!=', SantriInvoice::STATUS_PAID)
                 ->orderBy('due_date')
                 ->limit(8)
                 ->get(),
         ]);
+    }
+
+    /**
+     * Build leave request summary for all linked santri.
+     */
+    protected function buildLeaveSummary($leaveRequestBaseQuery): array
+    {
+        $today = now()->toDateString();
+
+        return [
+            'pending' => (clone $leaveRequestBaseQuery)
+                ->where('status', LeaveRequest::STATUS_PENDING)
+                ->count(),
+            'approved' => (clone $leaveRequestBaseQuery)
+                ->where('status', LeaveRequest::STATUS_APPROVED)
+                ->count(),
+            'rejected' => (clone $leaveRequestBaseQuery)
+                ->where('status', LeaveRequest::STATUS_REJECTED)
+                ->count(),
+            'completed' => (clone $leaveRequestBaseQuery)
+                ->where('status', LeaveRequest::STATUS_COMPLETED)
+                ->count(),
+            'active_today' => (clone $leaveRequestBaseQuery)
+                ->where('status', LeaveRequest::STATUS_APPROVED)
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->count(),
+        ];
     }
 
     /**
@@ -138,7 +177,7 @@ class WaliSantriDashboardController extends Controller
         return SantriInvoice::query()
             ->visibleTo($currentUser)
             ->with([
-                'santri',
+                'santri.room',
                 'tenant',
                 'payments' => fn ($query) => $query
                     ->with('recorder')

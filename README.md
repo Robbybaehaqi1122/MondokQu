@@ -30,17 +30,15 @@ php artisan key:generate
 
 Di Windows PowerShell, gunakan `Copy-Item .env.example .env` bila `cp` tidak tersedia.
 
-3. Jika memakai SQLite lokal, buat file database.
+3. Konfigurasi database (SQLite default atau MySQL/PostgreSQL via .env). Untuk MySQL:
 
-```bash
-mkdir -p database
-touch database/database.sqlite
-```
-
-Di Windows PowerShell:
-
-```powershell
-New-Item -ItemType File -Force database/database.sqlite
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=mondok_qu
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
 4. Jalankan migration dan seeder.
@@ -188,9 +186,15 @@ php artisan view:cache
 Pastikan juga:
 
 - Backup database dibuat sebelum deploy.
-- `.env` production berisi `APP_KEY`, koneksi database, mail, queue, dan konfigurasi `SAAS_*` yang benar.
+- `.env` production berisi `APP_KEY`, koneksi database, mail, queue, `SAAS_*`, dan `SANTRI_INVOICE_PERIOD_YEAR_FUTURE_LIMIT` yang benar.
 - Cron Laravel scheduler aktif: `* * * * * cd /path/to/mondok-qu && php artisan schedule:run >> /dev/null 2>&1`.
-- Queue worker aktif jika production memakai queue database/redis untuk email atau pekerjaan latar.
+- Queue worker aktif jika production memakai queue database/redis untuk email atau pekerjaan latar:
+
+```bash
+php artisan queue:work --sleep=3 --tries=3 --timeout=900
+```
+
+Di production, jalankan worker lewat process manager seperti Supervisor atau systemd agar otomatis hidup kembali setelah restart atau error.
 - Permission folder `storage` dan `bootstrap/cache` bisa ditulis oleh user web server.
 - Setelah deploy, jalankan smoke test: login superadmin, buka dashboard SaaS, login user tenant aktif, dan pastikan tenant expired diarahkan ke halaman status akses.
 
@@ -220,6 +224,7 @@ AUTH_DEFAULT_USER_PASSWORD=Password123!
 SAAS_TRIAL_DAYS=14
 SAAS_GRACE_DAYS=5
 SAAS_DEFAULT_PLAN=trial
+SANTRI_INVOICE_PERIOD_YEAR_FUTURE_LIMIT=5
 ```
 
 Penjelasan singkat:

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,6 +47,7 @@ class Santri extends Model
         'entry_date',
         'entry_year',
         'room_name',
+        'room_id',
         'notes',
         'status',
         'photo_path',
@@ -82,6 +84,22 @@ class Santri extends Model
     }
 
     /**
+     * Get the structured room assigned to this santri.
+     */
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
+    }
+
+    /**
+     * Get room transfer history for this santri.
+     */
+    public function roomTransfers(): HasMany
+    {
+        return $this->hasMany(RoomTransfer::class);
+    }
+
+    /**
      * Get invoices issued to this santri.
      */
     public function invoices(): HasMany
@@ -113,6 +131,39 @@ class Santri extends Model
         return $this->belongsToMany(User::class, 'santri_guardians')
             ->withPivot(['tenant_id', 'relationship', 'is_primary'])
             ->withTimestamps();
+    }
+
+    /**
+     * Apply filters used by the santri management list and export.
+     */
+    public function scopeWithFilters(Builder $query, string $search = '', string $status = '', string $gender = ''): Builder
+    {
+        $search = trim($search);
+        $status = trim($status);
+        $gender = trim($gender);
+
+        return $query
+            ->when($search !== '', function (Builder $query) use ($search): void {
+                $query->where(function (Builder $santriQuery) use ($search): void {
+                    $santriQuery
+                        ->where('nis', 'like', "%{$search}%")
+                        ->orWhere('full_name', 'like', "%{$search}%")
+                        ->orWhere('guardian_name', 'like', "%{$search}%")
+                        ->orWhere('guardian_phone_number', 'like', "%{$search}%")
+                        ->orWhere('father_name', 'like', "%{$search}%")
+                        ->orWhere('mother_name', 'like', "%{$search}%")
+                        ->orWhere('room_name', 'like', "%{$search}%")
+                        ->orWhereHas('room', fn (Builder $roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('guardians', function (Builder $guardianQuery) use ($search): void {
+                            $guardianQuery
+                                ->where('name', 'like', "%{$search}%")
+                                ->orWhere('username', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($status !== '', fn (Builder $query) => $query->where('status', $status))
+            ->when($gender !== '', fn (Builder $query) => $query->where('gender', $gender));
     }
 
     /**
@@ -185,5 +236,15 @@ class Santri extends Model
             self::STATUS_ALUMNI => 'Alumni',
             default => '-',
         };
+    }
+
+    /**
+     * Resolve the room name from the structured relationship, with legacy room_name as fallback.
+     */
+    public function displayRoomName(string $fallback = '-'): string
+    {
+        $roomName = $this->room?->name ?: trim((string) $this->room_name);
+
+        return $roomName !== '' ? $roomName : $fallback;
     }
 }

@@ -1,13 +1,18 @@
 <?php
 
+use App\Actions\Santri\GenerateMonthlySantriInvoices;
 use App\Http\Controllers\SantriPaymentController;
 use App\Http\Requests\Santri\UpdateSantriInvoiceRequest;
+use App\Jobs\GenerateDataExportJob;
+use App\Jobs\GenerateMonthlySantriInvoicesJob;
+use App\Models\DataExport;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Models\Tenant;
 use App\Services\ActivityLogger;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -98,6 +103,36 @@ test('admin can export filtered invoice list scoped to current tenant', function
     expect($csv)->not->toContain('INV-FILTER-PAID');
     expect($csv)->not->toContain('INV-FILTER-OTHER');
     expect($csv)->not->toContain('Invoice Tenant Lain');
+});
+
+test('large invoice export is queued instead of streamed', function () {
+    config(['exports.inline_threshold' => 1]);
+    Queue::fake();
+
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('view pembayaran');
+    $santri = Santri::factory()->forTenant($admin->tenant)->create();
+
+    SantriInvoice::factory()->count(2)->forSantri($santri)->create([
+        'title' => 'Tagihan Queue',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->get(route('santri.payments.invoices.export'));
+
+    $response->assertRedirect(route('santri.payments.invoices', absolute: false));
+    $response->assertSessionHas('success');
+
+    $export = DataExport::query()->first();
+
+    expect($export)->not->toBeNull();
+    expect($export?->type)->toBe(DataExport::TYPE_SANTRI_INVOICES);
+    expect($export?->status)->toBe(DataExport::STATUS_QUEUED);
+    expect($export?->row_count)->toBe(2);
+    expect($export?->user_id)->toBe($admin->id);
+
+    Queue::assertPushed(GenerateDataExportJob::class, fn (GenerateDataExportJob $job) => $job->dataExportId === $export?->id);
 });
 
 test('admin can access santri payment reports page', function () {
@@ -237,6 +272,88 @@ test('invoice period year allows configurable future planning window', function 
     ]);
 
     $response->assertSessionHasErrors('period_year', null, 'createInvoice');
+});
+
+test('admin can preview monthly invoice generation without creating invoices', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);
+
+    Santri::factory()->forTenant($admin->tenant)->count(3)->create();
+
+    $response = $this->actingAs($admin)->post(route('santri.payments.invoices.monthly.generate'), [
+        'title' => 'SPP Bulanan',
+        'period_month' => 5,
+        'period_year' => 2026,
+        'due_date' => '2026-05-20',
+        'amount' => 350000,
+        'mode' => 'preview',
+    ]);
+
+    $response->assertRedirect(route('santri.payments.invoices', absolute: false));
+    $response->assertSessionHas('bulk_invoice_preview');
+
+    expect(SantriInvoice::query()->count())->toBe(0);
+    expect(session('bulk_invoice_preview')['created'])->toBe(3);
+});
+
+test('admin can queue monthly invoice generation', function () {
+    Queue::fake();
+
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);
+
+    $response = $this->actingAs($admin)->post(route('santri.payments.invoices.monthly.generate'), [
+        'title' => 'SPP Bulanan',
+        'period_month' => 5,
+        'period_year' => 2026,
+        'due_date' => '2026-05-20',
+        'amount' => 350000,
+        'mode' => 'dispatch',
+    ]);
+
+    $response->assertRedirect(route('santri.payments.invoices', absolute: false));
+
+    Queue::assertPushed(GenerateMonthlySantriInvoicesJob::class, fn (GenerateMonthlySantriInvoicesJob $job) => $job->tenantId === $admin->tenant_id
+        && $job->title === 'SPP Bulanan'
+        && $job->periodMonth === 5
+        && $job->periodYear === 2026
+        && (float) $job->amount === 350000.0);
+});
+
+test('monthly invoice generator creates invoices for active santri and skips duplicates', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view pembayaran', 'create pembayaran']);
+
+    $activeSantri = Santri::factory()->forTenant($admin->tenant)->count(3)->create();
+    Santri::factory()->forTenant($admin->tenant)->create([
+        'status' => Santri::STATUS_ALUMNI,
+    ]);
+    SantriInvoice::factory()->forSantri($activeSantri->first())->create([
+        'title' => 'SPP Bulanan',
+        'period_month' => 5,
+        'period_year' => 2026,
+    ]);
+
+    $result = app(GenerateMonthlySantriInvoices::class)->handle(
+        tenantId: $admin->tenant_id,
+        title: 'SPP Bulanan',
+        periodMonth: 5,
+        periodYear: 2026,
+        dueDate: '2026-05-20',
+        amount: 350000,
+        notes: 'Generate otomatis',
+        createdBy: $admin->id
+    );
+
+    expect($result['eligible'])->toBe(3);
+    expect($result['skipped'])->toBe(1);
+    expect($result['created'])->toBe(2);
+    expect(SantriInvoice::query()
+        ->withoutTenantScope()
+        ->where('title', 'SPP Bulanan')
+        ->where('period_month', 5)
+        ->where('period_year', 2026)
+        ->count())->toBe(3);
 });
 
 test('admin can record partial and full payments for an invoice', function () {

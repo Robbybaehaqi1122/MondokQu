@@ -3,7 +3,8 @@
     $roles = $user?->getRoleNames() ?? collect();
     $roleLabel = $roles->implode(', ') ?: 'Tanpa role';
     $userInitial = strtoupper(substr($user->name, 0, 1));
-    $canOpenSantriModule = $user->can('view santri') || $user->can('view pembayaran') || $user->can('view laporan keuangan');
+    $canOpenOperationalReports = $user->can('manage kamar') || $user->canAny(['create izin', 'approve izin']);
+    $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
 @endphp
 
 <div class="mobile-topbar d-lg-none">
@@ -115,8 +116,8 @@
 
                 @if ($canOpenSantriModule)
                     <div class="sidebar-section-title">Modul</div>
-                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('santri.payments.*')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('santri.payments.*') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-school"></i>
                             </span>
@@ -133,6 +134,33 @@
                                         <i class="ti ti-users"></i>
                                     </span>
                                     <span>Manajemen Santri</span>
+                                </a>
+                            @endif
+
+                            @if ($user->can('manage kamar'))
+                                <a class="sidebar-sublink {{ request()->routeIs('rooms.*') ? 'active' : '' }}" href="{{ route('rooms.index') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-bed"></i>
+                                    </span>
+                                    <span>Manajemen Kamar</span>
+                                </a>
+                            @endif
+
+                            @if ($user->canAny(['create izin', 'approve izin']))
+                                <a class="sidebar-sublink {{ request()->routeIs('pengurus.izin.*') ? 'active' : '' }}" href="{{ route('pengurus.izin.index') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-clipboard-check"></i>
+                                    </span>
+                                    <span>Perizinan Santri</span>
+                                </a>
+                            @endif
+
+                            @if ($canOpenOperationalReports)
+                                <a class="sidebar-sublink {{ request()->routeIs('pengurus.reports.*') ? 'active' : '' }}" href="{{ route('pengurus.reports.index') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-report-analytics"></i>
+                                    </span>
+                                    <span>Laporan Kamar & Izin</span>
                                 </a>
                             @endif
 

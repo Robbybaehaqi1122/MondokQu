@@ -5,8 +5,12 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\PermissionManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\DataExportDownloadController;
+use App\Http\Controllers\Pengurus\LeaveRequestController;
+use App\Http\Controllers\Pengurus\OperationalReportController;
 use App\Http\Controllers\Pengurus\PengurusDashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoomManagementController;
 use App\Http\Controllers\SantriManagementController;
 use App\Http\Controllers\SantriPaymentController;
 use App\Http\Controllers\SubscriptionStatusController;
@@ -33,6 +37,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/subscription/expired', [SubscriptionStatusController::class, 'showExpired'])->name('subscription.expired');
     Route::post('/impersonation/stop', [TenantImpersonationController::class, 'destroy'])->name('impersonation.stop');
+});
+
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified'])->group(function () {
+    Route::get('/exports/{dataExport}/download', DataExportDownloadController::class)->name('exports.download');
 });
 
 // Role-based access routes
@@ -91,6 +99,10 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
             ->middleware('permission:create pembayaran')
             ->name('invoices.store');
 
+        Route::post('/tagihan/bulanan', [SantriPaymentController::class, 'generateMonthlyInvoices'])
+            ->middleware('permission:create pembayaran')
+            ->name('invoices.monthly.generate');
+
         Route::patch('/tagihan/{invoice}', [SantriPaymentController::class, 'updateInvoice'])
             ->middleware('permission:update pembayaran')
             ->name('invoices.update');
@@ -124,6 +136,18 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:view santri'])->group(function () {
     Route::get('/santri', [SantriManagementController::class, 'index'])->name('santri.index');
     Route::get('/santri/export', [SantriManagementController::class, 'export'])->name('santri.export');
+});
+
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage kamar'])->group(function () {
+    Route::get('/santri/kamar', [RoomManagementController::class, 'index'])->name('rooms.index');
+    Route::post('/santri/kamar', [RoomManagementController::class, 'store'])->name('rooms.store');
+    Route::patch('/santri/kamar/{room}', [RoomManagementController::class, 'update'])->name('rooms.update');
+    Route::post('/santri/kamar/{room}/santri', [RoomManagementController::class, 'assignSantris'])->name('rooms.santris.assign');
+    Route::delete('/santri/kamar/{room}/santri/{santri}', [RoomManagementController::class, 'releaseSantri'])->name('rooms.santris.release');
+    Route::delete('/santri/kamar/{room}', [RoomManagementController::class, 'destroy'])->name('rooms.destroy');
+});
+
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:view santri'])->group(function () {
     Route::get('/santri/{santri}', [SantriManagementController::class, 'show'])->name('santri.show');
 });
 
@@ -143,6 +167,43 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/pengurus', [PengurusDashboardController::class, 'index'])->name('pengurus.dashboard');
     Route::redirect('/pengurus/santri', '/santri')->name('pengurus.santri');
 });
+
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified'])
+    ->prefix('pengurus/izin')
+    ->name('pengurus.izin.')
+    ->group(function () {
+        Route::get('/', [LeaveRequestController::class, 'index'])
+            ->middleware('permission:create izin|approve izin')
+            ->name('index');
+        Route::post('/', [LeaveRequestController::class, 'store'])
+            ->middleware('permission:create izin')
+            ->name('store');
+        Route::get('/{leaveRequest}/edit', [LeaveRequestController::class, 'edit'])
+            ->middleware('permission:create izin')
+            ->name('edit');
+        Route::patch('/{leaveRequest}', [LeaveRequestController::class, 'update'])
+            ->middleware('permission:create izin')
+            ->name('update');
+        Route::post('/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])
+            ->middleware('permission:approve izin')
+            ->name('approve');
+        Route::post('/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])
+            ->middleware('permission:approve izin')
+            ->name('reject');
+        Route::post('/{leaveRequest}/complete', [LeaveRequestController::class, 'complete'])
+            ->middleware('permission:approve izin')
+            ->name('complete');
+        Route::delete('/{leaveRequest}', [LeaveRequestController::class, 'destroy'])
+            ->middleware('permission:create izin')
+            ->name('destroy');
+    });
+
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage kamar|create izin|approve izin'])
+    ->prefix('pengurus/laporan')
+    ->name('pengurus.reports.')
+    ->group(function () {
+        Route::get('/', [OperationalReportController::class, 'index'])->name('index');
+    });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Musyrif/Ustadz'])->group(function () {
     Route::get('/musyrif', fn () => view('dashboard'))->name('musyrif.dashboard');

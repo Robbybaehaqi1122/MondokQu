@@ -13,12 +13,19 @@
             'paid' => 'bg-success-lt text-success',
             'overdue' => 'bg-danger-lt text-danger',
         ];
+
+        $leaveBadgeClasses = [
+            'pending' => 'bg-warning-lt text-warning',
+            'approved' => 'bg-success-lt text-success',
+            'rejected' => 'bg-danger-lt text-danger',
+            'completed' => 'bg-info-lt text-info',
+        ];
     @endphp
 
     <x-slot name="header">
         <div>
             <h2 class="page-title">Portal Wali Santri</h2>
-            <div class="text-secondary mt-1">Ringkasan santri dan pembayaran yang terhubung dengan akun Anda.</div>
+            <div class="text-secondary mt-1">Ringkasan santri, pembayaran, dan izin yang terhubung dengan akun Anda.</div>
         </div>
     </x-slot>
 
@@ -121,7 +128,7 @@
                             <div class="row g-3 mt-3">
                                 <div class="col-6">
                                     <div class="text-secondary small">Kamar</div>
-                                    <div class="fw-semibold mt-1">{{ $santri->room_name ?: 'Belum diatur' }}</div>
+                                    <div class="fw-semibold mt-1">{{ $santri->displayRoomName('Belum diatur') }}</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-secondary small">Angkatan</div>
@@ -152,6 +159,85 @@
             @endforeach
         </div>
     @endif
+
+    <div class="row row-cards mt-3">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Riwayat Izin Santri</h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @forelse ($recentLeaveRequests as $leaveRequest)
+                        <div class="d-flex align-items-start gap-3 py-3 @unless($loop->last) border-bottom @endunless">
+                            <span class="avatar avatar-sm {{ $leaveBadgeClasses[$leaveRequest->status] ?? 'bg-secondary-lt text-secondary' }}">
+                                <i class="ti ti-clipboard-check"></i>
+                            </span>
+                            <div class="flex-fill min-width-0">
+                                <div class="d-flex flex-column flex-sm-row align-items-sm-start justify-content-sm-between gap-2">
+                                    <div>
+                                        <div class="fw-semibold">{{ $leaveRequest->santri?->full_name ?? '-' }}</div>
+                                        <div class="text-secondary small">
+                                            {{ $leaveRequest->start_date?->translatedFormat('d M Y') }}
+                                            @if ($leaveRequest->end_date && ! $leaveRequest->start_date?->isSameDay($leaveRequest->end_date))
+                                                s/d {{ $leaveRequest->end_date?->translatedFormat('d M Y') }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <span class="badge {{ $leaveBadgeClasses[$leaveRequest->status] ?? 'bg-secondary-lt text-secondary' }}">
+                                        {{ $leaveRequest->statusLabel() }}
+                                    </span>
+                                </div>
+                                <div class="text-secondary mt-2">{{ \Illuminate\Support\Str::limit($leaveRequest->reason, 120) }}</div>
+                                @if ($leaveRequest->approved_at)
+                                    <div class="text-secondary small mt-2">Diproses {{ $leaveRequest->approved_at->translatedFormat('d M Y H:i') }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-secondary">Belum ada riwayat izin untuk santri terhubung.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Ringkasan Izin</h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="text-secondary small">Menunggu</div>
+                            <div class="fs-2 fw-bold">{{ number_format($leaveSummary['pending']) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-secondary small">Sedang Izin</div>
+                            <div class="fs-2 fw-bold">{{ number_format($leaveSummary['active_today']) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-secondary small">Disetujui</div>
+                            <div class="fs-2 fw-bold">{{ number_format($leaveSummary['approved']) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-secondary small">Selesai</div>
+                            <div class="fs-2 fw-bold">{{ number_format($leaveSummary['completed']) }}</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between border-top pt-3">
+                                <span class="text-secondary">Ditolak</span>
+                                <span class="fw-semibold">{{ number_format($leaveSummary['rejected']) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row row-cards mt-3">
         <div class="col-lg-7">

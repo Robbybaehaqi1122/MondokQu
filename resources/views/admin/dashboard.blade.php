@@ -455,7 +455,7 @@
                         <div class="list-group-item d-flex align-items-center justify-content-between gap-3">
                             <div>
                                 <div class="fw-semibold">{{ $santri->full_name }}</div>
-                                <div class="text-secondary small">NIS {{ $santri->nis }} · {{ $santri->room_name ?: 'Kamar belum diatur' }}</div>
+                                <div class="text-secondary small">NIS {{ $santri->nis }} · {{ $santri->displayRoomName('Kamar belum diatur') }}</div>
                             </div>
                             <div class="text-end">
                                 <div class="badge bg-success-lt text-success">{{ $santri->statusLabel() }}</div>
