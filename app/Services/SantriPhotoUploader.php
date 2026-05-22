@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 class SantriPhotoUploader
 {
     /**
-     * Store a new photo and optionally replace the previous managed file.
+     * Store a new photo without deleting the previous file.
      */
     public function store(?UploadedFile $photo, ?string $currentPath = null): ?string
     {
@@ -17,11 +17,7 @@ class SantriPhotoUploader
         }
 
         $directory = config('santri.photo.directory', 'santri-photos');
-        $storedPath = $photo->store($directory, 'public');
-
-        $this->deleteIfManaged($currentPath);
-
-        return $storedPath;
+        return $photo->store($directory, 'public');
     }
 
     /**

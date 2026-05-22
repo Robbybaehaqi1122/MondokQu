@@ -81,6 +81,13 @@ class DataExport extends Model
         return $query->where('type', $type);
     }
 
+    public function scopeExpired(Builder $query): Builder
+    {
+        return $query
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now());
+    }
+
     public function isOwnedBy(?User $user): bool
     {
         return $user && (int) $this->user_id === (int) $user->id;

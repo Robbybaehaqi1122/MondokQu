@@ -5,6 +5,16 @@
     $userInitial = strtoupper(substr($user->name, 0, 1));
     $canOpenOperationalReports = $user->can('manage kamar') || $user->canAny(['create izin', 'approve izin']);
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
+    $unreadNotifications = collect();
+    $unreadNotificationCount = 0;
+
+    if ($user) {
+        $unreadNotifications = $user->unreadNotifications()
+            ->latest()
+            ->limit(5)
+            ->get();
+        $unreadNotificationCount = $user->unreadNotifications()->count();
+    }
 @endphp
 
 <div class="mobile-topbar d-lg-none">
@@ -20,6 +30,13 @@
             <span class="mobile-topbar-brand-title">Mondok Qu</span>
             <span class="mobile-topbar-brand-subtitle">{{ $roleLabel }}</span>
         </span>
+    </a>
+
+    <a href="{{ route('notifications.index') }}" class="mobile-topbar-notification" aria-label="Buka notifikasi">
+        <i class="ti ti-bell"></i>
+        @if ($unreadNotificationCount > 0)
+            <span class="mobile-topbar-notification-badge">{{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}</span>
+        @endif
     </a>
 
     <a href="{{ route('profile.edit') }}" class="mobile-topbar-profile" aria-label="Buka profil pengguna">
@@ -324,6 +341,45 @@
         </div>
 
         <div class="navbar-nav flex-row order-md-last">
+            <div class="nav-item dropdown me-3">
+                <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" aria-label="Buka notifikasi">
+                    <span class="position-relative d-inline-flex align-items-center">
+                        <i class="ti ti-bell fs-2"></i>
+                        @if ($unreadNotificationCount > 0)
+                            <span class="badge bg-red text-red-fg badge-notification badge-pill">{{ $unreadNotificationCount > 99 ? '99+' : $unreadNotificationCount }}</span>
+                        @endif
+                    </span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notification-dropdown">
+                    <div class="dropdown-header d-flex align-items-center justify-content-between gap-3">
+                        <span>Notifikasi</span>
+                        <a href="{{ route('notifications.index') }}" class="small text-decoration-none">Lihat semua</a>
+                    </div>
+                    <div class="dropdown-divider m-0"></div>
+
+                    @forelse ($unreadNotifications as $notification)
+                        @php
+                            $notificationTitle = data_get($notification->data, 'title', 'Notifikasi');
+                            $notificationMessage = data_get($notification->data, 'message', 'Ada informasi baru untuk akun Anda.');
+                            $notificationIcon = data_get($notification->data, 'icon', 'ti-bell');
+                        @endphp
+                        <a href="{{ route('notifications.show', $notification) }}" class="dropdown-item notification-dropdown-item">
+                            <span class="avatar avatar-sm bg-primary-lt text-primary">
+                                <i class="ti {{ $notificationIcon }}"></i>
+                            </span>
+                            <span class="min-width-0">
+                                <span class="d-block fw-semibold text-truncate">{{ $notificationTitle }}</span>
+                                <span class="d-block small text-secondary text-truncate">{{ $notificationMessage }}</span>
+                            </span>
+                        </a>
+                    @empty
+                        <div class="dropdown-item-text text-secondary">
+                            Belum ada notifikasi baru.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
                     @if ($user->avatarUrl())

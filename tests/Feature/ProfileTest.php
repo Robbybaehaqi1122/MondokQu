@@ -17,10 +17,15 @@ test('profile page is displayed', function () {
 test('profile information can be updated', function () {
     Storage::fake('public');
 
-    $user = User::factory()->create();
     $avatar = function_exists('imagecreatetruecolor')
         ? UploadedFile::fake()->image('profile-avatar.png', 300, 300)->size(512)
         : null;
+    $existingAvatarPath = $avatar
+        ? UploadedFile::fake()->image('profile-avatar-lama.png', 300, 300)->store('avatars', 'public')
+        : null;
+    $user = User::factory()->create([
+        'avatar_path' => $existingAvatarPath,
+    ]);
 
     $payload = [
         'name' => 'Test User',
@@ -50,6 +55,7 @@ test('profile information can be updated', function () {
     if ($avatar) {
         expect($user->avatar_path)->toStartWith('avatars/');
         Storage::disk('public')->assertExists($user->avatar_path);
+        Storage::disk('public')->assertMissing($existingAvatarPath);
     } else {
         expect($user->avatar_path)->toBeNull();
     }

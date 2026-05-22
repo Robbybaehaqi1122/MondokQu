@@ -5,6 +5,7 @@ use App\Models\DataExport;
 use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\DataExportCompletedNotification;
 use App\Jobs\GenerateDataExportJob;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -344,6 +345,20 @@ test('queued santri export job writes csv file', function () {
     expect(Storage::disk('local')->get($export->path))
         ->toContain('JOB-EXP-001')
         ->toContain('Santri Job Export');
+
+    $notification = $pengurus->notifications()->first();
+
+    expect($notification)->not->toBeNull();
+    expect($notification?->type)->toBe(DataExportCompletedNotification::class);
+    expect($notification?->data['title'])->toBe('Export selesai');
+    expect($notification?->data['url'])->toBe(route('exports.download', $export, false));
+
+    $response = $this
+        ->actingAs($pengurus)
+        ->get(route('notifications.show', $notification));
+
+    $response->assertRedirect(route('exports.download', $export, absolute: false));
+    expect($notification->fresh()?->read_at)->not->toBeNull();
 });
 
 test('santri model queries are scoped to the current tenant by default', function () {
@@ -804,11 +819,15 @@ test('user with permission can update santri', function () {
     $photo = function_exists('imagecreatetruecolor')
         ? UploadedFile::fake()->image('santri-baru.png', 500, 500)->size(700)
         : null;
+    $existingPhotoPath = $photo
+        ? UploadedFile::fake()->image('santri-lama-update.png', 300, 300)->store('santri-photos', 'public')
+        : null;
 
     $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
         'nis' => 'NIS3001',
         'full_name' => 'Nama Lama',
         'status' => Santri::STATUS_ACTIVE,
+        'photo_path' => $existingPhotoPath,
     ]);
 
     $payload = [
@@ -856,6 +875,7 @@ test('user with permission can update santri', function () {
     if ($photo) {
         expect($santri->photo_path)->toStartWith('santri-photos/');
         Storage::disk('public')->assertExists($santri->photo_path);
+        Storage::disk('public')->assertMissing($existingPhotoPath);
     }
 });
 

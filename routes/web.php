@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PermissionManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\DataExportDownloadController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengurus\LeaveRequestController;
 use App\Http\Controllers\Pengurus\OperationalReportController;
 use App\Http\Controllers\Pengurus\PengurusDashboardController;
@@ -41,6 +42,9 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified'])->group(function () {
     Route::get('/exports/{dataExport}/download', DataExportDownloadController::class)->name('exports.download');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
 });
 
 // Role-based access routes

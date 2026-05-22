@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 class UserAvatarUploader
 {
     /**
-     * Store a new avatar and optionally replace the previous managed file.
+     * Store a new avatar without deleting the previous file.
      */
     public function store(?UploadedFile $avatar, ?string $currentPath = null): ?string
     {
@@ -17,11 +17,7 @@ class UserAvatarUploader
         }
 
         $directory = config('user.avatar.directory', 'avatars');
-        $storedPath = $avatar->store($directory, 'public');
-
-        $this->deleteIfManaged($currentPath);
-
-        return $storedPath;
+        return $avatar->store($directory, 'public');
     }
 
     /**

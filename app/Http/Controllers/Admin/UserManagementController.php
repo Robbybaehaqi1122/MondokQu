@@ -17,6 +17,7 @@ use App\Services\UserAvatarUploader;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -192,34 +193,48 @@ class UserManagementController extends Controller
                 ], 'createUser');
         }
 
-        $user = User::query()->create([
-            'tenant_id' => $resolvedTenantId,
-            'name' => $validated['name'],
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'] ?? null,
-            'status' => $validated['status'],
-            'created_by' => $request->user()?->id,
-            'avatar_path' => $this->userAvatarUploader->store($request->file('avatar')),
-            'password' => $validated['password'],
-        ]);
+        $avatarPath = $this->userAvatarUploader->store($request->file('avatar'));
 
-        $user->syncRoles([$validated['role']]);
+        try {
+            $user = DB::transaction(function () use ($request, $validated, $resolvedTenantId, $avatarPath): User {
+                $user = User::query()->create([
+                    'tenant_id' => $resolvedTenantId,
+                    'name' => $validated['name'],
+                    'username' => $validated['username'],
+                    'email' => $validated['email'],
+                    'phone_number' => $validated['phone_number'] ?? null,
+                    'status' => $validated['status'],
+                    'created_by' => $request->user()?->id,
+                    'avatar_path' => $avatarPath,
+                    'password' => $validated['password'],
+                ]);
+
+                $user->syncRoles([$validated['role']]);
+
+                $this->activityLogger->log(
+                    action: 'user_created',
+                    actor: $request->user(),
+                    target: $user,
+                    description: 'Membuat user baru beserta role awal.',
+                    properties: [
+                        'role' => $validated['role'],
+                        'status' => $validated['status'],
+                        'tenant_id' => $resolvedTenantId,
+                        'tenant_name' => $user->tenant?->name,
+                        'phone_number' => $validated['phone_number'] ?? null,
+                    ],
+                    ipAddress: $request->ip()
+                );
+
+                return $user;
+            });
+        } catch (Throwable $exception) {
+            $this->userAvatarUploader->deleteIfManaged($avatarPath);
+
+            throw $exception;
+        }
+
         $verificationSent = $this->sendVerificationNotificationSafely($user);
-        $this->activityLogger->log(
-            action: 'user_created',
-            actor: $request->user(),
-            target: $user,
-            description: 'Membuat user baru beserta role awal.',
-            properties: [
-                'role' => $validated['role'],
-                'status' => $validated['status'],
-                'tenant_id' => $resolvedTenantId,
-                'tenant_name' => $user->tenant?->name,
-                'phone_number' => $validated['phone_number'] ?? null,
-            ],
-            ipAddress: $request->ip()
-        );
 
         return redirect()
             ->route('admin.users')
@@ -410,66 +425,92 @@ class UserManagementController extends Controller
         $previousUsername = $user->username;
         $previousName = $user->name;
         $previousAvatarPath = $user->avatar_path;
-        $avatarPath = $this->userAvatarUploader->store($request->file('avatar'), $user->avatar_path);
+        $newAvatarPath = $request->file('avatar')
+            ? $this->userAvatarUploader->store($request->file('avatar'))
+            : null;
+        $avatarPath = $newAvatarPath ?? $previousAvatarPath;
 
-        $user->forceFill([
-            'name' => $validated['name'],
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'] ?? null,
-            'avatar_path' => $avatarPath,
-            'email_verified_at' => $emailChanged ? null : $user->email_verified_at,
-        ])->save();
+        try {
+            DB::transaction(function () use (
+                $request,
+                $user,
+                $validated,
+                $emailChanged,
+                $previousEmail,
+                $previousPhoneNumber,
+                $previousUsername,
+                $previousName,
+                $previousAvatarPath,
+                $avatarPath
+            ): void {
+                $user->forceFill([
+                    'name' => $validated['name'],
+                    'username' => $validated['username'],
+                    'email' => $validated['email'],
+                    'phone_number' => $validated['phone_number'] ?? null,
+                    'avatar_path' => $avatarPath,
+                    'email_verified_at' => $emailChanged ? null : $user->email_verified_at,
+                ])->save();
 
-        $this->activityLogger->log(
-            action: 'user_profile_updated',
-            actor: $request->user(),
-            target: $user,
-            description: 'Profil user diperbarui dari panel admin.',
-            properties: [
-                'name' => ['from' => $previousName, 'to' => $validated['name']],
-                'username' => ['from' => $previousUsername, 'to' => $validated['username']],
-                'email' => ['from' => $previousEmail, 'to' => $validated['email']],
-                'phone_number' => ['from' => $previousPhoneNumber, 'to' => $validated['phone_number'] ?? null],
-                'avatar_path' => ['from' => $previousAvatarPath, 'to' => $avatarPath],
-                'email_verification_reset' => $emailChanged,
-            ],
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent()
-        );
-
-        if ($previousEmail !== $validated['email']) {
-            $this->activityLogger->log(
-                action: 'user_email_updated',
-                actor: $request->user(),
-                target: $user,
-                description: 'Email user diperbarui.',
-                properties: [
-                    'email' => [
-                        'before' => $previousEmail,
-                        'after' => $validated['email'],
+                $this->activityLogger->log(
+                    action: 'user_profile_updated',
+                    actor: $request->user(),
+                    target: $user,
+                    description: 'Profil user diperbarui dari panel admin.',
+                    properties: [
+                        'name' => ['from' => $previousName, 'to' => $validated['name']],
+                        'username' => ['from' => $previousUsername, 'to' => $validated['username']],
+                        'email' => ['from' => $previousEmail, 'to' => $validated['email']],
+                        'phone_number' => ['from' => $previousPhoneNumber, 'to' => $validated['phone_number'] ?? null],
+                        'avatar_path' => ['from' => $previousAvatarPath, 'to' => $avatarPath],
+                        'email_verification_reset' => $emailChanged,
                     ],
-                ],
-                ipAddress: $request->ip(),
-                userAgent: $request->userAgent()
-            );
+                    ipAddress: $request->ip(),
+                    userAgent: $request->userAgent()
+                );
+
+                if ($previousEmail !== $validated['email']) {
+                    $this->activityLogger->log(
+                        action: 'user_email_updated',
+                        actor: $request->user(),
+                        target: $user,
+                        description: 'Email user diperbarui.',
+                        properties: [
+                            'email' => [
+                                'before' => $previousEmail,
+                                'after' => $validated['email'],
+                            ],
+                        ],
+                        ipAddress: $request->ip(),
+                        userAgent: $request->userAgent()
+                    );
+                }
+
+                if ($previousPhoneNumber !== ($validated['phone_number'] ?? null)) {
+                    $this->activityLogger->log(
+                        action: 'user_phone_updated',
+                        actor: $request->user(),
+                        target: $user,
+                        description: 'Nomor HP user diperbarui.',
+                        properties: [
+                            'phone_number' => [
+                                'before' => $previousPhoneNumber,
+                                'after' => $validated['phone_number'] ?? null,
+                            ],
+                        ],
+                        ipAddress: $request->ip(),
+                        userAgent: $request->userAgent()
+                    );
+                }
+            });
+        } catch (Throwable $exception) {
+            $this->userAvatarUploader->deleteIfManaged($newAvatarPath);
+
+            throw $exception;
         }
 
-        if ($previousPhoneNumber !== ($validated['phone_number'] ?? null)) {
-            $this->activityLogger->log(
-                action: 'user_phone_updated',
-                actor: $request->user(),
-                target: $user,
-                description: 'Nomor HP user diperbarui.',
-                properties: [
-                    'phone_number' => [
-                        'before' => $previousPhoneNumber,
-                        'after' => $validated['phone_number'] ?? null,
-                    ],
-                ],
-                ipAddress: $request->ip(),
-                userAgent: $request->userAgent()
-            );
+        if ($previousAvatarPath && $previousAvatarPath !== $avatarPath) {
+            $this->userAvatarUploader->deleteIfManaged($previousAvatarPath);
         }
 
         return redirect()

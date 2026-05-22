@@ -49,3 +49,8 @@ Schedule::command('saas:expire-subscriptions')
     ->dailyAt('00:30')
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('exports:prune')
+    ->dailyAt('01:00')
+    ->withoutOverlapping()
+    ->onOneServer();

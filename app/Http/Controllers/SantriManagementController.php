@@ -18,6 +18,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class SantriManagementController extends Controller
 {
@@ -154,34 +155,41 @@ class SantriManagementController extends Controller
         }
 
         $photoPath = $this->santriPhotoUploader->store($request->file('photo'));
-        $santri = DB::transaction(function () use ($tenantId, $validated, $photoPath, $request, $guardianUserIds): Santri {
-            $room = $this->resolveRoomForSantri($tenantId, $validated['room_name']);
-            $santri = Santri::query()->create([
-                'tenant_id' => $tenantId,
-                'nis' => $validated['nis'],
-                'full_name' => $validated['full_name'],
-                'gender' => $validated['gender'],
-                'birth_place' => $validated['birth_place'],
-                'birth_date' => $validated['birth_date'],
-                'address' => $validated['address'],
-                'guardian_name' => $validated['guardian_name'] ?: null,
-                'father_name' => $validated['father_name'],
-                'mother_name' => $validated['mother_name'],
-                'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
-                'emergency_contact' => $validated['emergency_contact'],
-                'entry_date' => $validated['entry_date'],
-                'entry_year' => $validated['entry_year'],
-                'room_id' => $room->id,
-                'room_name' => $room->name,
-                'notes' => $validated['notes'] ?? null,
-                'status' => $validated['status'],
-                'photo_path' => $photoPath,
-                'created_by' => $request->user()?->id,
-            ]);
-            $this->syncGuardianUsers($santri, $guardianUserIds);
 
-            return $santri->load('room');
-        });
+        try {
+            $santri = DB::transaction(function () use ($tenantId, $validated, $photoPath, $request, $guardianUserIds): Santri {
+                $room = $this->resolveRoomForSantri($tenantId, $validated['room_name']);
+                $santri = Santri::query()->create([
+                    'tenant_id' => $tenantId,
+                    'nis' => $validated['nis'],
+                    'full_name' => $validated['full_name'],
+                    'gender' => $validated['gender'],
+                    'birth_place' => $validated['birth_place'],
+                    'birth_date' => $validated['birth_date'],
+                    'address' => $validated['address'],
+                    'guardian_name' => $validated['guardian_name'] ?: null,
+                    'father_name' => $validated['father_name'],
+                    'mother_name' => $validated['mother_name'],
+                    'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
+                    'emergency_contact' => $validated['emergency_contact'],
+                    'entry_date' => $validated['entry_date'],
+                    'entry_year' => $validated['entry_year'],
+                    'room_id' => $room->id,
+                    'room_name' => $room->name,
+                    'notes' => $validated['notes'] ?? null,
+                    'status' => $validated['status'],
+                    'photo_path' => $photoPath,
+                    'created_by' => $request->user()?->id,
+                ]);
+                $this->syncGuardianUsers($santri, $guardianUserIds);
+
+                return $santri->load('room');
+            });
+        } catch (Throwable $exception) {
+            $this->santriPhotoUploader->deleteIfManaged($photoPath);
+
+            throw $exception;
+        }
 
         $this->activityLogger->log(
             action: 'santri_created',
@@ -240,38 +248,55 @@ class SantriManagementController extends Controller
             ->values()
             ->all();
 
+        $previousPhotoPath = $santri->photo_path;
+        $newPhotoPath = null;
+        $photoPathToDeleteAfterCommit = null;
+
         if ($request->boolean('delete_photo') && ! $request->file('photo')) {
-            $this->santriPhotoUploader->deleteIfManaged($santri->photo_path);
             $photoPath = null;
         } else {
-            $photoPath = $this->santriPhotoUploader->store($request->file('photo'), $santri->photo_path);
+            $newPhotoPath = $request->file('photo')
+                ? $this->santriPhotoUploader->store($request->file('photo'))
+                : null;
+            $photoPath = $newPhotoPath ?? $previousPhotoPath;
         }
 
-        DB::transaction(function () use ($santri, $validated, $photoPath, $guardianUserIds): void {
-            $room = $this->resolveRoomForSantri((int) $santri->tenant_id, $validated['room_name']);
+        if ($previousPhotoPath && $previousPhotoPath !== $photoPath) {
+            $photoPathToDeleteAfterCommit = $previousPhotoPath;
+        }
 
-            $santri->update([
-                'nis' => $validated['nis'],
-                'full_name' => $validated['full_name'],
-                'gender' => $validated['gender'],
-                'birth_place' => $validated['birth_place'],
-                'birth_date' => $validated['birth_date'],
-                'address' => $validated['address'],
-                'guardian_name' => $validated['guardian_name'] ?: null,
-                'father_name' => $validated['father_name'],
-                'mother_name' => $validated['mother_name'],
-                'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
-                'emergency_contact' => $validated['emergency_contact'],
-                'entry_date' => $validated['entry_date'],
-                'entry_year' => $validated['entry_year'],
-                'room_id' => $room->id,
-                'room_name' => $room->name,
-                'notes' => $validated['notes'] ?? null,
-                'status' => $validated['status'],
-                'photo_path' => $photoPath,
-            ]);
-            $this->syncGuardianUsers($santri, $guardianUserIds);
-        });
+        try {
+            DB::transaction(function () use ($santri, $validated, $photoPath, $guardianUserIds): void {
+                $room = $this->resolveRoomForSantri((int) $santri->tenant_id, $validated['room_name']);
+
+                $santri->update([
+                    'nis' => $validated['nis'],
+                    'full_name' => $validated['full_name'],
+                    'gender' => $validated['gender'],
+                    'birth_place' => $validated['birth_place'],
+                    'birth_date' => $validated['birth_date'],
+                    'address' => $validated['address'],
+                    'guardian_name' => $validated['guardian_name'] ?: null,
+                    'father_name' => $validated['father_name'],
+                    'mother_name' => $validated['mother_name'],
+                    'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
+                    'emergency_contact' => $validated['emergency_contact'],
+                    'entry_date' => $validated['entry_date'],
+                    'entry_year' => $validated['entry_year'],
+                    'room_id' => $room->id,
+                    'room_name' => $room->name,
+                    'notes' => $validated['notes'] ?? null,
+                    'status' => $validated['status'],
+                    'photo_path' => $photoPath,
+                ]);
+                $this->syncGuardianUsers($santri, $guardianUserIds);
+            });
+        } catch (Throwable $exception) {
+            $this->santriPhotoUploader->deleteIfManaged($newPhotoPath);
+
+            throw $exception;
+        }
+
         $santri->refresh()->load('room');
 
         $this->activityLogger->log(
@@ -310,6 +335,8 @@ class SantriManagementController extends Controller
             userAgent: $request->userAgent()
         );
 
+        $this->santriPhotoUploader->deleteIfManaged($photoPathToDeleteAfterCommit);
+
         return redirect()
             ->route('santri.index')
             ->with('success', 'Data santri berhasil diperbarui.');
@@ -337,8 +364,9 @@ class SantriManagementController extends Controller
             userAgent: $request->userAgent()
         );
 
-        $this->santriPhotoUploader->deleteIfManaged($santri->photo_path);
+        $photoPath = $santri->photo_path;
         $santri->delete();
+        $this->santriPhotoUploader->deleteIfManaged($photoPath);
 
         return redirect()
             ->route('santri.index')

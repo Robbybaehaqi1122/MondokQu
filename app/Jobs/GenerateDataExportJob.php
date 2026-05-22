@@ -6,6 +6,7 @@ use App\Exports\SantriCsvExport;
 use App\Exports\SantriInvoiceCsvExport;
 use App\Models\DataExport;
 use App\Models\User;
+use App\Notifications\DataExportCompletedNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -59,6 +60,8 @@ class GenerateDataExportJob implements ShouldQueue
                     'row_count' => $rowCount,
                 ]
             );
+
+            $user->notify(new DataExportCompletedNotification($export));
         } catch (Throwable $exception) {
             $export->markFailed($exception->getMessage());
 
