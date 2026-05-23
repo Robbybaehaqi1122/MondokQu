@@ -113,6 +113,27 @@ php artisan test tests/Feature/Saas/TenantManagementTest.php
 
 Test memakai SQLite in-memory sesuai `phpunit.xml`, jadi tidak menyentuh database lokal `.env`.
 
+## Build Asset Frontend
+
+Untuk development, jalankan Vite dev server:
+
+```bash
+npm run dev
+```
+
+Untuk production atau staging, build asset statis:
+
+```bash
+npm ci
+npm run build
+```
+
+Jika PowerShell memblokir perintah `npm`, gunakan `npm.cmd`:
+
+```powershell
+npm.cmd run build
+```
+
 ## Catatan Internal Teknis
 
 ### Multi-tenancy Global Scope
@@ -156,6 +177,65 @@ Scheduler Laravel sudah mendaftarkan command ini setiap hari pukul `00:30` di `r
 
 Ganti `/path/to/mondok-qu` dengan path aplikasi di server.
 
+### Background Export, Queue, dan Notifikasi
+
+Export data santri dan tagihan memakai dua mode:
+
+- Data kecil langsung di-stream sebagai CSV.
+- Data besar masuk ke tabel `data_exports`, diproses oleh queue, lalu user mendapat notifikasi dengan link download saat file selesai dibuat.
+
+Pastikan migration sudah dijalankan setelah deploy:
+
+```bash
+php artisan migrate --force
+```
+
+Key `.env` yang terkait:
+
+```env
+QUEUE_CONNECTION=database
+EXPORT_INLINE_THRESHOLD=5000
+EXPORT_DISK=local
+EXPORT_RETENTION_DAYS=7
+```
+
+Penjelasan:
+
+- `QUEUE_CONNECTION=database` cukup untuk production awal. Jika traffic membesar, Redis lebih cocok.
+- `EXPORT_INLINE_THRESHOLD` menentukan batas jumlah baris yang masih boleh diunduh langsung lewat HTTP.
+- `EXPORT_DISK` menentukan disk storage file export. Default `local`, sehingga file tidak terbuka publik tanpa route download aplikasi.
+- `EXPORT_RETENTION_DAYS` menentukan umur file export sebelum dibersihkan otomatis.
+
+Queue worker wajib aktif agar background export dan notifikasi selesai berjalan:
+
+```bash
+php artisan queue:work --sleep=3 --tries=3 --timeout=900
+```
+
+Di production, jalankan worker lewat Supervisor atau systemd. Setelah deploy kode baru, restart worker secara halus:
+
+```bash
+php artisan queue:restart
+```
+
+File export lama dibersihkan oleh command:
+
+```bash
+php artisan exports:prune
+```
+
+Command ini sudah dijadwalkan setiap hari pukul `01:00` di `routes/console.php`. Untuk cek tanpa menghapus file:
+
+```bash
+php artisan exports:prune --dry-run
+```
+
+Scheduler Laravel tetap harus aktif di server:
+
+```cron
+* * * * * cd /path/to/mondok-qu && php artisan schedule:run >> /dev/null 2>&1
+```
+
 ### Validasi Nomor Telepon Indonesia
 
 Validasi nomor telepon Indonesia dipusatkan di rule `App\Rules\IndonesiaPhoneNumber`. Gunakan rule ini untuk field yang harus menerima nomor Indonesia dengan awalan `0`, `62`, atau `+62`.
@@ -181,14 +261,15 @@ php artisan storage:link
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+php artisan queue:restart
 ```
 
 Pastikan juga:
 
 - Backup database dibuat sebelum deploy.
-- `.env` production berisi `APP_KEY`, koneksi database, mail, queue, `SAAS_*`, dan `SANTRI_INVOICE_PERIOD_YEAR_FUTURE_LIMIT` yang benar.
+- `.env` production berisi `APP_KEY`, koneksi database, mail, queue, `SAAS_*`, `EXPORT_*`, dan `SANTRI_INVOICE_PERIOD_YEAR_FUTURE_LIMIT` yang benar.
 - Cron Laravel scheduler aktif: `* * * * * cd /path/to/mondok-qu && php artisan schedule:run >> /dev/null 2>&1`.
-- Queue worker aktif jika production memakai queue database/redis untuk email atau pekerjaan latar:
+- Queue worker aktif karena background export, notifikasi, email, dan pekerjaan latar bergantung ke antrean:
 
 ```bash
 php artisan queue:work --sleep=3 --tries=3 --timeout=900
@@ -213,6 +294,9 @@ DB_CONNECTION=sqlite
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 CACHE_STORE=database
+EXPORT_INLINE_THRESHOLD=5000
+EXPORT_DISK=local
+EXPORT_RETENTION_DAYS=7
 
 MAIL_MAILER=log
 MAIL_FROM_ADDRESS="noreply@mondokqu.test"
@@ -232,6 +316,7 @@ Penjelasan singkat:
 - `MAIL_MAILER=log` aman untuk lokal karena email verifikasi dan reset password masuk ke log, bukan dikirim sungguhan.
 - `AUTH_DEFAULT_USER_PASSWORD` dipakai saat admin mereset password user dari panel.
 - `SAAS_TRIAL_DAYS`, `SAAS_GRACE_DAYS`, dan `SAAS_DEFAULT_PLAN` mengatur default trial dan subscription tenant baru.
+- `EXPORT_INLINE_THRESHOLD`, `EXPORT_DISK`, dan `EXPORT_RETENTION_DAYS` mengatur mode background export dan pembersihan file lama.
 - Upload avatar dan foto santri disimpan di disk `public`, jadi `php artisan storage:link` tetap diperlukan.
 - Jangan commit file `.env` karena bisa berisi password database, mail credential, atau secret production.
 
@@ -249,6 +334,7 @@ Penjelasan singkat:
 ```bash
 php artisan serve
 npm run dev
+php artisan queue:work --sleep=3 --tries=3 --timeout=900
 composer test
 php artisan migrate:fresh --seed
 ```

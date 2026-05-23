@@ -133,6 +133,13 @@ test('large invoice export is queued instead of streamed', function () {
     expect($export?->user_id)->toBe($admin->id);
 
     Queue::assertPushed(GenerateDataExportJob::class, fn (GenerateDataExportJob $job) => $job->dataExportId === $export?->id);
+
+    $this
+        ->actingAs($admin)
+        ->get(route('santri.payments.invoices'))
+        ->assertOk()
+        ->assertSee('1 export sedang diproses')
+        ->assertSee('25%');
 });
 
 test('admin can access santri payment reports page', function () {

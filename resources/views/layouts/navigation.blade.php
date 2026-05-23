@@ -4,7 +4,9 @@
     $roleLabel = $roles->implode(', ') ?: 'Tanpa role';
     $userInitial = strtoupper(substr($user->name, 0, 1));
     $canOpenOperationalReports = $user->can('manage kamar') || $user->canAny(['create izin', 'approve izin']);
+    $canOpenAbsensiModule = $user->can('manage absensi');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenSantriModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -131,8 +133,52 @@
                     <span>Dashboard</span>
                 </a>
 
-                @if ($canOpenSantriModule)
+                @if ($canOpenCoreModules)
                     <div class="sidebar-section-title">Modul</div>
+                @endif
+
+                @if ($canOpenAbsensiModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('attendance.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-calendar-check"></i>
+                            </span>
+                            <span class="flex-grow-1">AbsenQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('attendance.dashboard') ? 'active' : '' }}" href="{{ route('attendance.dashboard') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-dashboard"></i>
+                                </span>
+                                <span>Dashboard Absensi</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('attendance.activities.*') ? 'active' : '' }}" href="{{ route('attendance.activities.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-list-check"></i>
+                                </span>
+                                <span>Master Kegiatan Absensi</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('attendance.sessions.*') ? 'active' : '' }}" href="{{ route('attendance.sessions.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-calendar-time"></i>
+                                </span>
+                                <span>Sesi Absensi Harian</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('attendance.reports.*') ? 'active' : '' }}" href="{{ route('attendance.reports.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-report-analytics"></i>
+                                </span>
+                                <span>Laporan Absensi</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenSantriModule)
                     <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*')) open @endif>
                         <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
@@ -203,7 +249,7 @@
                 @endif
 
                 @if ($user->hasAnyRole(['Superadmin', 'Admin']) || $user->canAny(['assign roles', 'manage system settings', 'view activity logs']))
-                    @unless ($canOpenSantriModule)
+                    @unless ($canOpenCoreModules)
                         <div class="sidebar-section-title">Modul</div>
                     @endunless
                     <details class="sidebar-dropdown" @if (request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs')) open @endif>
@@ -308,7 +354,7 @@
                     </a>
                 @endif
 
-                @if ($user->hasRole('Musyrif/Ustadz'))
+                @if ($user->hasRole('Musyrif/Ustadz') && ! $canOpenAbsensiModule)
                     <div class="sidebar-section-title">Modul Musyrif</div>
                     <a class="sidebar-link {{ request()->routeIs('musyrif.dashboard') ? 'active' : '' }}" href="{{ route('musyrif.dashboard') }}">
                         <span class="sidebar-link-icon">

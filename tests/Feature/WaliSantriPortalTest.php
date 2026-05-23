@@ -1,11 +1,19 @@
 <?php
 
+use App\Models\AttendanceActivity;
+use App\Models\AttendanceRecord;
+use App\Models\AttendanceSession;
 use App\Models\LeaveRequest;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
+use App\Models\SantriPaymentConfirmation;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\WaliPaymentProofSubmittedNotification;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -69,6 +77,7 @@ test('wali santri dashboard shows only linked santri and payment summary', funct
     $response->assertSee('Ayah');
     $response->assertSee('SPP Mei Wali');
     $response->assertSee('Rp 350.000');
+    $response->assertSee('Upload Bukti Bayar');
     $response->assertSee('data-mobile-invoice-list', false);
     $response->assertSee('data-mobile-invoice-card', false);
     $response->assertSee('data-mobile-payment-list', false);
@@ -164,6 +173,81 @@ test('wali santri dashboard shows leave requests only for linked santri', functi
     $response->assertDontSee('Izin tenant lain.');
 });
 
+test('wali santri dashboard shows attendance records only for linked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'full_name' => 'Umar Anak Wali Absensi',
+    ]);
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'full_name' => 'Santri Absensi Tidak Tertaut',
+    ]);
+    $otherTenantSantri = Santri::factory()->forTenant($otherTenant)->create([
+        'full_name' => 'Santri Absensi Tenant Lain',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $activity = AttendanceActivity::factory()->forTenant($wali->tenant)->create([
+        'name' => 'Halaqah Wali Absensi',
+    ]);
+    $session = AttendanceSession::factory()->forActivity($activity)->create([
+        'session_date' => now()->toDateString(),
+    ]);
+    $previousSession = AttendanceSession::factory()->forActivity($activity)->create([
+        'session_date' => now()->subDay()->toDateString(),
+    ]);
+    $otherTenantActivity = AttendanceActivity::factory()->forTenant($otherTenant)->create([
+        'name' => 'Halaqah Tenant Lain Absensi',
+    ]);
+    $otherTenantSession = AttendanceSession::factory()->forActivity($otherTenantActivity)->create([
+        'session_date' => now()->toDateString(),
+    ]);
+
+    AttendanceRecord::factory()->forSessionAndSantri($session, $linkedSantri)->create([
+        'status' => AttendanceRecord::STATUS_LATE,
+        'notes' => 'Catatan telat khusus portal wali.',
+        'recorded_at' => now(),
+    ]);
+    AttendanceRecord::factory()->forSessionAndSantri($previousSession, $linkedSantri)->create([
+        'status' => AttendanceRecord::STATUS_PERMISSION,
+        'notes' => 'Catatan izin khusus portal wali.',
+        'recorded_at' => now()->subHour(),
+    ]);
+    AttendanceRecord::factory()->forSessionAndSantri($session, $unlinkedSantri)->create([
+        'status' => AttendanceRecord::STATUS_ABSENT,
+        'notes' => 'Catatan absensi tidak tertaut.',
+        'recorded_at' => now(),
+    ]);
+    AttendanceRecord::factory()->forSessionAndSantri($otherTenantSession, $otherTenantSantri)->create([
+        'status' => AttendanceRecord::STATUS_SICK,
+        'notes' => 'Catatan absensi tenant lain.',
+        'recorded_at' => now(),
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('Ringkasan Absensi');
+    $response->assertSee('Riwayat Absensi Santri');
+    $response->assertSee('Umar Anak Wali Absensi');
+    $response->assertSee('Halaqah Wali Absensi');
+    $response->assertSee('Terlambat');
+    $response->assertSee('Izin');
+    $response->assertSee('Catatan telat khusus portal wali.');
+    $response->assertSee('Catatan izin khusus portal wali.');
+    $response->assertDontSee('Santri Absensi Tidak Tertaut');
+    $response->assertDontSee('Catatan absensi tidak tertaut.');
+    $response->assertDontSee('Santri Absensi Tenant Lain');
+    $response->assertDontSee('Catatan absensi tenant lain.');
+});
+
 test('wali santri can view linked invoice detail with payment history', function () {
     $wali = tenantUser('Wali Santri');
     $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
@@ -217,6 +301,100 @@ test('wali santri can view linked invoice detail with payment history', function
     $response->assertSee('REF-WALI-1');
     $response->assertSee('Pembayaran awal wali');
     $response->assertSee('Dibayarkan sebelum akhir bulan.');
+    $response->assertSee('Upload Bukti Bayar');
+    $response->assertSee('Bukti Bayar Dikirim');
+});
+
+test('wali santri can upload payment proof for linked invoice', function () {
+    Storage::fake('public');
+    Notification::fake();
+
+    $wali = tenantUser('Wali Santri');
+    $admin = User::factory()->forTenant($wali->tenant)->create([
+        'status' => User::STATUS_ACTIVE,
+    ]);
+    $admin->assignRole('Admin');
+
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'full_name' => 'Santri Bukti Bayar',
+    ]);
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $invoice = SantriInvoice::factory()->forSantri($linkedSantri)->create([
+        'invoice_number' => 'INV-PROOF-001',
+        'title' => 'SPP Bukti Bayar',
+        'amount' => 500000,
+        'paid_amount' => 100000,
+        'status' => SantriInvoice::STATUS_PARTIAL,
+    ]);
+    $proof = UploadedFile::fake()->createWithContent(
+        'bukti-bayar.png',
+        base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=')
+    );
+
+    $response = $this
+        ->actingAs($wali)
+        ->from(route('wali-santri.dashboard'))
+        ->post(route('wali-santri.invoices.payment-confirmations.store', $invoice), [
+            'confirmation_invoice_id' => $invoice->id,
+            'amount' => 400000,
+            'paid_at' => now()->format('Y-m-d H:i:s'),
+            'payment_method' => 'transfer bank',
+            'reference_number' => 'TRF-WALI-001',
+            'note' => 'Transfer dari rekening orang tua.',
+            'proof' => $proof,
+        ]);
+
+    $response->assertRedirect(route('wali-santri.dashboard', absolute: false));
+    $response->assertSessionHas('success');
+
+    $confirmation = SantriPaymentConfirmation::query()->first();
+
+    expect($confirmation)->not->toBeNull();
+    expect($confirmation->tenant_id)->toBe($wali->tenant_id);
+    expect($confirmation->santri_invoice_id)->toBe($invoice->id);
+    expect($confirmation->santri_id)->toBe($linkedSantri->id);
+    expect($confirmation->submitted_by)->toBe($wali->id);
+    expect($confirmation->status)->toBe(SantriPaymentConfirmation::STATUS_PENDING);
+    expect((float) $confirmation->amount)->toBe(400000.0);
+    Storage::disk('public')->assertExists($confirmation->proof_path);
+    Notification::assertSentTo($admin, WaliPaymentProofSubmittedNotification::class);
+
+    $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.dashboard'))
+        ->assertOk()
+        ->assertSee('Bukti bayar menunggu verifikasi');
+});
+
+test('wali santri can not upload payment proof for unlinked invoice', function () {
+    Storage::fake('public');
+
+    $wali = tenantUser('Wali Santri');
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+    $invoice = SantriInvoice::factory()->forSantri($unlinkedSantri)->create([
+        'amount' => 300000,
+    ]);
+    $proof = UploadedFile::fake()->createWithContent(
+        'bukti-bayar.png',
+        base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=')
+    );
+
+    $this
+        ->actingAs($wali)
+        ->post(route('wali-santri.invoices.payment-confirmations.store', $invoice), [
+            'confirmation_invoice_id' => $invoice->id,
+            'amount' => 300000,
+            'paid_at' => now()->format('Y-m-d H:i:s'),
+            'payment_method' => 'transfer bank',
+            'proof' => $proof,
+        ])
+        ->assertNotFound();
+
+    expect(SantriPaymentConfirmation::query()->count())->toBe(0);
 });
 
 test('wali santri can print linked invoice receipt', function () {

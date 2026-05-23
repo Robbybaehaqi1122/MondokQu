@@ -63,6 +63,7 @@ class SantriManagementController extends Controller
             ->unique()
             ->values();
         $guardianUserOptionsByTenant = $this->guardianUserOptionsByTenant($currentUser, $tenantIds);
+        $roomOptionsByTenant = $this->roomOptionsByTenant($currentUser, $tenantIds);
 
         return view('santri.index', [
             'allSantriCount' => (clone $baseQuery)->count(),
@@ -74,6 +75,7 @@ class SantriManagementController extends Controller
             'genders' => $this->genderOptions(),
             'canCreateSantri' => $currentUser?->can('create', Santri::class) ?? false,
             'guardianUserOptionsByTenant' => $guardianUserOptionsByTenant,
+            'roomOptionsByTenant' => $roomOptionsByTenant,
             'dataExports' => DataExport::query()
                 ->visibleTo($currentUser)
                 ->forType(DataExport::TYPE_SANTRI)
@@ -158,7 +160,7 @@ class SantriManagementController extends Controller
 
         try {
             $santri = DB::transaction(function () use ($tenantId, $validated, $photoPath, $request, $guardianUserIds): Santri {
-                $room = $this->resolveRoomForSantri($tenantId, $validated['room_name']);
+                $room = $this->resolveRoomForSantri($tenantId, $validated);
                 $santri = Santri::query()->create([
                     'tenant_id' => $tenantId,
                     'nis' => $validated['nis'],
@@ -267,7 +269,7 @@ class SantriManagementController extends Controller
 
         try {
             DB::transaction(function () use ($santri, $validated, $photoPath, $guardianUserIds): void {
-                $room = $this->resolveRoomForSantri((int) $santri->tenant_id, $validated['room_name']);
+                $room = $this->resolveRoomForSantri((int) $santri->tenant_id, $validated);
 
                 $santri->update([
                     'nis' => $validated['nis'],
@@ -430,6 +432,24 @@ class SantriManagementController extends Controller
     }
 
     /**
+     * Build selectable room master data grouped by tenant.
+     */
+    protected function roomOptionsByTenant(?User $currentUser, Collection $tenantIds): Collection
+    {
+        if (! $currentUser || $tenantIds->isEmpty()) {
+            return collect();
+        }
+
+        return Room::query()
+            ->withoutTenantScope()
+            ->when(! $currentUser->isSuperAdmin(), fn ($query) => $query->where('tenant_id', $currentUser->tenant_id))
+            ->whereIn('tenant_id', $tenantIds)
+            ->orderBy('name')
+            ->get(['id', 'tenant_id', 'name', 'status'])
+            ->groupBy('tenant_id');
+    }
+
+    /**
      * Sync wali portal users to the selected santri.
      */
     protected function syncGuardianUsers(Santri $santri, Collection $guardianUserIds): void
@@ -451,8 +471,21 @@ class SantriManagementController extends Controller
         $santri->guardians()->sync($syncPayload);
     }
 
-    protected function resolveRoomForSantri(int $tenantId, string $roomName): Room
+    protected function resolveRoomForSantri(int $tenantId, array|string $roomInput): Room
     {
+        if (is_array($roomInput) && filled($roomInput['room_id'] ?? null)) {
+            return Room::query()
+                ->withoutTenantScope()
+                ->where('tenant_id', $tenantId)
+                ->findOrFail((int) $roomInput['room_id']);
+        }
+
+        $roomName = is_array($roomInput)
+            ? (string) ($roomInput['room_name'] ?? '')
+            : $roomInput;
+
+        $roomName = $this->normalizeRoomName($roomName);
+
         return Room::query()
             ->withoutTenantScope()
             ->firstOrCreate(
@@ -467,5 +500,10 @@ class SantriManagementController extends Controller
                     'created_by' => request()->user()?->id,
                 ]
             );
+    }
+
+    protected function normalizeRoomName(string $roomName): string
+    {
+        return preg_replace('/\s+/', ' ', trim($roomName)) ?: '';
     }
 }

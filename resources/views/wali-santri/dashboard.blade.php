@@ -20,6 +20,20 @@
             'rejected' => 'bg-danger-lt text-danger',
             'completed' => 'bg-info-lt text-info',
         ];
+
+        $attendanceBadgeClasses = [
+            'present' => 'bg-success-lt text-success',
+            'permission' => 'bg-azure-lt text-azure',
+            'sick' => 'bg-warning-lt text-warning',
+            'absent' => 'bg-danger-lt text-danger',
+            'late' => 'bg-orange-lt text-orange',
+        ];
+
+        $confirmationBadgeClasses = [
+            'pending' => 'bg-warning-lt text-warning',
+            'approved' => 'bg-success-lt text-success',
+            'rejected' => 'bg-danger-lt text-danger',
+        ];
     @endphp
 
     <x-slot name="header">
@@ -161,6 +175,92 @@
     @endif
 
     <div class="row row-cards mt-3">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Ringkasan Absensi</h3>
+                        <div class="text-secondary small mt-2">Akumulasi absensi santri terhubung dalam 30 hari terakhir.</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-3">
+                        <span class="text-secondary">Total Catatan</span>
+                        <span class="fs-2 fw-bold">{{ number_format($attendanceSummary['total']) }}</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="text-secondary small">Hadir</div>
+                            <div class="fs-2 fw-bold">{{ number_format($attendanceSummary['present']) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-secondary small">Izin</div>
+                            <div class="fs-2 fw-bold">{{ number_format($attendanceSummary['permission']) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-secondary small">Sakit</div>
+                            <div class="fs-2 fw-bold">{{ number_format($attendanceSummary['sick']) }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-secondary small">Alpa</div>
+                            <div class="fs-2 fw-bold">{{ number_format($attendanceSummary['absent']) }}</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between border-top pt-3">
+                                <span class="text-secondary">Terlambat</span>
+                                <span class="fw-semibold">{{ number_format($attendanceSummary['late']) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Riwayat Absensi Santri</h3>
+                        <div class="text-secondary small mt-2">Catatan terbaru dari sesi absensi santri terhubung.</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @forelse ($recentAttendanceRecords as $attendanceRecord)
+                        <div class="d-flex align-items-start gap-3 py-3 @unless($loop->last) border-bottom @endunless">
+                            <span class="avatar avatar-sm {{ $attendanceBadgeClasses[$attendanceRecord->status] ?? 'bg-secondary-lt text-secondary' }}">
+                                <i class="ti ti-clipboard-check"></i>
+                            </span>
+                            <div class="flex-fill min-width-0">
+                                <div class="d-flex flex-column flex-sm-row align-items-sm-start justify-content-sm-between gap-2">
+                                    <div>
+                                        <div class="fw-semibold">{{ $attendanceRecord->santri?->full_name ?? '-' }}</div>
+                                        <div class="text-secondary small">
+                                            {{ $attendanceRecord->session?->activity?->name ?? '-' }}
+                                            &bull;
+                                            {{ $attendanceRecord->session?->session_date?->translatedFormat('d M Y') ?? '-' }}
+                                        </div>
+                                    </div>
+                                    <span class="badge {{ $attendanceBadgeClasses[$attendanceRecord->status] ?? 'bg-secondary-lt text-secondary' }}">
+                                        {{ $attendanceRecord->statusLabel() }}
+                                    </span>
+                                </div>
+                                @if ($attendanceRecord->notes)
+                                    <div class="text-secondary mt-2">{{ \Illuminate\Support\Str::limit($attendanceRecord->notes, 120) }}</div>
+                                @endif
+                                @if ($attendanceRecord->recorded_at)
+                                    <div class="text-secondary small mt-2">Diinput {{ $attendanceRecord->recorded_at->translatedFormat('d M Y H:i') }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-secondary">Belum ada riwayat absensi untuk santri terhubung.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cards mt-3">
         <div class="col-lg-7">
             <div class="card h-100">
                 <div class="card-header">
@@ -263,11 +363,17 @@
                             @forelse ($upcomingInvoices as $invoice)
                                 @php
                                     $displayStatus = $invoice->isOverdue() ? 'overdue' : $invoice->status;
+                                    $pendingConfirmations = $pendingPaymentConfirmationsByInvoice->get($invoice->id, collect());
                                 @endphp
                                 <tr>
                                     <td>
                                         <div class="fw-semibold">{{ $invoice->title }}</div>
                                         <div class="text-secondary small">{{ $invoice->invoice_number }}</div>
+                                        @if ($pendingConfirmations->isNotEmpty())
+                                            <span class="badge mt-2 {{ $confirmationBadgeClasses['pending'] }}">
+                                                Bukti menunggu verifikasi
+                                            </span>
+                                        @endif
                                     </td>
                                     <td>{{ $invoice->santri?->full_name ?? '-' }}</td>
                                     <td class="text-secondary">{{ $invoice->due_date?->translatedFormat('d M Y') ?? '-' }}</td>
@@ -278,10 +384,16 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('wali-santri.invoices.show', $invoice) }}" class="btn btn-outline-primary btn-sm">
-                                            <i class="ti ti-eye me-1"></i>
-                                            Detail
-                                        </a>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#uploadProofModal{{ $invoice->id }}">
+                                                <i class="ti ti-upload me-1"></i>
+                                                Bukti Bayar
+                                            </button>
+                                            <a href="{{ route('wali-santri.invoices.show', $invoice) }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="ti ti-eye me-1"></i>
+                                                Detail
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -297,6 +409,7 @@
                     @forelse ($upcomingInvoices as $invoice)
                         @php
                             $displayStatus = $invoice->isOverdue() ? 'overdue' : $invoice->status;
+                            $pendingConfirmations = $pendingPaymentConfirmationsByInvoice->get($invoice->id, collect());
                         @endphp
 
                         <article class="wali-mobile-item" data-mobile-invoice-card>
@@ -309,6 +422,11 @@
                                     {{ $invoice->statusLabel() }}
                                 </span>
                             </div>
+                            @if ($pendingConfirmations->isNotEmpty())
+                                <span class="badge mt-3 {{ $confirmationBadgeClasses['pending'] }}">
+                                    Bukti bayar menunggu verifikasi
+                                </span>
+                            @endif
 
                             <div class="wali-mobile-grid mt-3">
                                 <div class="wali-mobile-field">
@@ -325,10 +443,16 @@
                                 </div>
                             </div>
 
-                            <a href="{{ route('wali-santri.invoices.show', $invoice) }}" class="btn btn-outline-primary w-100 mt-3">
-                                <i class="ti ti-eye me-1"></i>
-                                Detail Tagihan
-                            </a>
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#uploadProofModal{{ $invoice->id }}">
+                                    <i class="ti ti-upload me-1"></i>
+                                    Upload Bukti Bayar
+                                </button>
+                                <a href="{{ route('wali-santri.invoices.show', $invoice) }}" class="btn btn-outline-primary">
+                                    <i class="ti ti-eye me-1"></i>
+                                    Detail Tagihan
+                                </a>
+                            </div>
                         </article>
                     @empty
                         <div class="text-secondary p-3">Tidak ada tagihan aktif untuk santri terhubung.</div>
@@ -382,4 +506,136 @@
             </div>
         </div>
     </div>
+
+    @foreach ($upcomingInvoices as $invoice)
+        <div class="modal modal-blur fade" id="uploadProofModal{{ $invoice->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('wali-santri.invoices.payment-confirmations.store', $invoice) }}" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="confirmation_invoice_id" value="{{ $invoice->id }}">
+
+                        <div class="modal-header">
+                            <div>
+                                <h5 class="modal-title">Upload Bukti Bayar</h5>
+                                <div class="text-secondary small mt-1">{{ $invoice->invoice_number }} &middot; {{ $invoice->santri?->full_name ?? '-' }}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            @if ($errors->paymentConfirmation->any() && (string) old('confirmation_invoice_id') === (string) $invoice->id)
+                                <div class="alert alert-danger" role="alert">
+                                    <div class="fw-semibold mb-2">Bukti bayar belum bisa dikirim.</div>
+                                    <ul class="mb-0 ps-3">
+                                        @foreach ($errors->paymentConfirmation->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="proof_amount_{{ $invoice->id }}" class="form-label">Nominal Transfer</label>
+                                    <input
+                                        id="proof_amount_{{ $invoice->id }}"
+                                        name="amount"
+                                        type="number"
+                                        min="1"
+                                        max="{{ (int) ceil($invoice->outstandingAmount()) }}"
+                                        step="1"
+                                        class="form-control @if($errors->paymentConfirmation->has('amount') && (string) old('confirmation_invoice_id') === (string) $invoice->id) is-invalid @endif"
+                                        value="{{ old('confirmation_invoice_id') == $invoice->id ? old('amount') : (int) ceil($invoice->outstandingAmount()) }}"
+                                        required
+                                    >
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="proof_paid_at_{{ $invoice->id }}" class="form-label">Tanggal Transfer</label>
+                                    <input
+                                        id="proof_paid_at_{{ $invoice->id }}"
+                                        name="paid_at"
+                                        type="datetime-local"
+                                        class="form-control @if($errors->paymentConfirmation->has('paid_at') && (string) old('confirmation_invoice_id') === (string) $invoice->id) is-invalid @endif"
+                                        value="{{ old('confirmation_invoice_id') == $invoice->id ? old('paid_at') : now()->format('Y-m-d\\TH:i') }}"
+                                        required
+                                    >
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="proof_method_{{ $invoice->id }}" class="form-label">Metode Pembayaran</label>
+                                    <select
+                                        id="proof_method_{{ $invoice->id }}"
+                                        name="payment_method"
+                                        class="form-select form-select-pretty @if($errors->paymentConfirmation->has('payment_method') && (string) old('confirmation_invoice_id') === (string) $invoice->id) is-invalid @endif"
+                                        required
+                                    >
+                                        @foreach ($paymentMethods as $method)
+                                            <option value="{{ $method }}" @selected((old('confirmation_invoice_id') == $invoice->id ? old('payment_method') : 'transfer bank') === $method)>
+                                                {{ str($method)->headline() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="proof_reference_{{ $invoice->id }}" class="form-label">No. Referensi</label>
+                                    <input
+                                        id="proof_reference_{{ $invoice->id }}"
+                                        name="reference_number"
+                                        type="text"
+                                        maxlength="100"
+                                        class="form-control @if($errors->paymentConfirmation->has('reference_number') && (string) old('confirmation_invoice_id') === (string) $invoice->id) is-invalid @endif"
+                                        value="{{ old('confirmation_invoice_id') == $invoice->id ? old('reference_number') : '' }}"
+                                        placeholder="Opsional"
+                                    >
+                                </div>
+                                <div class="col-12">
+                                    <label for="proof_file_{{ $invoice->id }}" class="form-label">File Bukti Bayar</label>
+                                    <input
+                                        id="proof_file_{{ $invoice->id }}"
+                                        name="proof"
+                                        type="file"
+                                        class="form-control @if($errors->paymentConfirmation->has('proof') && (string) old('confirmation_invoice_id') === (string) $invoice->id) is-invalid @endif"
+                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                        required
+                                    >
+                                    <div class="form-hint mt-2">JPG, PNG, atau WEBP. Maksimal 4 MB.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="proof_note_{{ $invoice->id }}" class="form-label">Catatan</label>
+                                    <textarea
+                                        id="proof_note_{{ $invoice->id }}"
+                                        name="note"
+                                        rows="3"
+                                        maxlength="1000"
+                                        class="form-control @if($errors->paymentConfirmation->has('note') && (string) old('confirmation_invoice_id') === (string) $invoice->id) is-invalid @endif"
+                                        placeholder="Opsional. Contoh: transfer atas nama orang tua."
+                                    >{{ old('confirmation_invoice_id') == $invoice->id ? old('note') : '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="ti ti-upload me-1"></i>
+                                Kirim Bukti Bayar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            @if ($errors->paymentConfirmation->any() && old('confirmation_invoice_id'))
+                const proofModalElement = document.getElementById('uploadProofModal{{ old('confirmation_invoice_id') }}');
+
+                if (proofModalElement && window.bootstrap?.Modal) {
+                    window.bootstrap.Modal.getOrCreateInstance(proofModalElement).show();
+                }
+            @endif
+        });
+    </script>
 </x-app-layout>

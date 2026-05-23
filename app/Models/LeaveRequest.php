@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -81,6 +83,19 @@ class LeaveRequest extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Limit the query to approved leave requests covering the given date.
+     */
+    public function scopeActiveOnDate(Builder $query, CarbonInterface|string $date): Builder
+    {
+        $dateString = $date instanceof CarbonInterface ? $date->toDateString() : (string) $date;
+
+        return $query
+            ->where('status', self::STATUS_APPROVED)
+            ->whereDate('start_date', '<=', $dateString)
+            ->whereDate('end_date', '>=', $dateString);
     }
 
     /**

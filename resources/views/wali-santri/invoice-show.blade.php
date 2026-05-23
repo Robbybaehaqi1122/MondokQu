@@ -15,6 +15,11 @@
         $periodLabel = $invoice->period_month && $invoice->period_year
             ? str_pad((string) $invoice->period_month, 2, '0', STR_PAD_LEFT).'/'.$invoice->period_year
             : '-';
+        $confirmationBadgeClasses = [
+            'pending' => 'bg-warning-lt text-warning',
+            'approved' => 'bg-success-lt text-success',
+            'rejected' => 'bg-danger-lt text-danger',
+        ];
     @endphp
 
     <x-slot name="header">
@@ -24,6 +29,12 @@
                 <div class="text-secondary mt-1">{{ $invoice->invoice_number }} - {{ $invoice->santri?->full_name ?? '-' }}</div>
             </div>
             <div class="d-flex flex-wrap gap-2">
+                @if ($outstandingAmount > 0)
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadProofModal{{ $invoice->id }}">
+                        <i class="ti ti-upload me-1"></i>
+                        Upload Bukti Bayar
+                    </button>
+                @endif
                 <a href="{{ route('wali-santri.invoices.receipt', $invoice) }}" class="btn btn-primary" target="_blank" rel="noopener">
                     <i class="ti ti-printer me-1"></i>
                     Cetak
@@ -133,9 +144,49 @@
                         <strong>{{ number_format($payments->count()) }}</strong>
                     </div>
                     <div class="user-detail-info-row">
+                        <span>Bukti Dikirim</span>
+                        <strong>{{ number_format($paymentConfirmations->count()) }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
                         <span>Status</span>
                         <strong>{{ $invoice->statusLabel() }}</strong>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Bukti Bayar Dikirim</h3>
+                </div>
+                <div class="card-body wali-payment-list">
+                    @forelse ($paymentConfirmations as $confirmation)
+                        <div class="wali-payment-item d-flex align-items-start gap-3">
+                            <span class="avatar avatar-sm {{ $confirmationBadgeClasses[$confirmation->status] ?? 'bg-secondary-lt text-secondary' }}">
+                                <i class="ti ti-receipt-2"></i>
+                            </span>
+                            <div class="flex-fill min-width-0">
+                                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-1">
+                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format((float) $confirmation->amount, 0, ',', '.') }}</div>
+                                    <span class="badge {{ $confirmationBadgeClasses[$confirmation->status] ?? 'bg-secondary-lt text-secondary' }}">
+                                        {{ $confirmation->statusLabel() }}
+                                    </span>
+                                </div>
+                                <div class="text-secondary small mt-1">
+                                    Transfer {{ $confirmation->paid_at?->translatedFormat('d M Y H:i') }}
+                                    @if ($confirmation->reference_number)
+                                        &middot; {{ $confirmation->reference_number }}
+                                    @endif
+                                </div>
+                                @if ($confirmation->note)
+                                    <div class="text-secondary small mt-2">{{ $confirmation->note }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-secondary">Belum ada bukti bayar yang dikirim untuk tagihan ini.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -176,4 +227,90 @@
             </div>
         </div>
     </div>
+
+    @if ($outstandingAmount > 0)
+        <div class="modal modal-blur fade" id="uploadProofModal{{ $invoice->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('wali-santri.invoices.payment-confirmations.store', $invoice) }}" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="confirmation_invoice_id" value="{{ $invoice->id }}">
+
+                        <div class="modal-header">
+                            <div>
+                                <h5 class="modal-title">Upload Bukti Bayar</h5>
+                                <div class="text-secondary small mt-1">{{ $invoice->invoice_number }} &middot; {{ $invoice->santri?->full_name ?? '-' }}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            @if ($errors->paymentConfirmation->any() && (string) old('confirmation_invoice_id') === (string) $invoice->id)
+                                <div class="alert alert-danger" role="alert">
+                                    <div class="fw-semibold mb-2">Bukti bayar belum bisa dikirim.</div>
+                                    <ul class="mb-0 ps-3">
+                                        @foreach ($errors->paymentConfirmation->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="proof_amount_{{ $invoice->id }}" class="form-label">Nominal Transfer</label>
+                                    <input id="proof_amount_{{ $invoice->id }}" name="amount" type="number" min="1" max="{{ (int) ceil($outstandingAmount) }}" step="1" class="form-control @if($errors->paymentConfirmation->has('amount')) is-invalid @endif" value="{{ old('amount', (int) ceil($outstandingAmount)) }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="proof_paid_at_{{ $invoice->id }}" class="form-label">Tanggal Transfer</label>
+                                    <input id="proof_paid_at_{{ $invoice->id }}" name="paid_at" type="datetime-local" class="form-control @if($errors->paymentConfirmation->has('paid_at')) is-invalid @endif" value="{{ old('paid_at', now()->format('Y-m-d\\TH:i')) }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="proof_method_{{ $invoice->id }}" class="form-label">Metode Pembayaran</label>
+                                    <select id="proof_method_{{ $invoice->id }}" name="payment_method" class="form-select form-select-pretty @if($errors->paymentConfirmation->has('payment_method')) is-invalid @endif" required>
+                                        @foreach ($paymentMethods as $method)
+                                            <option value="{{ $method }}" @selected(old('payment_method', 'transfer bank') === $method)>{{ str($method)->headline() }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="proof_reference_{{ $invoice->id }}" class="form-label">No. Referensi</label>
+                                    <input id="proof_reference_{{ $invoice->id }}" name="reference_number" type="text" maxlength="100" class="form-control @if($errors->paymentConfirmation->has('reference_number')) is-invalid @endif" value="{{ old('reference_number') }}" placeholder="Opsional">
+                                </div>
+                                <div class="col-12">
+                                    <label for="proof_file_{{ $invoice->id }}" class="form-label">File Bukti Bayar</label>
+                                    <input id="proof_file_{{ $invoice->id }}" name="proof" type="file" class="form-control @if($errors->paymentConfirmation->has('proof')) is-invalid @endif" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required>
+                                    <div class="form-hint mt-2">JPG, PNG, atau WEBP. Maksimal 4 MB.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="proof_note_{{ $invoice->id }}" class="form-label">Catatan</label>
+                                    <textarea id="proof_note_{{ $invoice->id }}" name="note" rows="3" maxlength="1000" class="form-control @if($errors->paymentConfirmation->has('note')) is-invalid @endif" placeholder="Opsional. Contoh: transfer atas nama orang tua.">{{ old('note') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="ti ti-upload me-1"></i>
+                                Kirim Bukti Bayar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                @if ($errors->paymentConfirmation->any())
+                    const proofModalElement = document.getElementById('uploadProofModal{{ $invoice->id }}');
+
+                    if (proofModalElement && window.bootstrap?.Modal) {
+                        window.bootstrap.Modal.getOrCreateInstance(proofModalElement).show();
+                    }
+                @endif
+            });
+        </script>
+    @endif
 </x-app-layout>

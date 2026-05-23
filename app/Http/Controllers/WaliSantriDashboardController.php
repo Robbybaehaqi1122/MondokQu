@@ -2,10 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AttendanceRecord;
 use App\Models\LeaveRequest;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
+use App\Models\SantriPaymentConfirmation;
+use App\Models\User;
+use App\Http\Requests\WaliSantri\StorePaymentConfirmationRequest;
+use App\Notifications\WaliPaymentProofSubmittedNotification;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class WaliSantriDashboardController extends Controller
@@ -30,6 +39,9 @@ class WaliSantriDashboardController extends Controller
             ->visibleTo($currentUser)
             ->whereIn('santri_id', $santriIds);
         $leaveRequestBaseQuery = LeaveRequest::query()
+            ->visibleTo($currentUser)
+            ->whereIn('santri_id', $santriIds);
+        $attendanceBaseQuery = AttendanceRecord::query()
             ->visibleTo($currentUser)
             ->whereIn('santri_id', $santriIds);
 
@@ -70,7 +82,14 @@ class WaliSantriDashboardController extends Controller
                 ->latest()
                 ->limit(8)
                 ->get(),
+            'recentAttendanceRecords' => $this->recentAttendanceRecords(clone $attendanceBaseQuery),
+            'attendanceSummary' => $this->buildAttendanceSummary(clone $attendanceBaseQuery),
             'leaveSummary' => $this->buildLeaveSummary(clone $leaveRequestBaseQuery),
+            'paymentMethods' => SantriPayment::paymentMethods(),
+            'pendingPaymentConfirmationsByInvoice' => $this->pendingPaymentConfirmationsByInvoice(
+                $currentUser,
+                $santriIds
+            ),
             'summary' => $this->buildSummary(
                 clone $invoiceBaseQuery,
                 clone $paymentBaseQuery,
@@ -83,6 +102,55 @@ class WaliSantriDashboardController extends Controller
                 ->limit(8)
                 ->get(),
         ]);
+    }
+
+    /**
+     * Build attendance summary for the last 30 days.
+     */
+    protected function buildAttendanceSummary($attendanceBaseQuery): array
+    {
+        $dateFrom = now()->subDays(29)->toDateString();
+        $dateTo = now()->toDateString();
+        $counts = (clone $attendanceBaseQuery)
+            ->join('attendance_sessions', function ($join): void {
+                $join
+                    ->on('attendance_records.attendance_session_id', '=', 'attendance_sessions.id')
+                    ->on('attendance_records.tenant_id', '=', 'attendance_sessions.tenant_id');
+            })
+            ->whereDate('attendance_sessions.session_date', '>=', $dateFrom)
+            ->whereDate('attendance_sessions.session_date', '<=', $dateTo)
+            ->select('attendance_records.status', DB::raw('COUNT(*) as total'))
+            ->groupBy('attendance_records.status')
+            ->pluck('total', 'attendance_records.status');
+
+        return [
+            'total' => (int) $counts->sum(),
+            AttendanceRecord::STATUS_PRESENT => (int) $counts->get(AttendanceRecord::STATUS_PRESENT, 0),
+            AttendanceRecord::STATUS_PERMISSION => (int) $counts->get(AttendanceRecord::STATUS_PERMISSION, 0),
+            AttendanceRecord::STATUS_SICK => (int) $counts->get(AttendanceRecord::STATUS_SICK, 0),
+            AttendanceRecord::STATUS_ABSENT => (int) $counts->get(AttendanceRecord::STATUS_ABSENT, 0),
+            AttendanceRecord::STATUS_LATE => (int) $counts->get(AttendanceRecord::STATUS_LATE, 0),
+        ];
+    }
+
+    /**
+     * Get recent attendance records for linked santri.
+     */
+    protected function recentAttendanceRecords($attendanceBaseQuery)
+    {
+        return $attendanceBaseQuery
+            ->select('attendance_records.*')
+            ->join('attendance_sessions', function ($join): void {
+                $join
+                    ->on('attendance_records.attendance_session_id', '=', 'attendance_sessions.id')
+                    ->on('attendance_records.tenant_id', '=', 'attendance_sessions.tenant_id');
+            })
+            ->with(['santri.room', 'session.activity'])
+            ->orderByDesc('attendance_sessions.session_date')
+            ->orderByDesc('attendance_records.recorded_at')
+            ->orderByDesc('attendance_records.id')
+            ->limit(10)
+            ->get();
     }
 
     /**
@@ -123,7 +191,59 @@ class WaliSantriDashboardController extends Controller
         return view('wali-santri.invoice-show', [
             'invoice' => $invoice,
             'payments' => $invoice->payments,
+            'paymentConfirmations' => $invoice->paymentConfirmations,
+            'paymentMethods' => SantriPayment::paymentMethods(),
         ]);
+    }
+
+    /**
+     * Store a wali-submitted manual transfer proof for later admin verification.
+     */
+    public function storePaymentConfirmation(
+        StorePaymentConfirmationRequest $request,
+        SantriInvoice $invoice
+    ): RedirectResponse {
+        $invoice = $this->resolveLinkedInvoice($request, $invoice);
+
+        if ($invoice->status === SantriInvoice::STATUS_PAID || $invoice->outstandingAmount() <= 0) {
+            throw ValidationException::withMessages([
+                'amount' => 'Tagihan ini sudah lunas dan tidak memerlukan bukti bayar baru.',
+            ])->errorBag('paymentConfirmation');
+        }
+
+        $validated = $request->validated();
+        $amount = (float) $validated['amount'];
+
+        if ($amount > $invoice->outstandingAmount()) {
+            throw ValidationException::withMessages([
+                'amount' => 'Nominal bukti bayar tidak boleh melebihi sisa tagihan.',
+            ])->errorBag('paymentConfirmation');
+        }
+
+        $proofPath = $request->file('proof')->store(
+            'wali-payment-proofs/'.$invoice->tenant_id,
+            'public'
+        );
+
+        $confirmation = SantriPaymentConfirmation::query()->create([
+            'tenant_id' => $invoice->tenant_id,
+            'santri_invoice_id' => $invoice->id,
+            'santri_id' => $invoice->santri_id,
+            'submitted_by' => $request->user()?->id,
+            'amount' => $amount,
+            'paid_at' => $validated['paid_at'],
+            'payment_method' => $validated['payment_method'],
+            'reference_number' => $validated['reference_number'] ?? null,
+            'proof_path' => $proofPath,
+            'note' => $validated['note'] ?? null,
+            'status' => SantriPaymentConfirmation::STATUS_PENDING,
+        ]);
+
+        $confirmation->load(['invoice', 'santri']);
+        $this->notifyPaymentProofReviewers($confirmation);
+
+        return back()
+            ->with('success', 'Bukti bayar berhasil diunggah dan menunggu verifikasi admin pondok.');
     }
 
     /**
@@ -137,6 +257,43 @@ class WaliSantriDashboardController extends Controller
             'invoice' => $invoice,
             'payments' => $invoice->payments,
         ]);
+    }
+
+    /**
+     * Get pending payment confirmations keyed by invoice for the current wali user.
+     */
+    protected function pendingPaymentConfirmationsByInvoice(?User $currentUser, $santriIds)
+    {
+        if (! $currentUser || $santriIds->isEmpty()) {
+            return collect();
+        }
+
+        return SantriPaymentConfirmation::query()
+            ->visibleTo($currentUser)
+            ->where('submitted_by', $currentUser->id)
+            ->whereIn('santri_id', $santriIds)
+            ->pending()
+            ->latest()
+            ->get()
+            ->groupBy('santri_invoice_id');
+    }
+
+    /**
+     * Notify tenant finance operators that a wali proof needs verification.
+     */
+    protected function notifyPaymentProofReviewers(SantriPaymentConfirmation $confirmation): void
+    {
+        $reviewers = User::query()
+            ->where('tenant_id', $confirmation->tenant_id)
+            ->where('status', User::STATUS_ACTIVE)
+            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['Admin', 'Bendahara']))
+            ->get();
+
+        if ($reviewers->isEmpty()) {
+            return;
+        }
+
+        Notification::send($reviewers, new WaliPaymentProofSubmittedNotification($confirmation));
     }
 
     /**
@@ -183,6 +340,9 @@ class WaliSantriDashboardController extends Controller
                     ->with('recorder')
                     ->latest('paid_at')
                     ->latest('id'),
+                'paymentConfirmations' => fn ($query) => $query
+                    ->where('submitted_by', $currentUser->id)
+                    ->latest(),
             ])
             ->whereKey($invoice->id)
             ->whereIn('santri_id', $santriIds)

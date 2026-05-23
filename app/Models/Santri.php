@@ -116,6 +116,14 @@ class Santri extends Model
     }
 
     /**
+     * Get attendance records for this santri.
+     */
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    /**
      * Get guardian link records for this santri.
      */
     public function guardianLinks(): HasMany

@@ -5,6 +5,11 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\PermissionManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\AttendanceActivityController;
+use App\Http\Controllers\AttendanceDashboardController;
+use App\Http\Controllers\AttendanceRecordController;
+use App\Http\Controllers\AttendanceReportController;
+use App\Http\Controllers\AttendanceSessionController;
 use App\Http\Controllers\DataExportDownloadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengurus\LeaveRequestController;
@@ -86,6 +91,24 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified'])->group(function () {
+    Route::prefix('absen')->name('attendance.')->middleware('permission:manage absensi')->group(function () {
+        Route::get('/', [AttendanceDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/kegiatan', [AttendanceActivityController::class, 'index'])->name('activities.index');
+        Route::post('/kegiatan', [AttendanceActivityController::class, 'store'])->name('activities.store');
+        Route::patch('/kegiatan/{attendanceActivity}', [AttendanceActivityController::class, 'update'])->name('activities.update');
+        Route::delete('/kegiatan/{attendanceActivity}', [AttendanceActivityController::class, 'destroy'])->name('activities.destroy');
+
+        Route::get('/laporan', [AttendanceReportController::class, 'index'])->name('reports.index');
+
+        Route::get('/sesi', [AttendanceSessionController::class, 'index'])->name('sessions.index');
+        Route::post('/sesi', [AttendanceSessionController::class, 'store'])->name('sessions.store');
+        Route::get('/sesi/{attendanceSession}/input', [AttendanceRecordController::class, 'edit'])->name('sessions.records.edit');
+        Route::put('/sesi/{attendanceSession}/input', [AttendanceRecordController::class, 'update'])->name('sessions.records.update');
+        Route::patch('/sesi/{attendanceSession}', [AttendanceSessionController::class, 'update'])->name('sessions.update');
+        Route::delete('/sesi/{attendanceSession}', [AttendanceSessionController::class, 'destroy'])->name('sessions.destroy');
+    });
+
     Route::prefix('santri/pembayaran')->name('santri.payments.')->group(function () {
         Route::get('/', [SantriPaymentController::class, 'index'])
             ->middleware('permission:view pembayaran')
@@ -221,6 +244,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Wali Santri|view portal wali'])->group(function () {
     Route::get('/wali-santri', [WaliSantriDashboardController::class, 'index'])->name('wali-santri.dashboard');
     Route::get('/wali-santri/tagihan/{invoice}', [WaliSantriDashboardController::class, 'showInvoice'])->name('wali-santri.invoices.show');
+    Route::post('/wali-santri/tagihan/{invoice}/bukti-bayar', [WaliSantriDashboardController::class, 'storePaymentConfirmation'])->name('wali-santri.invoices.payment-confirmations.store');
     Route::get('/wali-santri/tagihan/{invoice}/kwitansi', [WaliSantriDashboardController::class, 'printInvoice'])->name('wali-santri.invoices.receipt');
 });
 

@@ -2,9 +2,11 @@
     $isCreateForm = $santriItem === null;
     $errorBagInstance = $errorsBag ?? $errors;
     $guardianOptions = $guardianUserOptions ?? collect();
+    $roomOptions = $roomOptions ?? collect();
     $selectedGuardianUserIds = collect($selectedGuardianUserIds ?? old('guardian_user_ids', []))
         ->map(fn ($guardianUserId) => (int) $guardianUserId)
         ->all();
+    $selectedRoomId = old('room_id', $santriItem?->room_id);
 @endphp
 
 <div class="row g-3">
@@ -253,18 +255,48 @@
     </div>
 
     <div class="col-md-4">
-        <label for="room_name_{{ $santriFormId }}" class="form-label">Kamar / Asrama</label>
-        <input
-            id="room_name_{{ $santriFormId }}"
-            name="room_name"
-            type="text"
-            class="form-control @if($errorBagInstance->has('room_name')) is-invalid @endif"
-            value="{{ old('room_name', $santriItem?->displayRoomName('')) }}"
-            placeholder="Contoh: Asrama A1"
-            required
-        >
-        @if ($errorBagInstance->has('room_name'))
-            <div class="invalid-feedback">{{ $errorBagInstance->first('room_name') }}</div>
+        <label for="room_id_{{ $santriFormId }}" class="form-label">Kamar / Asrama</label>
+        @if ($roomOptions->isNotEmpty())
+            <select
+                id="room_id_{{ $santriFormId }}"
+                name="room_id"
+                class="form-select form-select-pretty @if($errorBagInstance->has('room_id') || $errorBagInstance->has('room_name')) is-invalid @endif"
+                required
+            >
+                <option value="">Pilih kamar</option>
+                @foreach ($roomOptions as $roomOption)
+                    <option value="{{ $roomOption->id }}" @selected((string) $selectedRoomId === (string) $roomOption->id)>
+                        {{ $roomOption->name }}{{ $roomOption->status !== 'active' ? ' (Nonaktif)' : '' }}
+                    </option>
+                @endforeach
+            </select>
+            @if ($errorBagInstance->has('room_id'))
+                <div class="invalid-feedback d-block">{{ $errorBagInstance->first('room_id') }}</div>
+            @elseif ($errorBagInstance->has('room_name'))
+                <div class="invalid-feedback d-block">{{ $errorBagInstance->first('room_name') }}</div>
+            @else
+                <div class="form-hint mt-2">Pilihan kamar diambil dari master Manajemen Kamar agar nama kamar tetap konsisten.</div>
+            @endif
+        @else
+            <select
+                id="room_id_{{ $santriFormId }}"
+                name="room_id"
+                class="form-select form-select-pretty @if($errorBagInstance->has('room_id') || $errorBagInstance->has('room_name')) is-invalid @endif"
+                disabled
+                required
+            >
+                <option value="">Belum ada kamar</option>
+            </select>
+            @if ($errorBagInstance->has('room_id'))
+                <div class="invalid-feedback d-block">{{ $errorBagInstance->first('room_id') }}</div>
+            @elseif ($errorBagInstance->has('room_name'))
+                <div class="invalid-feedback d-block">{{ $errorBagInstance->first('room_name') }}</div>
+            @else
+                <div class="form-hint mt-2">
+                    Buat kamar terlebih dahulu di
+                    <a href="{{ route('rooms.index') }}" class="link-primary">Manajemen Kamar</a>.
+                </div>
+            @endif
         @endif
     </div>
 

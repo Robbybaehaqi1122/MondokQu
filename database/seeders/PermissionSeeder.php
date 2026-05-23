@@ -79,6 +79,7 @@ class PermissionSeeder extends Seeder
             'create pembayaran',
             'update pembayaran',
             'view laporan keuangan',
+            'manage absensi',
         ])->get());
         $pengurus->syncPermissions(Permission::whereIn('name', [
             'manage kamar',

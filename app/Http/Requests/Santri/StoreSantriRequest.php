@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Santri;
 
 use App\Http\Requests\Santri\Concerns\ValidatesGuardianUsers;
+use App\Models\Room;
 use App\Models\Santri;
 use App\Rules\IndonesiaPhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
@@ -32,7 +33,13 @@ class StoreSantriRequest extends FormRequest
     {
         if ($this->has('room_name')) {
             $this->merge([
-                'room_name' => trim((string) $this->input('room_name')),
+                'room_name' => preg_replace('/\s+/', ' ', trim((string) $this->input('room_name'))),
+            ]);
+        }
+
+        if ($this->has('room_id') && $this->input('room_id') === '') {
+            $this->merge([
+                'room_id' => null,
             ]);
         }
 
@@ -67,7 +74,12 @@ class StoreSantriRequest extends FormRequest
             'emergency_contact' => ['required', 'string', 'max:20', new IndonesiaPhoneNumber('Kontak darurat harus berupa nomor yang valid, diawali 0, 62, atau +62 dan hanya berisi angka setelah kode awal.')],
             'entry_date' => ['required', 'date', 'after_or_equal:birth_date', 'before_or_equal:today'],
             'entry_year' => ['required', 'integer', 'digits:4', 'min:1900', 'max:'.now()->year],
-            'room_name' => ['required', 'string', 'max:255'],
+            'room_id' => [
+                'nullable',
+                'integer',
+                Rule::exists(Room::class, 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
+            ],
+            'room_name' => ['required_without:room_id', 'nullable', 'string', 'max:255'],
             'guardian_user_ids' => ['sometimes', 'array', $this->guardianUsersExistRule()],
             'guardian_user_ids.*' => ['integer', 'distinct'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -116,7 +128,8 @@ class StoreSantriRequest extends FormRequest
             'entry_year.digits' => 'Angkatan atau tahun masuk harus 4 digit.',
             'entry_year.min' => 'Angkatan atau tahun masuk tidak valid.',
             'entry_year.max' => 'Angkatan atau tahun masuk tidak boleh melebihi tahun ini.',
-            'room_name.required' => 'Kamar atau asrama wajib diisi.',
+            'room_id.exists' => 'Pilih kamar dari tenant pondok yang sama.',
+            'room_name.required_without' => 'Kamar atau asrama wajib dipilih.',
             'guardian_user_ids.array' => 'Akun wali portal harus dipilih dari daftar yang tersedia.',
             'guardian_user_ids.exists' => 'Pilih akun wali santri dari tenant pondok yang sama.',
             'guardian_user_ids.*.integer' => 'Akun wali portal tidak valid.',

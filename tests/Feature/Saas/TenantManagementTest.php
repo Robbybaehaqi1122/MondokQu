@@ -18,6 +18,39 @@ beforeEach(function () {
     Role::findOrCreate('Admin', 'web');
 });
 
+test('superadmin can view saas dashboard with growth and revenue metrics', function () {
+    $superadmin = User::factory()->create();
+    $superadmin->assignRole('Superadmin');
+
+    $tenant = Tenant::factory()->create([
+        'name' => 'Pondok Dashboard SaaS',
+        'slug' => 'pondok-dashboard-saas',
+        'subscription_status' => Tenant::SUBSCRIPTION_ACTIVE,
+        'subscription_ends_at' => now()->addMonth(),
+    ]);
+
+    TenantBillingNote::query()->create([
+        'tenant_id' => $tenant->id,
+        'paid_at' => now(),
+        'amount' => 250000,
+        'payment_method' => 'transfer bank',
+        'period_starts_at' => now()->toDateString(),
+        'period_ends_at' => now()->addMonth()->toDateString(),
+        'recorded_by' => $superadmin->id,
+    ]);
+
+    $response = $this
+        ->actingAs($superadmin)
+        ->get(route('saas.dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('SaaS Dashboard');
+    $response->assertSee('Pertumbuhan Tenant');
+    $response->assertSee('Pendapatan Platform');
+    $response->assertSee('Rp 250.000');
+    $response->assertSee('Pondok Dashboard SaaS');
+});
+
 test('superadmin can view the tenant management page', function () {
     $superadmin = User::factory()->create();
     $superadmin->assignRole('Superadmin');

@@ -103,6 +103,14 @@ class SantriInvoice extends Model
     }
 
     /**
+     * Get payment proof confirmations submitted by wali santri.
+     */
+    public function paymentConfirmations(): HasMany
+    {
+        return $this->hasMany(SantriPaymentConfirmation::class);
+    }
+
+    /**
      * Apply filters used by invoice list and export.
      */
     public function scopeWithFilters(Builder $query, string $search = '', string $status = '', string $santriId = ''): Builder

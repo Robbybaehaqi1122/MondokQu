@@ -309,6 +309,13 @@ test('large santri export is queued instead of streamed', function () {
     expect($export?->user_id)->toBe($pengurus->id);
 
     Queue::assertPushed(GenerateDataExportJob::class, fn (GenerateDataExportJob $job) => $job->dataExportId === $export?->id);
+
+    $this
+        ->actingAs($pengurus)
+        ->get(route('santri.index'))
+        ->assertOk()
+        ->assertSee('1 export sedang diproses')
+        ->assertSee('25%');
 });
 
 test('queued santri export job writes csv file', function () {
@@ -491,6 +498,83 @@ test('user with permission can create santri', function () {
     } else {
         expect($santri->photo_path)->toBeNull();
     }
+});
+
+test('user can create santri by selecting an existing room', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo(['view santri', 'create santri']);
+    $room = Room::factory()->forTenant($admin->tenant)->create([
+        'name' => 'Asrama Dropdown A',
+    ]);
+
+    $this
+        ->actingAs($admin)
+        ->get(route('santri.index'))
+        ->assertOk()
+        ->assertSee('Asrama Dropdown A');
+
+    $response = $this
+        ->actingAs($admin)
+        ->post(route('santri.store'), [
+            'nis' => 'NIS-ROOM-ID',
+            'full_name' => 'Santri Pilih Kamar',
+            'gender' => Santri::GENDER_MALE,
+            'birth_place' => 'Bandung',
+            'birth_date' => '2012-01-10',
+            'address' => 'Alamat',
+            'guardian_name' => 'Bapak Pilih',
+            'father_name' => 'Ayah Pilih',
+            'mother_name' => 'Ibu Pilih',
+            'guardian_phone_number' => '081234567890',
+            'emergency_contact' => '081234567891',
+            'entry_date' => '2024-01-01',
+            'entry_year' => 2024,
+            'room_id' => $room->id,
+            'status' => Santri::STATUS_ACTIVE,
+        ]);
+
+    $response->assertRedirect(route('santri.index', absolute: false));
+
+    $santri = Santri::query()->where('nis', 'NIS-ROOM-ID')->first();
+
+    expect($santri)->not->toBeNull();
+    expect($santri->room_id)->toBe($room->id);
+    expect($santri->room_name)->toBe('Asrama Dropdown A');
+    expect(Room::query()->withoutTenantScope()->where('tenant_id', $admin->tenant_id)->where('name', 'Asrama Dropdown A')->count())->toBe(1);
+});
+
+test('user can not assign santri to room from another tenant', function () {
+    $admin = tenantUser('Admin');
+    $admin->givePermissionTo('create santri');
+    $otherTenant = Tenant::factory()->activeSubscription()->create();
+    $otherRoom = Room::factory()->forTenant($otherTenant)->create([
+        'name' => 'Asrama Tenant Lain',
+    ]);
+
+    $response = $this
+        ->actingAs($admin)
+        ->from(route('santri.index'))
+        ->post(route('santri.store'), [
+            'nis' => 'NIS-ROOM-OTHER',
+            'full_name' => 'Santri Salah Kamar',
+            'gender' => Santri::GENDER_MALE,
+            'birth_place' => 'Bandung',
+            'birth_date' => '2012-01-10',
+            'address' => 'Alamat',
+            'guardian_name' => 'Bapak Salah',
+            'father_name' => 'Ayah Salah',
+            'mother_name' => 'Ibu Salah',
+            'guardian_phone_number' => '081234567890',
+            'emergency_contact' => '081234567891',
+            'entry_date' => '2024-01-01',
+            'entry_year' => 2024,
+            'room_id' => $otherRoom->id,
+            'status' => Santri::STATUS_ACTIVE,
+        ]);
+
+    $response->assertRedirect(route('santri.index', absolute: false));
+    $response->assertSessionHasErrors(['room_id'], null, 'createSantri');
+    expect(Santri::query()->where('nis', 'NIS-ROOM-OTHER')->exists())->toBeFalse();
 });
 
 test('user can create santri with wali portal account', function () {

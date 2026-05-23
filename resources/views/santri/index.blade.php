@@ -13,6 +13,7 @@
         ];
 
         $createGuardianUserOptions = $guardianUserOptionsByTenant->get(auth()->user()?->tenant_id, collect());
+        $createRoomOptions = $roomOptionsByTenant->get(auth()->user()?->tenant_id, collect());
     @endphp
 
     <x-slot name="header">
@@ -235,6 +236,7 @@
                                                                     'genders' => $genders,
                                                                     'statuses' => $statuses,
                                                                     'guardianUserOptions' => $guardianUserOptionsByTenant->get($managedSantri->tenant_id, collect()),
+                                                                    'roomOptions' => $roomOptionsByTenant->get($managedSantri->tenant_id, collect()),
                                                                     'selectedGuardianUserIds' => ((int) old('editing_santri_id') === (int) $managedSantri->id)
                                                                         ? old('guardian_user_ids', [])
                                                                         : $managedSantri->guardians->pluck('id')->all(),
@@ -293,6 +295,7 @@
                                 'genders' => $genders,
                                 'statuses' => $statuses,
                                 'guardianUserOptions' => $createGuardianUserOptions,
+                                'roomOptions' => $createRoomOptions,
                                 'selectedGuardianUserIds' => $errors->createSantri->any() ? old('guardian_user_ids', []) : [],
                                 'errorsBag' => $errors->createSantri,
                             ])

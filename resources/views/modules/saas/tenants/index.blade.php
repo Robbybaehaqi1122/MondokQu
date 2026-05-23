@@ -1,13 +1,36 @@
+@php
+    use App\Models\Tenant;
+
+    $statusUi = [
+        Tenant::SUBSCRIPTION_ACTIVE => [
+            'label' => 'Active',
+            'meta' => 'Subscription berjalan',
+            'indicator' => 'tenant-subscription-indicator-active',
+        ],
+        Tenant::SUBSCRIPTION_TRIAL => [
+            'label' => 'Trial',
+            'meta' => 'Perlu follow-up onboarding',
+            'indicator' => 'tenant-subscription-indicator-trial',
+        ],
+        Tenant::SUBSCRIPTION_GRACE => [
+            'label' => 'Grace',
+            'meta' => 'Masa tenggang pembayaran',
+            'indicator' => 'tenant-subscription-indicator-grace',
+        ],
+        Tenant::SUBSCRIPTION_EXPIRED => [
+            'label' => 'Expired',
+            'meta' => 'Prioritas follow-up',
+            'indicator' => 'tenant-subscription-indicator-expired',
+        ],
+        Tenant::SUBSCRIPTION_DELETING => [
+            'label' => 'Deleting',
+            'meta' => 'Dalam antrean hapus',
+            'indicator' => 'tenant-subscription-indicator-deleting',
+        ],
+    ];
+@endphp
+
 <x-app-layout>
-    @php
-        $statusBadgeClasses = [
-            'trial' => 'bg-azure-lt text-azure',
-            'active' => 'bg-success-lt text-success',
-            'grace' => 'bg-warning-lt text-warning',
-            'expired' => 'bg-danger-lt text-danger',
-            'deleting' => 'bg-danger text-white',
-        ];
-    @endphp
 
     <x-slot name="header">
         <div>
@@ -82,28 +105,64 @@
                                 <th>User</th>
                                 <th>Santri</th>
                                 <th>Owner</th>
-                                <th>Trial Ends</th>
+                                <th>Batas Akses</th>
                                 <th class="w-1">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($tenants as $tenant)
-                                @php($tenantIsDeleting = $tenant->isDeleting())
-                                <tr>
+                                @php
+                                    $tenantIsDeleting = $tenant->isDeleting();
+                                    $status = $statusUi[$tenant->subscription_status] ?? [
+                                        'label' => str($tenant->subscription_status)->headline(),
+                                        'meta' => 'Status belum dikenal',
+                                        'indicator' => 'tenant-subscription-indicator-unknown',
+                                    ];
+                                    $accessLimit = match ($tenant->subscription_status) {
+                                        Tenant::SUBSCRIPTION_TRIAL => [
+                                            'label' => 'Trial ends',
+                                            'value' => $tenant->trial_ends_at,
+                                        ],
+                                        Tenant::SUBSCRIPTION_ACTIVE => [
+                                            'label' => 'Subscription ends',
+                                            'value' => $tenant->subscription_ends_at,
+                                        ],
+                                        Tenant::SUBSCRIPTION_GRACE => [
+                                            'label' => 'Grace ends',
+                                            'value' => $tenant->grace_ends_at,
+                                        ],
+                                        Tenant::SUBSCRIPTION_EXPIRED => [
+                                            'label' => 'Expired',
+                                            'value' => $tenant->subscription_ends_at ?? $tenant->trial_ends_at,
+                                        ],
+                                        default => [
+                                            'label' => 'Tidak ada batas aktif',
+                                            'value' => null,
+                                        ],
+                                    };
+                                @endphp
+                                <tr class="tenant-status-row tenant-status-row-{{ $tenant->subscription_status }}">
                                     <td>
                                         <div class="fw-semibold">{{ $tenant->name }}</div>
                                         <div class="text-secondary small mt-1">{{ $tenant->slug }}</div>
                                         <div class="text-secondary small mt-1">{{ $tenant->contact_email ?: 'Email kontak belum diisi' }}</div>
                                     </td>
                                     <td>
-                                        <span class="badge {{ $statusBadgeClasses[$tenant->subscription_status] ?? 'bg-secondary-lt text-secondary' }}">
-                                            {{ str($tenant->subscription_status)->headline() }}
-                                        </span>
+                                        <div class="tenant-subscription-indicator {{ $status['indicator'] }}">
+                                            <span class="tenant-subscription-dot"></span>
+                                            <span class="tenant-subscription-copy">
+                                                <span class="tenant-subscription-label">{{ $status['label'] }}</span>
+                                                <span class="tenant-subscription-meta">{{ $status['meta'] }}</span>
+                                            </span>
+                                        </div>
                                     </td>
                                     <td>{{ $tenant->users_count }}</td>
                                     <td>{{ $tenant->santris_count }}</td>
                                     <td>{{ $tenant->owner?->name ?? 'Belum ada owner' }}</td>
-                                    <td>{{ $tenant->trial_ends_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>
+                                    <td>
+                                        <div>{{ $accessLimit['value']?->translatedFormat('d M Y H:i') ?? '-' }}</div>
+                                        <div class="text-secondary small mt-1">{{ $accessLimit['label'] }}</div>
+                                    </td>
                                     <td>
                                         <div class="dropdown">
                                             <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
