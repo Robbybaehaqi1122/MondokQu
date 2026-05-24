@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -486,20 +487,32 @@ class SantriManagementController extends Controller
 
         $roomName = $this->normalizeRoomName($roomName);
 
+        $room = Room::query()
+            ->withoutTenantScope()
+            ->where('tenant_id', $tenantId)
+            ->where('name', trim($roomName))
+            ->first();
+
+        if ($room) {
+            return $room;
+        }
+
+        if (! request()->user()?->can('manage kamar')) {
+            throw ValidationException::withMessages([
+                'room_name' => 'Kamar "' . $roomName . '" tidak ditemukan. Hubungi admin untuk membuat kamar baru.',
+            ]);
+        }
+
         return Room::query()
             ->withoutTenantScope()
-            ->firstOrCreate(
-                [
-                    'tenant_id' => $tenantId,
-                    'name' => trim($roomName),
-                ],
-                [
-                    'capacity' => null,
-                    'status' => Room::STATUS_ACTIVE,
-                    'description' => null,
-                    'created_by' => request()->user()?->id,
-                ]
-            );
+            ->create([
+                'tenant_id' => $tenantId,
+                'name' => trim($roomName),
+                'capacity' => null,
+                'status' => Room::STATUS_ACTIVE,
+                'description' => null,
+                'created_by' => request()->user()?->id,
+            ]);
     }
 
     protected function normalizeRoomName(string $roomName): string
