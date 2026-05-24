@@ -21,7 +21,7 @@ class UpdateSantriPaymentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('edit historical pembayaran') ?? false;
     }
 
     /**
