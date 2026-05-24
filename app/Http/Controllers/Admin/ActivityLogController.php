@@ -109,9 +109,9 @@ class ActivityLogController extends Controller
     /**
      * Delete all activity log records.
      */
-    public function destroyAll(): RedirectResponse
+    public function destroyAll(Request $request): RedirectResponse
     {
-        $currentUser = request()->user();
+        $currentUser = $request->user();
 
         ActivityLog::query()
             ->visibleTo($currentUser)

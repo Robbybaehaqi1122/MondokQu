@@ -86,7 +86,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/admin/activity-logs/export', [ActivityLogController::class, 'export'])->name('admin.activity-logs.export');
 });
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin', 'password.confirm'])->group(function () {
     Route::delete('/admin/activity-logs', [ActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
 });
 
