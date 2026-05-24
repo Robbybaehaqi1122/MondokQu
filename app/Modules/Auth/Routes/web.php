@@ -16,6 +16,7 @@ Route::middleware('guest')->group(function () {
         ->name('register');
 
     Route::post('/register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:3,1')
         ->name('register.store');
 
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])
@@ -26,6 +27,7 @@ Route::middleware('guest')->group(function () {
         ->name('login.check-identity');
 
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:5,1')
         ->name('login.store');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
@@ -39,6 +41,7 @@ Route::middleware('guest')->group(function () {
         ->name('password.reset');
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
+        ->middleware('throttle:5,1')
         ->name('password.store');
 });
 
