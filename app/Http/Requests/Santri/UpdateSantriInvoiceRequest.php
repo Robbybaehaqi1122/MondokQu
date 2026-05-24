@@ -22,7 +22,7 @@ class UpdateSantriInvoiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('update pembayaran') ?? false;
     }
 
     /**
