@@ -53,6 +53,8 @@ class SantriInvoice extends Model
             'due_date' => 'date',
             'amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
+            'period_month' => 'integer',
+            'period_year' => 'integer',
         ];
     }
 
