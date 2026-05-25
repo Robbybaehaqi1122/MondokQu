@@ -220,10 +220,12 @@ class WaliSantriDashboardController extends Controller
             ])->errorBag('paymentConfirmation');
         }
 
-        $proofPath = $request->file('proof')->store(
-            'wali-payment-proofs/'.$invoice->tenant_id,
-            'public'
-        );
+        $proofPath = $request->hasFile('proof')
+            ? $request->file('proof')->store(
+                'wali-payment-proofs/'.$invoice->tenant_id,
+                'public'
+            )
+            : null;
 
         $confirmation = SantriPaymentConfirmation::query()->create([
             'tenant_id' => $invoice->tenant_id,
@@ -243,7 +245,7 @@ class WaliSantriDashboardController extends Controller
         $this->notifyPaymentProofReviewers($confirmation);
 
         return back()
-            ->with('success', 'Bukti bayar berhasil diunggah dan menunggu verifikasi admin pondok.');
+            ->with('success', 'Konfirmasi pembayaran berhasil dikirim dan menunggu verifikasi admin pondok.');
     }
 
     /**

@@ -97,9 +97,9 @@ class SantriPaymentConfirmation extends Model
         return $query->where('status', self::STATUS_PENDING);
     }
 
-    public function proofUrl(): string
+    public function proofUrl(): ?string
     {
-        return asset('storage/'.$this->proof_path);
+        return $this->proof_path ? asset('storage/'.$this->proof_path) : null;
     }
 
     public function statusLabel(): string

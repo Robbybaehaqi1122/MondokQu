@@ -39,7 +39,7 @@ class StorePaymentConfirmationRequest extends FormRequest
             'reference_number' => ['nullable', 'string', 'max:100'],
             'note' => ['nullable', 'string', 'max:1000'],
             'proof' => [
-                'required',
+                'nullable',
                 File::image()
                     ->types(['jpg', 'jpeg', 'png', 'webp'])
                     ->max(4096),
