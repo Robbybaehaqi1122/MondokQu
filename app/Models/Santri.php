@@ -269,4 +269,26 @@ class Santri extends Model
     {
         return $this->room?->name ?? $fallback;
     }
+
+    /**
+     * Resolve guardian name from linked user account, fallback to legacy column.
+     */
+    public function displayGuardianName(string $fallback = '-'): string
+    {
+        $primaryGuardian = $this->guardians()->wherePivot('is_primary', true)->first()
+            ?? $this->guardians()->first();
+
+        return $primaryGuardian?->name ?? ($this->guardian_name ?: $fallback);
+    }
+
+    /**
+     * Resolve guardian phone from linked user account, fallback to legacy column.
+     */
+    public function displayGuardianPhone(string $fallback = '-'): string
+    {
+        $primaryGuardian = $this->guardians()->wherePivot('is_primary', true)->first()
+            ?? $this->guardians()->first();
+
+        return $primaryGuardian?->phone_number ?? ($this->guardian_phone_number ?: $fallback);
+    }
 }
