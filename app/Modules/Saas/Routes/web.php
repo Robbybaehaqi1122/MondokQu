@@ -23,7 +23,8 @@ Route::middleware(['auth', 'password_change_required', 'verified', 'role:Superad
     Route::get('/saas/tenants/{tenant}', [TenantManagementController::class, 'show'])
         ->name('saas.tenants.show');
     Route::post('/saas/tenants/{tenant}/users/{user}/impersonate', [TenantImpersonationController::class, 'store'])
-        ->name('saas.tenants.users.impersonate');
+        ->name('saas.tenants.users.impersonate')
+        ->middleware('throttle:10,1');
     Route::patch('/saas/tenants/{tenant}/subscription', [TenantManagementController::class, 'updateSubscription'])
         ->name('saas.tenants.update-subscription');
     Route::delete('/saas/tenants/{tenant}', [TenantManagementController::class, 'destroy'])
