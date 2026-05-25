@@ -143,6 +143,22 @@ class Santri extends Model
     }
 
     /**
+     * Get payment confirmations submitted for this santri.
+     */
+    public function paymentConfirmations(): HasMany
+    {
+        return $this->hasMany(SantriPaymentConfirmation::class);
+    }
+
+    /**
+     * Get leave requests for this santri.
+     */
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    /**
      * Apply filters used by the santri management list and export.
      */
     public function scopeWithFilters(Builder $query, string $search = '', string $status = '', string $gender = ''): Builder
