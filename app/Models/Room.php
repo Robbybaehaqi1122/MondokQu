@@ -33,6 +33,18 @@ class Room extends Model
     ];
 
     /**
+     * Get the casts for the model.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'capacity' => 'integer',
+        ];
+    }
+
+    /**
      * Get available room statuses.
      *
      * @return array<int, string>

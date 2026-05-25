@@ -64,6 +64,7 @@ class Santri extends Model
         return [
             'birth_date' => 'date',
             'entry_date' => 'date',
+            'entry_year' => 'integer',
         ];
     }
 
