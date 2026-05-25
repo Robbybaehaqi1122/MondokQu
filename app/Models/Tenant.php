@@ -128,6 +128,70 @@ class Tenant extends Model
     }
 
     /**
+     * Get the payment confirmations that belong to the tenant.
+     */
+    public function santriPaymentConfirmations(): HasMany
+    {
+        return $this->hasMany(SantriPaymentConfirmation::class);
+    }
+
+    /**
+     * Get the attendance activities that belong to the tenant.
+     */
+    public function attendanceActivities(): HasMany
+    {
+        return $this->hasMany(AttendanceActivity::class);
+    }
+
+    /**
+     * Get the attendance sessions that belong to the tenant.
+     */
+    public function attendanceSessions(): HasMany
+    {
+        return $this->hasMany(AttendanceSession::class);
+    }
+
+    /**
+     * Get the attendance records that belong to the tenant.
+     */
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    /**
+     * Get the leave requests that belong to the tenant.
+     */
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    /**
+     * Get the data exports that belong to the tenant.
+     */
+    public function dataExports(): HasMany
+    {
+        return $this->hasMany(DataExport::class);
+    }
+
+    /**
+     * Get the room transfers that belong to the tenant.
+     */
+    public function roomTransfers(): HasMany
+    {
+        return $this->hasMany(RoomTransfer::class);
+    }
+
+    /**
+     * Get the guardian link records that belong to the tenant.
+     */
+    public function santriGuardians(): HasMany
+    {
+        return $this->hasMany(SantriGuardian::class);
+    }
+
+    /**
      * Determine whether the tenant is still in the trial period.
      */
     public function onTrial(): bool

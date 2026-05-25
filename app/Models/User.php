@@ -116,6 +116,150 @@ class User extends Authenticatable implements MustVerifyEmailContract
     }
 
     /**
+     * Get santri records created by this user.
+     */
+    public function createdSantris(): HasMany
+    {
+        return $this->hasMany(Santri::class, 'created_by');
+    }
+
+    /**
+     * Get rooms created by this user.
+     */
+    public function createdRooms(): HasMany
+    {
+        return $this->hasMany(Room::class, 'created_by');
+    }
+
+    /**
+     * Get invoices created by this user.
+     */
+    public function createdSantriInvoices(): HasMany
+    {
+        return $this->hasMany(SantriInvoice::class, 'created_by');
+    }
+
+    /**
+     * Get payment confirmations submitted by this user.
+     */
+    public function submittedPaymentConfirmations(): HasMany
+    {
+        return $this->hasMany(SantriPaymentConfirmation::class, 'submitted_by');
+    }
+
+    /**
+     * Get payment confirmations reviewed by this user.
+     */
+    public function reviewedPaymentConfirmations(): HasMany
+    {
+        return $this->hasMany(SantriPaymentConfirmation::class, 'reviewed_by');
+    }
+
+    /**
+     * Get attendance sessions created by this user.
+     */
+    public function createdAttendanceSessions(): HasMany
+    {
+        return $this->hasMany(AttendanceSession::class, 'created_by');
+    }
+
+    /**
+     * Get attendance records recorded by this user.
+     */
+    public function recordedAttendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class, 'recorded_by');
+    }
+
+    /**
+     * Get attendance activities where this user is responsible.
+     */
+    public function responsibleAttendanceActivities(): HasMany
+    {
+        return $this->hasMany(AttendanceActivity::class, 'responsible_user_id');
+    }
+
+    /**
+     * Get attendance activities created by this user.
+     */
+    public function createdAttendanceActivities(): HasMany
+    {
+        return $this->hasMany(AttendanceActivity::class, 'created_by');
+    }
+
+    /**
+     * Get leave requests approved by this user.
+     */
+    public function approvedLeaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class, 'approved_by');
+    }
+
+    /**
+     * Get leave requests created by this user.
+     */
+    public function createdLeaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class, 'created_by');
+    }
+
+    /**
+     * Get data exports requested by this user.
+     */
+    public function dataExports(): HasMany
+    {
+        return $this->hasMany(DataExport::class, 'user_id');
+    }
+
+    /**
+     * Get payments recorded by this user.
+     */
+    public function recordedPayments(): HasMany
+    {
+        return $this->hasMany(SantriPayment::class, 'recorded_by');
+    }
+
+    /**
+     * Get room transfers moved by this user.
+     */
+    public function movedRoomTransfers(): HasMany
+    {
+        return $this->hasMany(RoomTransfer::class, 'moved_by');
+    }
+
+    /**
+     * Get activity logs where this user is the actor.
+     */
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class, 'actor_id');
+    }
+
+    /**
+     * Get billing notes recorded by this user.
+     */
+    public function recordedBillingNotes(): HasMany
+    {
+        return $this->hasMany(TenantBillingNote::class, 'recorded_by');
+    }
+
+    /**
+     * Get subscription history entries changed by this user.
+     */
+    public function changedSubscriptionHistories(): HasMany
+    {
+        return $this->hasMany(TenantSubscriptionHistory::class, 'changed_by');
+    }
+
+    /**
+     * Get users created by this user.
+     */
+    public function createdUsers(): HasMany
+    {
+        return $this->hasMany(self::class, 'created_by');
+    }
+
+    /**
      * Get the available user statuses.
      *
      * @return array<int, string>
