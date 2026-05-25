@@ -46,7 +46,6 @@ class Santri extends Model
         'emergency_contact',
         'entry_date',
         'entry_year',
-        'room_name',
         'room_id',
         'notes',
         'status',
@@ -177,7 +176,7 @@ class Santri extends Model
                         ->orWhere('guardian_phone_number', 'like', "%{$search}%")
                         ->orWhere('father_name', 'like', "%{$search}%")
                         ->orWhere('mother_name', 'like', "%{$search}%")
-                        ->orWhere('room_name', 'like', "%{$search}%")
+                        ->orWhereHas('room', fn (Builder $roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('room', fn (Builder $roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('guardians', function (Builder $guardianQuery) use ($search): void {
                             $guardianQuery
@@ -268,8 +267,6 @@ class Santri extends Model
      */
     public function displayRoomName(string $fallback = '-'): string
     {
-        $roomName = $this->room?->name ?: trim((string) $this->room_name);
-
-        return $roomName !== '' ? $roomName : $fallback;
+        return $this->room?->name ?? $fallback;
     }
 }

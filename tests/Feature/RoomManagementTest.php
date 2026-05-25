@@ -125,7 +125,7 @@ test('room rename updates linked santri mirror inside the room update flow', fun
 
     expect($room->fresh()->name)->toBe('Asrama Baru');
     expect($santri->room_id)->toBe($room->id);
-    expect($santri->room_name)->toBe('Asrama Baru');
+    expect($santri->room?->name)->toBe('Asrama Baru');
     expect($santri->load('room')->displayRoomName())->toBe('Asrama Baru');
 });
 
@@ -184,7 +184,7 @@ test('user can assign santri to a room and room capacity is enforced', function 
         ->assertRedirect(route('rooms.index', absolute: false));
 
     expect($santriA->fresh()->room_id)->toBe($room->id);
-    expect($santriA->fresh()->room_name)->toBe('Asrama Kapasitas');
+    expect($santriA->fresh()->room?->name)->toBe('Asrama Kapasitas');
     expect($santriB->fresh()->room_id)->toBe($room->id);
 
     $response = $this
@@ -312,7 +312,7 @@ test('user can release santri from room and history records empty destination', 
     $transfer = RoomTransfer::query()->first();
 
     expect($santri->room_id)->toBeNull();
-    expect($santri->room_name)->toBeNull();
+    expect($santri->fresh()->room_id)->toBeNull();
     expect(RoomTransfer::query()->count())->toBe(1);
     expect($transfer?->from_room_id)->toBe($room->id);
     expect($transfer?->from_room_name)->toBe('Asrama Release');
@@ -353,7 +353,7 @@ test('release santri does not run when santri is not assigned to selected room',
     $santri->refresh();
 
     expect($santri->room_id)->toBe($roomB->id);
-    expect($santri->room_name)->toBe('Asrama B');
+    expect($santri->room?->name)->toBe('Asrama B');
     expect(RoomTransfer::query()->count())->toBe(0);
 });
 

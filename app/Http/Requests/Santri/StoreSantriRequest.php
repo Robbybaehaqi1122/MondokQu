@@ -31,12 +31,6 @@ class StoreSantriRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('room_name')) {
-            $this->merge([
-                'room_name' => preg_replace('/\s+/', ' ', trim((string) $this->input('room_name'))),
-            ]);
-        }
-
         if ($this->has('room_id') && $this->input('room_id') === '') {
             $this->merge([
                 'room_id' => null,
@@ -79,7 +73,6 @@ class StoreSantriRequest extends FormRequest
                 'integer',
                 Rule::exists(Room::class, 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
             ],
-            'room_name' => ['required_without:room_id', 'nullable', 'string', 'max:255'],
             'guardian_user_ids' => ['sometimes', 'array', $this->guardianUsersExistRule()],
             'guardian_user_ids.*' => ['integer', 'distinct'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -129,7 +122,6 @@ class StoreSantriRequest extends FormRequest
             'entry_year.min' => 'Angkatan atau tahun masuk tidak valid.',
             'entry_year.max' => 'Angkatan atau tahun masuk tidak boleh melebihi tahun ini.',
             'room_id.exists' => 'Pilih kamar dari tenant pondok yang sama.',
-            'room_name.required_without' => 'Kamar atau asrama wajib dipilih.',
             'guardian_user_ids.array' => 'Akun wali portal harus dipilih dari daftar yang tersedia.',
             'guardian_user_ids.exists' => 'Pilih akun wali santri dari tenant pondok yang sama.',
             'guardian_user_ids.*.integer' => 'Akun wali portal tidak valid.',

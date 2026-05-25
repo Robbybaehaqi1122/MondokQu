@@ -33,7 +33,6 @@ class SantriFactory extends Factory
             'emergency_contact' => fake()->numerify('08##########'),
             'entry_date' => fake()->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
             'entry_year' => (int) fake()->year(),
-            'room_name' => 'Asrama '.fake()->randomElement(['A1', 'A2', 'B1', 'B2']),
             'notes' => fake()->optional()->sentence(),
             'status' => Santri::STATUS_ACTIVE,
             'photo_path' => null,

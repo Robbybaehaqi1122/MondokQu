@@ -78,14 +78,13 @@ class PengurusDashboardController extends Controller
      */
     protected function buildRoomStats($query): array
     {
-        $roomNameExpression = "COALESCE(NULLIF(rooms.name, ''), NULLIF(santris.room_name, ''), 'Belum diatur')";
         $roomSourceQuery = $query
             ->leftJoin('rooms', function ($join): void {
                 $join
                     ->on('santris.room_id', '=', 'rooms.id')
                     ->on('santris.tenant_id', '=', 'rooms.tenant_id');
             })
-            ->selectRaw($roomNameExpression.' as room_name');
+            ->selectRaw("COALESCE(NULLIF(rooms.name, ''), 'Belum diatur') as room_name");
 
         return DB::query()
             ->fromSub($roomSourceQuery, 'room_source')
