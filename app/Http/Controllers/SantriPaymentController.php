@@ -409,10 +409,10 @@ class SantriPaymentController extends Controller
                 ->lockForUpdate()
                 ->findOrFail($invoice->id);
 
-            $recordedTotal = (float) $lockedInvoice->payments()->sum('amount');
-            $maxAllowedAmount = max(0, (float) $lockedInvoice->amount - $recordedTotal);
+            $recordedTotal = $lockedInvoice->payments()->sum('amount');
+            $maxAllowedAmount = max(0, (float) $lockedInvoice->amount - (float) $recordedTotal);
 
-            if ((float) $validated['amount'] > $maxAllowedAmount) {
+            if (bccomp((string) $validated['amount'], (string) $maxAllowedAmount, 2) > 0) {
                 throw $this->paymentValidationException(
                     'Nominal pembayaran melebihi sisa tagihan.',
                     'recordPayment'
@@ -485,12 +485,12 @@ class SantriPaymentController extends Controller
                 'reference_number',
                 'note',
             ]);
-            $otherPaymentTotal = (float) $lockedInvoice->payments()
+            $otherPaymentTotal = $lockedInvoice->payments()
                 ->whereKeyNot($lockedPayment->id)
                 ->sum('amount');
-            $maxAllowedAmount = max(0, (float) $lockedInvoice->amount - $otherPaymentTotal);
+            $maxAllowedAmount = max(0, (float) $lockedInvoice->amount - (float) $otherPaymentTotal);
 
-            if ((float) $validated['amount'] > $maxAllowedAmount) {
+            if (bccomp((string) $validated['amount'], (string) $maxAllowedAmount, 2) > 0) {
                 throw $this->paymentValidationException(
                     'Nominal koreksi melebihi sisa tagihan setelah pembayaran lain.',
                     'updatePayment'
