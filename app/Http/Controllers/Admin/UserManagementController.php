@@ -127,7 +127,7 @@ class UserManagementController extends Controller
                 ->with('room')
                 ->orderBy('full_name')
                 ->limit(250)
-                ->get(['id', 'tenant_id', 'nis', 'full_name', 'room_id', 'room_name', 'status']);
+                ->get(['id', 'tenant_id', 'nis', 'full_name', 'room_id', 'status']);
         }
 
         $activityLogs = ActivityLog::query()

@@ -487,7 +487,7 @@ test('user with permission can create santri', function () {
     expect($santri->created_by)->toBe($admin->id);
     expect($santri->father_name)->toBe('Fulan Senior');
     expect($santri->mother_name)->toBe('Ibu Fulan');
-    expect($santri->room_name)->toBe('Asrama A1');
+    expect($santri->room?->name)->toBe('Asrama A1');
     expect($santri->room_id)->not->toBeNull();
     expect($santri->room?->name)->toBe('Asrama A1');
     expect($santri->entry_year)->toBe(2024);
@@ -539,7 +539,7 @@ test('user can create santri by selecting an existing room', function () {
 
     expect($santri)->not->toBeNull();
     expect($santri->room_id)->toBe($room->id);
-    expect($santri->room_name)->toBe('Asrama Dropdown A');
+    expect($santri->room?->name)->toBe('Asrama Dropdown A');
     expect(Room::query()->withoutTenantScope()->where('tenant_id', $admin->tenant_id)->where('name', 'Asrama Dropdown A')->count())->toBe(1);
 });
 
@@ -808,7 +808,7 @@ test('santri can not be updated with future entry date', function () {
             'emergency_contact' => $santri->emergency_contact,
             'entry_date' => now()->addDay()->format('Y-m-d'),
             'entry_year' => $santri->entry_year,
-            'room_name' => $santri->room_name,
+            'room_name' => $santri->room?->name,
             'notes' => $santri->notes,
             'status' => $santri->status,
             'editing_santri_id' => $santri->id,
@@ -836,7 +836,7 @@ test('user with permission can view santri detail', function () {
     $response->assertSee('Santri Detail');
     $response->assertSee('NIS2001');
     $response->assertSee((string) $santri->entry_year);
-    $response->assertSee($santri->room_name);
+    $response->assertSee($santri->displayRoomName());
     $response->assertSee($santri->father_name);
     $response->assertSee($santri->mother_name);
 });
@@ -948,7 +948,7 @@ test('user with permission can update santri', function () {
     expect($santri->nis)->toBe('NIS3001X');
     expect($santri->full_name)->toBe('Nama Baru');
     expect($santri->status)->toBe(Santri::STATUS_ALUMNI);
-    expect($santri->room_name)->toBe('Asrama Putri 2');
+    expect($santri->room?->name)->toBe('Asrama Putri 2');
     expect($santri->room_id)->not->toBeNull();
     expect($santri->room?->name)->toBe('Asrama Putri 2');
     expect($santri->entry_year)->toBe(2025);
@@ -1001,7 +1001,7 @@ test('user can update wali portal accounts from santri management', function () 
             'emergency_contact' => $santri->emergency_contact,
             'entry_date' => $santri->entry_date->toDateString(),
             'entry_year' => $santri->entry_year,
-            'room_name' => $santri->room_name,
+            'room_name' => $santri->room?->name,
             'notes' => $santri->notes,
             'status' => $santri->status,
             'guardian_user_ids' => [$newWali->id],
@@ -1052,7 +1052,7 @@ test('santri can not be linked to wali account from another tenant', function ()
             'emergency_contact' => $santri->emergency_contact,
             'entry_date' => $santri->entry_date->toDateString(),
             'entry_year' => $santri->entry_year,
-            'room_name' => $santri->room_name,
+            'room_name' => $santri->room?->name,
             'notes' => $santri->notes,
             'status' => $santri->status,
             'guardian_user_ids' => [$otherWali->id],

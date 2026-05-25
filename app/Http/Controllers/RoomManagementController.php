@@ -147,12 +147,6 @@ class RoomManagementController extends Controller
                 'description' => $validated['description'] ?? null,
             ]);
 
-            Santri::query()
-                ->withoutTenantScope()
-                ->where('tenant_id', $room->tenant_id)
-                ->where('room_id', $room->id)
-                ->update(['room_name' => $room->name]);
-
             $room->refresh();
 
             return [$room, $previousValues, $room->only(['name', 'capacity', 'status', 'description'])];
@@ -249,7 +243,6 @@ class RoomManagementController extends Controller
                 ->whereIn('id', $changedSantris->pluck('id'))
                 ->update([
                     'room_id' => $room->id,
-                    'room_name' => $room->name,
                 ]);
         });
 
@@ -308,7 +301,6 @@ class RoomManagementController extends Controller
 
             $santri->update([
                 'room_id' => null,
-                'room_name' => null,
             ]);
 
             return [
