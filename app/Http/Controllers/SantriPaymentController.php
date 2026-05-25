@@ -175,7 +175,8 @@ class SantriPaymentController extends Controller
             ->visibleTo($currentUser)
             ->findOrFail($validated['santri_id']);
 
-        $invoice = SantriInvoice::query()->create([
+        $invoice = DB::transaction(function () use ($santri, $validated, $currentUser): SantriInvoice {
+            return SantriInvoice::query()->create([
             'tenant_id' => $santri->tenant_id,
             'santri_id' => $santri->id,
             'invoice_number' => $this->generateInvoiceNumber($santri, $validated['period_month'] ?? null, $validated['period_year'] ?? null),
@@ -189,6 +190,7 @@ class SantriPaymentController extends Controller
             'notes' => $validated['notes'] ?? null,
             'created_by' => $currentUser?->id,
         ]);
+        });
 
         $this->activityLogger->log(
             action: 'santri_invoice_created',
@@ -640,6 +642,7 @@ class SantriPaymentController extends Controller
         $nextNumber = SantriInvoice::query()
             ->where('tenant_id', $santri->tenant_id)
             ->where('invoice_number', 'like', $prefix.'-%')
+            ->lockForUpdate()
             ->count() + 1;
 
         return $prefix.'-'.Str::padLeft((string) $nextNumber, 4, '0');

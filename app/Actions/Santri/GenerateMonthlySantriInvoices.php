@@ -108,6 +108,7 @@ class GenerateMonthlySantriInvoices
             ->withoutTenantScope()
             ->where('tenant_id', $tenantId)
             ->where('invoice_number', 'like', $prefix.'-%')
+            ->lockForUpdate()
             ->count() + 1;
 
         return $prefix.'-'.Str::padLeft((string) $nextNumber, 4, '0');
