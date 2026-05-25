@@ -155,8 +155,8 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="fw-medium">{{ $managedSantri->guardian_name ?: '-' }}</div>
-                                        <div class="text-secondary small mt-1">{{ $managedSantri->guardian_phone_number ?: 'Belum diisi' }}</div>
+                                        <div class="fw-medium">{{ $managedSantri->displayGuardianName() }}</div>
+                                        <div class="text-secondary small mt-1">{{ $managedSantri->displayGuardianPhone('Belum diisi') }}</div>
                                         @if ($managedSantri->guardians->isNotEmpty())
                                             <div class="mt-2 d-flex flex-wrap gap-1">
                                                 @foreach ($managedSantri->guardians as $guardianUser)

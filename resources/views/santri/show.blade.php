@@ -81,11 +81,11 @@
                                         </div>
                                         <div class="user-detail-meta-card">
                                             <div class="text-secondary small text-uppercase fw-bold">Wali / Penanggung Jawab</div>
-                                            <div class="fw-semibold mt-2">{{ $santri->guardian_name ?: '-' }}</div>
+                                            <div class="fw-semibold mt-2">{{ $santri->displayGuardianName() }}</div>
                                         </div>
                                         <div class="user-detail-meta-card">
                                             <div class="text-secondary small text-uppercase fw-bold">No. HP Wali / Penanggung Jawab</div>
-                                            <div class="fw-semibold mt-2">{{ $santri->guardian_phone_number ?: '-' }}</div>
+                                            <div class="fw-semibold mt-2">{{ $santri->displayGuardianPhone() }}</div>
                                         </div>
                                         <div class="user-detail-meta-card">
                                             <div class="text-secondary small text-uppercase fw-bold">Akun Wali Portal</div>
@@ -186,7 +186,7 @@
                 <div class="card-body user-detail-info-list">
                     <div class="user-detail-info-row">
                         <span>Wali / Penanggung Jawab</span>
-                        <strong class="user-detail-info-value">{{ $santri->guardian_name ?: '-' }}</strong>
+                        <strong class="user-detail-info-value">{{ $santri->displayGuardianName() }}</strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Nama Ayah</span>
@@ -198,7 +198,7 @@
                     </div>
                     <div class="user-detail-info-row">
                         <span>No. HP Wali / Penanggung Jawab</span>
-                        <strong class="user-detail-info-value">{{ $santri->guardian_phone_number ?: '-' }}</strong>
+                        <strong class="user-detail-info-value">{{ $santri->displayGuardianPhone() }}</strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Akun Wali Portal</span>
