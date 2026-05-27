@@ -102,7 +102,7 @@
                 <label for="avatar" class="form-label">Upload Avatar</label>
                 @if ($user->avatarUrl())
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <img src="{{ $user->avatarUrl() }}" alt="Avatar {{ $user->name }}" class="user-inline-avatar">
+                        <img src="{{ $user->avatarUrl() }}" alt="Avatar {{ $user->name }}" class="user-inline-avatar" loading="lazy">
                         <div class="text-secondary small">Avatar saat ini</div>
                     </div>
                 @endif

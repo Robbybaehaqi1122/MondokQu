@@ -412,7 +412,7 @@
                                                                     <label for="edit_avatar_{{ $managedUser->id }}" class="form-label">Upload Avatar</label>
                                                                     @if ($managedUser->avatarUrl())
                                                                         <div class="d-flex align-items-center gap-3 mb-3">
-                                                                            <img src="{{ $managedUser->avatarUrl() }}" alt="Avatar {{ $managedUser->name }}" class="user-inline-avatar">
+                                                                            <img src="{{ $managedUser->avatarUrl() }}" alt="Avatar {{ $managedUser->name }}" class="user-inline-avatar" loading="lazy">
                                                                             <div class="text-secondary small">Avatar saat ini</div>
                                                                         </div>
                                                                     @endif

@@ -26,7 +26,7 @@
 
     <a href="{{ route('dashboard') }}" class="mobile-topbar-brand text-decoration-none text-reset">
         <span class="mobile-topbar-brand-mark">
-            <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Logo Mondok Qu" class="sidebar-brand-image">
+            <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Logo Mondok Qu" class="sidebar-brand-image" loading="lazy">
         </span>
         <span class="mobile-topbar-brand-copy">
             <span class="mobile-topbar-brand-title">Mondok Qu</span>
@@ -63,7 +63,7 @@
         <h1 class="navbar-brand navbar-brand-autodark w-100 mobile-sidebar-brand-wrap">
             <a href="{{ route('dashboard') }}" class="sidebar-brand-card text-decoration-none text-reset">
                 <span class="sidebar-brand-mark">
-                    <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Logo Mondok Qu" class="sidebar-brand-image">
+                    <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Logo Mondok Qu" class="sidebar-brand-image" loading="lazy">
                 </span>
                 <span class="sidebar-brand-copy">
                     <span class="sidebar-brand-title">Mondok Qu</span>

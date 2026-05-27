@@ -22,7 +22,7 @@
                 <div class="text-center mb-4">
                     <div class="auth-branding text-white">
                         <span class="auth-branding-mark">
-                            <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Logo Mondok Qu" class="auth-brand-image">
+                            <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Logo Mondok Qu" class="auth-brand-image" loading="lazy">
                         </span>
                         <span class="auth-branding-copy">
                             <span class="auth-brand">Mondok Qu</span>
