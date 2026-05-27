@@ -7,6 +7,17 @@ window.Alpine = Alpine;
 Alpine.start();
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-error-fallback]').forEach((img) => {
+        img.addEventListener('error', () => {
+            img.classList.add('d-none');
+            const fallback = img.nextElementSibling;
+            if (fallback) {
+                fallback.classList.remove('d-none');
+            }
+        });
+    });
+
+
     const body = document.body;
     const toggle = document.getElementById('sidebar-toggle');
     const mobileToggle = document.getElementById('mobile-sidebar-toggle');
