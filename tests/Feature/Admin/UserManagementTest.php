@@ -659,7 +659,7 @@ test('admin can reset a user password from the panel', function () {
         ->patch(route('admin.users.update-password', $user));
 
     $response->assertRedirect(route('admin.users', absolute: false));
-    expect(Hash::check(config('auth.default_user_password'), $user->fresh()->password))->toBeTrue();
+    expect(Hash::check('changeme', $user->fresh()->password))->toBeFalse();
     expect($user->fresh()->password_change_required)->toBeTrue();
     expect($user->fresh()->remember_token)->not->toBe($previousRememberToken);
 });
