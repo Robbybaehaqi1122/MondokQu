@@ -321,7 +321,7 @@
         <main class="receipt-page">
             <header class="receipt-header">
                 <div class="brand">
-                    <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Mondok Qu">
+                    <img src="{{ asset('images/mondok-qu-logo.png') }}" alt="Mondok Qu" loading="lazy">
                     <div>
                         <div class="brand-title">Mondok Qu</div>
                         <div class="brand-meta">{{ $invoice->tenant?->name ?? 'Portal Wali Santri' }}</div>

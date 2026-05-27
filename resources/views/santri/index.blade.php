@@ -130,7 +130,7 @@
                                     <td>
                                         <div class="d-flex align-items-center gap-3">
                                             @if ($managedSantri->photoUrl())
-                                                <img src="{{ $managedSantri->photoUrl() }}" alt="Foto {{ $managedSantri->full_name }}" class="user-inline-avatar">
+                                                <img src="{{ $managedSantri->photoUrl() }}" alt="Foto {{ $managedSantri->full_name }}" class="user-inline-avatar" loading="lazy">
                                             @else
                                                 <span class="user-detail-avatar" style="width: 3rem; height: 3rem; border-radius: 999px; font-size: 1rem;">
                                                     {{ strtoupper(substr($managedSantri->full_name, 0, 1)) }}

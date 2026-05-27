@@ -335,7 +335,7 @@
         <label for="photo_{{ $santriFormId }}" class="form-label">Foto</label>
         @if ($santriItem?->photoUrl())
             <div class="d-flex align-items-center gap-3 mb-3">
-                <img src="{{ $santriItem->photoUrl() }}" alt="Foto {{ $santriItem->full_name }}" class="user-inline-avatar">
+                <img src="{{ $santriItem->photoUrl() }}" alt="Foto {{ $santriItem->full_name }}" class="user-inline-avatar" loading="lazy">
                 <div class="text-secondary small">Foto saat ini</div>
             </div>
 
