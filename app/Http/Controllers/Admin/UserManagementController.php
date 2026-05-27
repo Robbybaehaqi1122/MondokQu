@@ -620,10 +620,10 @@ class UserManagementController extends Controller
                 ->with('error', $authorization->message());
         }
 
-        $defaultPassword = config('auth.default_user_password');
+        $password = Str::password(length: 16);
 
         $user->forceFill([
-            'password' => $defaultPassword,
+            'password' => $password,
             'password_change_required' => true,
             'remember_token' => Str::random(60),
         ])->save();
@@ -632,7 +632,7 @@ class UserManagementController extends Controller
             action: 'user_password_reset',
             actor: $request->user(),
             target: $user,
-            description: 'Password user direset ke password default dan wajib diganti saat login berikutnya.',
+            description: 'Password user direset dan wajib diganti saat login berikutnya.',
             properties: [
                 'password_change_required' => true,
             ],
@@ -642,7 +642,7 @@ class UserManagementController extends Controller
 
         return redirect()
             ->route('admin.users')
-            ->with('success', 'Password user berhasil direset ke default. User wajib menggantinya saat login berikutnya.');
+            ->with('success', 'Password user berhasil direset. Password baru: <code>'.$password.'</code>. User wajib menggantinya saat login berikutnya.');
     }
 
     /**
