@@ -41,8 +41,10 @@ class ProfileController extends Controller
             : null;
         $avatarPath = $newAvatarPath ?? $previousAvatarPath;
 
+        $emailChanged = false;
+
         try {
-            DB::transaction(function () use ($user, $validated, $avatarPath): void {
+            DB::transaction(function () use ($user, $validated, $avatarPath, &$emailChanged): void {
                 $user->fill([
                     'name' => $validated['name'],
                     'username' => $validated['username'],
@@ -56,11 +58,17 @@ class ProfileController extends Controller
                 }
 
                 $user->save();
+
+                $emailChanged = $user->wasChanged('email');
             });
         } catch (Throwable $exception) {
             $this->userAvatarUploader->deleteIfManaged($newAvatarPath);
 
             throw $exception;
+        }
+
+        if ($emailChanged) {
+            $user->sendEmailVerificationNotification();
         }
 
         if ($previousAvatarPath && $previousAvatarPath !== $avatarPath) {
