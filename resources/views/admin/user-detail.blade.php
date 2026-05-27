@@ -62,7 +62,7 @@
                                             alt="Avatar {{ $userDetail->name }}"
                                             loading="lazy"
                                             class="user-detail-avatar-image"
-                                            onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');"
+                                            data-error-fallback="true"
                                         >
                                         <div class="user-detail-avatar d-none">
                                             {{ strtoupper(substr($userDetail->name, 0, 1)) }}

@@ -31,7 +31,7 @@
                                             alt="Foto {{ $santri->full_name }}"
                                             loading="lazy"
                                             class="user-detail-avatar-image"
-                                            onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');"
+                                            data-error-fallback="true"
                                         >
                                         <div class="user-detail-avatar d-none">
                                             {{ strtoupper(substr($santri->full_name, 0, 1)) }}
