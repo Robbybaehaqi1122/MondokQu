@@ -1,8 +1,8 @@
 @php
     $displayStatus = $invoice->isOverdue() ? 'overdue' : $invoice->status;
     $statusLabel = $invoice->statusLabel();
-    $invoiceAmount = (float) $invoice->amount;
-    $paidAmount = (float) $invoice->paid_amount;
+    $invoiceAmount = $invoice->amount;
+    $paidAmount = $invoice->paid_amount;
     $outstandingAmount = $invoice->outstandingAmount();
     $periodLabel = $invoice->period_month && $invoice->period_year
         ? str_pad((string) $invoice->period_month, 2, '0', STR_PAD_LEFT).'/'.$invoice->period_year
@@ -371,15 +371,15 @@
             <section class="grid summary">
                 <div class="box">
                     <span class="label">Total Tagihan</span>
-                    <span class="value">Rp {{ number_format($invoiceAmount, 0, ',', '.') }}</span>
+                    <span class="value">Rp {{ number_format($invoiceAmount / 100, 0, ',', '.') }}</span>
                 </div>
                 <div class="box">
                     <span class="label">Sudah Dibayar</span>
-                    <span class="value">Rp {{ number_format($paidAmount, 0, ',', '.') }}</span>
+                    <span class="value">Rp {{ number_format($paidAmount / 100, 0, ',', '.') }}</span>
                 </div>
                 <div class="box">
                     <span class="label">Sisa Tagihan</span>
-                    <span class="value">Rp {{ number_format($outstandingAmount, 0, ',', '.') }}</span>
+                    <span class="value">Rp {{ number_format($outstandingAmount / 100, 0, ',', '.') }}</span>
                 </div>
             </section>
 
@@ -405,7 +405,7 @@
                                 </td>
                                 <td>{{ $payment->payment_method ? str($payment->payment_method)->headline() : '-' }}</td>
                                 <td>{{ $payment->reference_number ?: '-' }}</td>
-                                <td>Rp {{ number_format((float) $payment->amount, 0, ',', '.') }}</td>
+                                <td>Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</td>
                             </tr>
                         @empty
                             <tr>

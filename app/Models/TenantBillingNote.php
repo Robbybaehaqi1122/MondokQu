@@ -37,7 +37,7 @@ class TenantBillingNote extends Model
             'paid_at' => 'datetime',
             'period_starts_at' => 'date',
             'period_ends_at' => 'date',
-            'amount' => 'decimal:2',
+            'amount' => 'integer',
         ];
     }
 

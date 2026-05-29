@@ -11,27 +11,27 @@
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Total Tagihan</div>
                 <div class="fs-2 fw-bold">{{ number_format($summary['total_invoices']) }}</div>
-                <div class="text-secondary small">Rp {{ number_format((float) $summary['total_amount'], 0, ',', '.') }}</div>
+                <div class="text-secondary small">Rp {{ number_format($summary['total_amount'] / 100, 0, ',', '.') }}</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Terbayar</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format((float) $summary['paid_amount'], 0, ',', '.') }}</div>
+                <div class="fs-2 fw-bold">Rp {{ number_format($summary['paid_amount'] / 100, 0, ',', '.') }}</div>
                 <div class="text-secondary small">{{ number_format($summary['paid_invoices']) }} tagihan lunas</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Sisa Tagihan</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format((float) $summary['outstanding_amount'], 0, ',', '.') }}</div>
+                <div class="fs-2 fw-bold">Rp {{ number_format($summary['outstanding_amount'] / 100, 0, ',', '.') }}</div>
                 <div class="text-secondary small">{{ number_format($summary['partial_invoices'] + $summary['pending_invoices']) }} belum lunas</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Masuk Bulan Ini</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format((float) $paidThisMonth, 0, ',', '.') }}</div>
+                <div class="fs-2 fw-bold">Rp {{ number_format($paidThisMonth / 100, 0, ',', '.') }}</div>
                 <div class="text-secondary small">{{ number_format($summary['overdue_invoices']) }} tunggakan aktif</div>
             </div>
         </div>
@@ -67,7 +67,7 @@
                                         <div class="text-secondary small">{{ optional($invoice->due_date)->translatedFormat('d M Y') }}</div>
                                     </td>
                                     <td>{{ $invoice->santri?->full_name ?? '-' }}</td>
-                                    <td>Rp {{ number_format((float) $invoice->amount, 0, ',', '.') }}</td>
+                                    <td>Rp {{ number_format($invoice->amount / 100, 0, ',', '.') }}</td>
                                     <td>{{ $invoice->statusLabel() }}</td>
                                 </tr>
                             @empty
@@ -95,7 +95,7 @@
                                     <div class="text-secondary small">{{ $payment->invoice?->invoice_number ?? '-' }} - {{ str($payment->payment_method)->headline() }}</div>
                                 </div>
                                 <div class="text-end">
-                                    <div class="fw-semibold">Rp {{ number_format((float) $payment->amount, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">{{ optional($payment->paid_at)->translatedFormat('d M Y') }}</div>
                                 </div>
                             </div>

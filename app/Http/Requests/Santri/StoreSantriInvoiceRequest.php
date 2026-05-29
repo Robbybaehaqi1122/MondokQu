@@ -45,9 +45,16 @@ class StoreSantriInvoiceRequest extends FormRequest
             'period_month' => ['nullable', 'integer', 'min:1', 'max:12'],
             'period_year' => ['nullable', 'integer', 'digits:4', 'min:'.$periodYearMin, 'max:'.$periodYearMax],
             'due_date' => ['required', 'date'],
-            'amount' => ['required', 'numeric', 'min:1', 'max:999999999.99'],
+            'amount' => ['required', 'numeric', 'min:100', 'max:99999999999'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount')) {
+            $this->merge(['amount' => (int) ((float) $this->input('amount') * 100)]);
+        }
     }
 
     /**

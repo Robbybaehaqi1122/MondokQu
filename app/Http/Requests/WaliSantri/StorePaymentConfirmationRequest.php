@@ -33,7 +33,7 @@ class StorePaymentConfirmationRequest extends FormRequest
     {
         return [
             'confirmation_invoice_id' => ['required', 'integer'],
-            'amount' => ['required', 'numeric', 'min:1'],
+            'amount' => ['required', 'numeric', 'min:100'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
             'payment_method' => ['required', 'string', Rule::in(SantriPayment::paymentMethods())],
             'reference_number' => ['nullable', 'string', 'max:100'],
@@ -45,6 +45,13 @@ class StorePaymentConfirmationRequest extends FormRequest
                     ->max(4096),
             ],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount')) {
+            $this->merge(['amount' => (int) ((float) $this->input('amount') * 100)]);
+        }
     }
 
     /**

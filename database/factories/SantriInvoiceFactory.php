@@ -30,7 +30,7 @@ class SantriInvoiceFactory extends Factory
             'period_month' => (int) now()->month,
             'period_year' => (int) now()->year,
             'due_date' => now()->addDays(10)->toDateString(),
-            'amount' => 500000,
+            'amount' => 50000000,
             'paid_amount' => 0,
             'status' => SantriInvoice::STATUS_PENDING,
             'notes' => null,
@@ -68,7 +68,7 @@ class SantriInvoiceFactory extends Factory
     public function paid(): static
     {
         return $this->state(fn (array $attributes) => [
-            'paid_amount' => $attributes['amount'] ?? 500000,
+            'paid_amount' => $attributes['amount'] ?? 50000000,
             'status' => SantriInvoice::STATUS_PAID,
         ]);
     }

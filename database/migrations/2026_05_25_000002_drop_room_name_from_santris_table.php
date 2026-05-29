@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('santris', function (Blueprint $table): void {
+            $table->dropIndex(['room_name', 'status']);
             $table->dropColumn('room_name');
         });
     }
@@ -17,6 +18,9 @@ return new class extends Migration
     {
         Schema::table('santris', function (Blueprint $table): void {
             $table->string('room_name')->nullable()->after('entry_year');
+        });
+
+        Schema::table('santris', function (Blueprint $table): void {
             $table->index(['room_name', 'status']);
         });
     }

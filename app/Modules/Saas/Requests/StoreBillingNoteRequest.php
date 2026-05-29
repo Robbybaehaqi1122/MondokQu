@@ -44,6 +44,13 @@ class StoreBillingNoteRequest extends FormRequest
         ];
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount')) {
+            $this->merge(['amount' => (int) ((float) $this->input('amount') * 100)]);
+        }
+    }
+
     /**
      * Configure the validator instance.
      */

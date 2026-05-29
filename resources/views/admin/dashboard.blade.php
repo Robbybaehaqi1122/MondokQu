@@ -127,7 +127,7 @@
                                 </span>
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Pemasukan Bulan Ini</div>
-                                    <div class="h2 mb-1">Rp {{ number_format((float) $financeStats['paid_this_month'], 0, ',', '.') }}</div>
+                                    <div class="h2 mb-1">Rp {{ number_format($financeStats['paid_this_month'] / 100, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">Total pembayaran yang sudah tercatat.</div>
                                 </div>
                             </div>
@@ -144,7 +144,7 @@
                                 </span>
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Sisa Tagihan</div>
-                                    <div class="h2 mb-1">Rp {{ number_format((float) $financeStats['outstanding_amount'], 0, ',', '.') }}</div>
+                                    <div class="h2 mb-1">Rp {{ number_format($financeStats['outstanding_amount'] / 100, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">Nominal yang belum lunas.</div>
                                 </div>
                             </div>
@@ -202,7 +202,7 @@
                             <div>
                                 <div class="d-flex align-items-center justify-content-between mb-2 gap-3">
                                     <div class="fw-semibold">{{ $month['label'] }}</div>
-                                    <div class="text-secondary">Rp {{ number_format($month['total'], 0, ',', '.') }}</div>
+                                    <div class="text-secondary">Rp {{ number_format($month['total'] / 100, 0, ',', '.') }}</div>
                                 </div>
                                 <div class="progress progress-sm">
                                     <div
@@ -274,7 +274,7 @@
                                     <td class="fw-semibold">{{ $invoice['invoice_number'] }}</td>
                                     <td>{{ $invoice['santri_name'] }}</td>
                                     <td>{{ $invoice['due_date'] }}</td>
-                                    <td class="text-end fw-bold">Rp {{ number_format($invoice['outstanding_amount'], 0, ',', '.') }}</td>
+                                    <td class="text-end fw-bold">Rp {{ number_format($invoice['outstanding_amount'] / 100, 0, ',', '.') }}</td>
                                 </tr>
                             @empty
                                 <tr>

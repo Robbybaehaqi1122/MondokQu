@@ -25,7 +25,7 @@ class FinancialReportingService
             'overdue_invoices' => (clone $query)->overdue()->count(),
             'total_amount' => $totalAmount,
             'paid_amount' => $paidAmount,
-            'outstanding_amount' => max(0, (float) $totalAmount - (float) $paidAmount),
+            'outstanding_amount' => max(0, (int) $totalAmount - (int) $paidAmount),
             'overdue_amount' => (clone $query)
                 ->overdue()
                 ->selectRaw('COALESCE(SUM(amount - paid_amount), 0) as total')
@@ -36,9 +36,9 @@ class FinancialReportingService
     /**
      * Sum payments within a date range for the given tenant-scoped query.
      */
-    public function paidBetween(Builder $query, Carbon $dateFrom, Carbon $dateTo): float
+    public function paidBetween(Builder $query, Carbon $dateFrom, Carbon $dateTo): int
     {
-        return (float) (clone $query)
+        return (int) (clone $query)
             ->paidBetween($dateFrom, $dateTo)
             ->sum('amount');
     }
@@ -49,9 +49,9 @@ class FinancialReportingService
     public function paymentSummary(Builder $query): array
     {
         return [
-            'received' => (float) (clone $query)->sum('amount'),
+            'received' => (int) (clone $query)->sum('amount'),
             'transactions' => (clone $query)->count(),
-            'average_payment' => (float) ((clone $query)->avg('amount') ?? 0),
+            'average_payment' => (int) ((clone $query)->avg('amount') ?? 0),
         ];
     }
 

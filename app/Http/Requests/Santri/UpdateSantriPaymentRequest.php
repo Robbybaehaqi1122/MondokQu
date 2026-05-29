@@ -32,7 +32,7 @@ class UpdateSantriPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric', 'min:1', 'max:999999999.99'],
+            'amount' => ['required', 'numeric', 'min:100', 'max:99999999999'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
             'payment_method' => ['required', 'string', Rule::in(SantriPayment::paymentMethods())],
             'reference_number' => ['nullable', 'string', 'max:100'],
@@ -43,6 +43,13 @@ class UpdateSantriPaymentRequest extends FormRequest
     /**
      * Configure the validator instance.
      */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount')) {
+            $this->merge(['amount' => (int) ((float) $this->input('amount') * 100)]);
+        }
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
@@ -66,12 +73,12 @@ class UpdateSantriPaymentRequest extends FormRequest
                 return;
             }
 
-            $otherPaymentTotal = (float) $invoice->payments()
+            $otherPaymentTotal = $invoice->payments()
                 ->whereKeyNot($payment->id)
                 ->sum('amount');
-            $maxAllowedAmount = max(0, (float) $invoice->amount - $otherPaymentTotal);
+            $maxAllowedAmount = max(0, $invoice->amount - $otherPaymentTotal);
 
-            if ((float) $this->input('amount', 0) > $maxAllowedAmount) {
+            if ((int) $this->input('amount', 0) > $maxAllowedAmount) {
                 $validator->errors()->add('amount', 'Nominal koreksi melebihi sisa tagihan setelah pembayaran lain.');
             }
         });

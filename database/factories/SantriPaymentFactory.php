@@ -25,7 +25,7 @@ class SantriPaymentFactory extends Factory
             'santri_invoice_id' => $invoice->id,
             'santri_id' => $invoice->santri_id,
             'paid_at' => now(),
-            'amount' => 250000,
+            'amount' => 25000000,
             'payment_method' => fake()->randomElement(SantriPayment::paymentMethods()),
             'reference_number' => fake()->optional()->numerify('REF#######'),
             'note' => fake()->optional()->sentence(),

@@ -206,7 +206,9 @@ test('superadmin can delete activity logs by role even without explicit manage p
     $superadminRole->revokePermissionTo('manage activity logs');
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-    $superadmin = User::factory()->create();
+    $superadmin = User::factory()->create([
+        'password' => bcrypt('secret'),
+    ]);
     $superadmin->assignRole('Superadmin');
 
     ActivityLog::query()->create([
@@ -217,6 +219,13 @@ test('superadmin can delete activity logs by role even without explicit manage p
         'target_name' => $superadmin->name,
         'ip_address' => '127.0.0.1',
     ]);
+
+    $this
+        ->actingAs($superadmin)
+        ->post(route('password.confirm'), [
+            'password' => 'secret',
+        ])
+        ->assertRedirect();
 
     $response = $this
         ->actingAs($superadmin)

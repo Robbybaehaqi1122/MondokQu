@@ -9,8 +9,8 @@
 
         $displayStatus = $invoice->isOverdue() ? 'overdue' : $invoice->status;
         $outstandingAmount = $invoice->outstandingAmount();
-        $invoiceAmount = (float) $invoice->amount;
-        $paidAmount = (float) $invoice->paid_amount;
+        $invoiceAmount = $invoice->amount;
+        $paidAmount = $invoice->paid_amount;
         $paymentProgress = $invoiceAmount > 0 ? min(100, round(($paidAmount / $invoiceAmount) * 100)) : 0;
         $periodLabel = $invoice->period_month && $invoice->period_year
             ? str_pad((string) $invoice->period_month, 2, '0', STR_PAD_LEFT).'/'.$invoice->period_year
@@ -90,13 +90,13 @@
                         <div class="col-sm-6 col-lg-4">
                             <div class="wali-mobile-field h-100">
                                 <span>Nominal</span>
-                                <strong>Rp {{ number_format($invoiceAmount, 0, ',', '.') }}</strong>
+                                <strong>Rp {{ number_format($invoiceAmount / 100, 0, ',', '.') }}</strong>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-4">
                             <div class="wali-mobile-field h-100">
                                 <span>Sisa</span>
-                                <strong>Rp {{ number_format($outstandingAmount, 0, ',', '.') }}</strong>
+                                <strong>Rp {{ number_format($outstandingAmount / 100, 0, ',', '.') }}</strong>
                             </div>
                         </div>
                     </div>
@@ -104,7 +104,7 @@
                     <div class="mt-4">
                         <div class="d-flex justify-content-between gap-3 mb-2">
                             <div class="text-secondary small">Terbayar</div>
-                            <div class="fw-semibold">Rp {{ number_format($paidAmount, 0, ',', '.') }}</div>
+                            <div class="fw-semibold">Rp {{ number_format($paidAmount / 100, 0, ',', '.') }}</div>
                         </div>
                         <div class="progress progress-sm">
                             <div class="progress-bar bg-primary" style="width: {{ $paymentProgress }}%" role="progressbar" aria-valuenow="{{ $paymentProgress }}" aria-valuemin="0" aria-valuemax="100"></div>
@@ -129,15 +129,15 @@
                 <div class="card-body user-detail-info-list">
                     <div class="user-detail-info-row">
                         <span>Total Tagihan</span>
-                        <strong>Rp {{ number_format($invoiceAmount, 0, ',', '.') }}</strong>
+                        <strong>Rp {{ number_format($invoiceAmount / 100, 0, ',', '.') }}</strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Sudah Dibayar</span>
-                        <strong>Rp {{ number_format($paidAmount, 0, ',', '.') }}</strong>
+                        <strong>Rp {{ number_format($paidAmount / 100, 0, ',', '.') }}</strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Sisa Tagihan</span>
-                        <strong>Rp {{ number_format($outstandingAmount, 0, ',', '.') }}</strong>
+                        <strong>Rp {{ number_format($outstandingAmount / 100, 0, ',', '.') }}</strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Transaksi</span>
@@ -168,7 +168,7 @@
                             </span>
                             <div class="flex-fill min-width-0">
                                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-1">
-                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format((float) $confirmation->amount, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format($confirmation->amount / 100, 0, ',', '.') }}</div>
                                     <span class="badge {{ $confirmationBadgeClasses[$confirmation->status] ?? 'bg-secondary-lt text-secondary' }}">
                                         {{ $confirmation->statusLabel() }}
                                     </span>
@@ -204,7 +204,7 @@
                             </span>
                             <div class="flex-fill min-width-0">
                                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-1">
-                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format((float) $payment->amount, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">{{ $payment->paid_at?->translatedFormat('d M Y H:i') }}</div>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 mt-2">
@@ -259,7 +259,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="proof_amount_{{ $invoice->id }}" class="form-label">Nominal Transfer</label>
-                                    <input id="proof_amount_{{ $invoice->id }}" name="amount" type="number" min="1" max="{{ (int) ceil($outstandingAmount) }}" step="1" class="form-control @if($errors->paymentConfirmation->has('amount')) is-invalid @endif" value="{{ old('amount', (int) ceil($outstandingAmount)) }}" required>
+                                    <input id="proof_amount_{{ $invoice->id }}" name="amount" type="number" min="1" max="{{ $outstandingAmount / 100 }}" step="1" class="form-control @if($errors->paymentConfirmation->has('amount')) is-invalid @endif" value="{{ old('amount', $outstandingAmount / 100) }}" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="proof_paid_at_{{ $invoice->id }}" class="form-label">Tanggal Transfer</label>

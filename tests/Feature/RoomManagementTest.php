@@ -107,7 +107,6 @@ test('room rename updates linked santri mirror inside the room update flow', fun
     $santri = Santri::factory()->forTenant($admin->tenant)->create([
         'full_name' => 'Santri Rename Kamar',
         'room_id' => $room->id,
-        'room_name' => 'Asrama Lama',
         'status' => Santri::STATUS_ACTIVE,
     ]);
 
@@ -215,7 +214,6 @@ test('room transfer history is recorded and scoped to current tenant', function 
         'full_name' => 'Santri Mutasi',
         'status' => Santri::STATUS_ACTIVE,
         'room_id' => null,
-        'room_name' => null,
     ]);
 
     $this
@@ -300,7 +298,6 @@ test('user can release santri from room and history records empty destination', 
         'full_name' => 'Santri Dikeluarkan',
         'status' => Santri::STATUS_ACTIVE,
         'room_id' => $room->id,
-        'room_name' => $room->name,
     ]);
 
     $this
@@ -342,7 +339,6 @@ test('release santri does not run when santri is not assigned to selected room',
     $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
         'status' => Santri::STATUS_ACTIVE,
         'room_id' => $roomB->id,
-        'room_name' => $roomB->name,
     ]);
 
     $this
@@ -365,7 +361,6 @@ test('room with assigned santri can not be deleted', function () {
     ]);
     Santri::factory()->forTenant($admin->tenant)->create([
         'room_id' => $room->id,
-        'room_name' => $room->name,
     ]);
 
     $this

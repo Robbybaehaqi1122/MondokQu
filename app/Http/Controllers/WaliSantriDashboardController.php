@@ -68,7 +68,7 @@ class WaliSantriDashboardController extends Controller
                     'santri' => $santri,
                     'relationship' => $santri->pivot?->relationship ?: 'Wali',
                     'outstanding_invoices' => (int) ($invoiceStats?->outstanding_invoices ?? 0),
-                    'outstanding_amount' => (float) ($invoiceStats?->outstanding_amount ?? 0),
+                    'outstanding_amount' => (int) ($invoiceStats?->outstanding_amount ?? 0),
                     'last_payment' => $lastPayment,
                 ];
             }),
@@ -205,14 +205,15 @@ class WaliSantriDashboardController extends Controller
     ): RedirectResponse {
         $invoice = $this->resolveLinkedInvoice($request, $invoice);
 
+        $validated = $request->validated();
+
         if ($invoice->status === SantriInvoice::STATUS_PAID || $invoice->outstandingAmount() <= 0) {
             throw ValidationException::withMessages([
                 'amount' => 'Tagihan ini sudah lunas dan tidak memerlukan bukti bayar baru.',
             ])->errorBag('paymentConfirmation');
         }
 
-        $validated = $request->validated();
-        $amount = (float) $validated['amount'];
+        $amount = (int) $validated['amount'];
 
         if ($amount > $invoice->outstandingAmount()) {
             throw ValidationException::withMessages([
@@ -309,9 +310,9 @@ class WaliSantriDashboardController extends Controller
         return [
             'children_count' => $childrenCount,
             'outstanding_invoices' => (clone $outstandingQuery)->count(),
-            'outstanding_amount' => (clone $outstandingQuery)
+                    'outstanding_amount' => (int) ((clone $outstandingQuery)
                 ->selectRaw('COALESCE(SUM(amount - paid_amount), 0) as total')
-                ->value('total') ?? 0,
+                ->value('total') ?? 0),
             'overdue_invoices' => (clone $outstandingQuery)
                 ->whereDate('due_date', '<', now()->toDateString())
                 ->count(),

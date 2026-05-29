@@ -37,28 +37,28 @@
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Pembayaran Masuk</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format((float) $reportSummary['received'], 0, ',', '.') }}</div>
+                <div class="fs-2 fw-bold">Rp {{ number_format($reportSummary['received'] / 100, 0, ',', '.') }}</div>
                 <div class="text-secondary small">{{ number_format($reportSummary['transactions']) }} transaksi</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Rata-rata Bayar</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format((float) $reportSummary['average_payment'], 0, ',', '.') }}</div>
+                <div class="fs-2 fw-bold">Rp {{ number_format($reportSummary['average_payment'] / 100, 0, ',', '.') }}</div>
                 <div class="text-secondary small">Dalam periode filter</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Sisa Tagihan</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format((float) $summary['outstanding_amount'], 0, ',', '.') }}</div>
+                <div class="fs-2 fw-bold">Rp {{ number_format($summary['outstanding_amount'] / 100, 0, ',', '.') }}</div>
                 <div class="text-secondary small">{{ number_format($summary['pending_invoices'] + $summary['partial_invoices']) }} belum lunas</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Tunggakan</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format((float) $summary['overdue_amount'], 0, ',', '.') }}</div>
+                <div class="fs-2 fw-bold">Rp {{ number_format($summary['overdue_amount'] / 100, 0, ',', '.') }}</div>
                 <div class="text-secondary small">{{ number_format($summary['overdue_invoices']) }} tagihan lewat tempo</div>
             </div>
         </div>
@@ -78,7 +78,7 @@
                                     <div class="fw-semibold">{{ str($methodTotal->payment_method)->headline() }}</div>
                                     <div class="text-secondary small">{{ number_format($methodTotal->count) }} transaksi</div>
                                 </div>
-                                <div class="fw-semibold text-end">Rp {{ number_format((float) $methodTotal->total, 0, ',', '.') }}</div>
+                                <div class="fw-semibold text-end">Rp {{ number_format($methodTotal->total / 100, 0, ',', '.') }}</div>
                             </div>
                         </div>
                     @empty
@@ -118,7 +118,7 @@
                                     </td>
                                     <td>{{ $payment->invoice?->invoice_number ?? '-' }}</td>
                                     <td>{{ str($payment->payment_method)->headline() }}</td>
-                                    <td>Rp {{ number_format((float) $payment->amount, 0, ',', '.') }}</td>
+                                    <td>Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</td>
                                     <td>{{ $payment->recorder?->name ?? 'System' }}</td>
                                 </tr>
                             @empty

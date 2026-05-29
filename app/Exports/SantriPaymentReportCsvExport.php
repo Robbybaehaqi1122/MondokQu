@@ -66,7 +66,7 @@ class SantriPaymentReportCsvExport
                         $payment->santri?->nis,
                         Str::headline($payment->payment_method),
                         $payment->reference_number,
-                        number_format((float) $payment->amount, 2, '.', ''),
+                        number_format($payment->amount / 100, 2, '.', ''),
                         $payment->recorder?->name ?? 'System',
                         $payment->note,
                     ]);

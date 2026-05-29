@@ -38,7 +38,7 @@ class GenerateMonthlySantriInvoicesCommand extends Command
         $month = (int) ($this->option('month') ?: now()->month);
         $year = (int) ($this->option('year') ?: now()->year);
         $dueDate = (string) ($this->option('due-date') ?: now()->endOfMonth()->toDateString());
-        $amount = (float) $this->option('amount');
+        $amount = (int) ((float) $this->option('amount') * 100);
         $title = trim((string) $this->option('title'));
 
         if ($amount <= 0) {

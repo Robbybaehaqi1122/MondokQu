@@ -21,7 +21,7 @@ class GenerateMonthlySantriInvoicesJob implements ShouldQueue
         public int $periodMonth,
         public int $periodYear,
         public string $dueDate,
-        public float $amount,
+        public int $amount,
         public ?string $notes = null,
         public ?int $createdBy = null
     ) {}

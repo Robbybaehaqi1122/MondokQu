@@ -340,7 +340,7 @@ class AdminDashboardController extends Controller
             'paid_this_month' => $paymentQuery
                 ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->sum('amount'),
-            'outstanding_amount' => (float) ($invoiceStats?->outstanding_amount ?? 0),
+            'outstanding_amount' => (int) ($invoiceStats?->outstanding_amount ?? 0),
             'overdue_invoices' => (int) ($invoiceStats?->overdue_invoices ?? 0),
         ];
     }
@@ -358,11 +358,11 @@ class AdminDashboardController extends Controller
             ->whereBetween('paid_at', [$months->first()?->copy()->startOfMonth(), now()->endOfMonth()])
             ->get(['paid_at', 'amount'])
             ->groupBy(fn (SantriPayment $payment): string => $payment->paid_at->format('Y-m'))
-            ->map(fn (Collection $payments): float => (float) $payments->sum('amount'));
-        $maxTotal = max(1, (float) $totals->max());
+            ->map(fn (Collection $payments): int => $payments->sum('amount'));
+        $maxTotal = max(1, $totals->max());
 
         return $months->map(function ($month) use ($maxTotal, $totals): array {
-            $total = (float) ($totals[$month->format('Y-m')] ?? 0);
+            $total = (int) ($totals[$month->format('Y-m')] ?? 0);
 
             return [
                 'label' => $month->translatedFormat('M Y'),
@@ -393,7 +393,7 @@ class AdminDashboardController extends Controller
                 'invoice_number' => $invoice->invoice_number,
                 'santri_name' => $invoice->santri?->full_name ?? '-',
                 'due_date' => $invoice->due_date?->translatedFormat('d M Y') ?? '-',
-                'outstanding_amount' => (float) $invoice->outstanding_amount,
+                'outstanding_amount' => (int) $invoice->outstanding_amount,
             ]);
     }
 }

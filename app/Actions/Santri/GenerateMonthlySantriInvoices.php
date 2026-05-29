@@ -21,7 +21,7 @@ class GenerateMonthlySantriInvoices
         int $periodMonth,
         int $periodYear,
         string $dueDate,
-        float $amount,
+        int $amount,
         ?string $notes = null,
         ?int $createdBy = null,
         bool $dryRun = false
