@@ -177,7 +177,6 @@ class Santri extends Model
                         ->orWhere('father_name', 'like', "%{$search}%")
                         ->orWhere('mother_name', 'like', "%{$search}%")
                         ->orWhereHas('room', fn (Builder $roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('room', fn (Builder $roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('guardians', function (Builder $guardianQuery) use ($search): void {
                             $guardianQuery
                                 ->where('name', 'like', "%{$search}%")
