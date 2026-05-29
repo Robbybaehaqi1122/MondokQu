@@ -251,3 +251,4 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 require base_path('app/Modules/Auth/Routes/web.php');
 require base_path('app/Modules/Saas/Routes/web.php');
 require base_path('app/Modules/Tahfidz/Routes/web.php');
+require base_path('app/Modules/Pelanggaran/Routes/web.php');

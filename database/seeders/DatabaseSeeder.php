@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Tenant;
 use App\Models\User;
+use Database\Seeders\Pelanggaran\PelanggaranKategoriSeeder;
 use Database\Seeders\Tahfidz\TahfidzSurahSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -61,5 +62,7 @@ class DatabaseSeeder extends Seeder
         $tenant->forceFill([
             'owner_id' => $tenantAdmin->id,
         ])->save();
+
+        $this->call(PelanggaranKategoriSeeder::class);
     }
 }

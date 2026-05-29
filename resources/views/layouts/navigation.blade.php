@@ -6,8 +6,9 @@
     $canOpenOperationalReports = $user->can('manage kamar') || $user->canAny(['create izin', 'approve izin']);
     $canOpenAbsensiModule = $user->can('manage absensi');
     $canOpenTahfidzModule = $user->can('manage tahfidz');
+    $canOpenPelanggaranModule = $user->can('manage pelanggaran');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenSantriModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenSantriModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -214,6 +215,39 @@
                     </details>
                 @endif
 
+                @if ($canOpenPelanggaranModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('pelanggaran.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('pelanggaran.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-alert-triangle"></i>
+                            </span>
+                            <span class="flex-grow-1">PelanggaranQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('pelanggaran.dashboard') ? 'active' : '' }}" href="{{ route('pelanggaran.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('pelanggaran.index') || request()->routeIs('pelanggaran.create') ? 'active' : '' }}" href="{{ route('pelanggaran.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-list-details"></i></span>
+                                <span>Catatan Pelanggaran</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('pelanggaran.kategori.*') ? 'active' : '' }}" href="{{ route('pelanggaran.kategori.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-tags"></i></span>
+                                <span>Kategori & Poin</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('pelanggaran.laporan.*') ? 'active' : '' }}" href="{{ route('pelanggaran.laporan.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
+                                <span>Laporan</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
                 @if ($canOpenSantriModule)
                     <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*')) open @endif>
                         <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') ? 'active' : '' }}">
@@ -390,18 +424,18 @@
                     </a>
                 @endif
 
-                @if ($user->hasRole('Musyrif/Ustadz') && ! ($canOpenTahfidzModule || $canOpenAbsensiModule))
+                @if ($user->hasRole('Musyrif/Ustadz') && ! ($canOpenTahfidzModule || $canOpenAbsensiModule || $canOpenPelanggaranModule))
                     <div class="sidebar-section-title">Modul Musyrif</div>
-                    <a class="sidebar-link {{ request()->routeIs('tahfidz.dashboard') || request()->routeIs('tahfidz.*') ? 'active' : '' }}" href="{{ route('tahfidz.dashboard') }}">
-                        <span class="sidebar-link-icon">
-                            <i class="ti ti-book-2"></i>
-                        </span>
+                    <a class="sidebar-link {{ request()->routeIs('tahfidz.*') ? 'active' : '' }}" href="{{ route('tahfidz.dashboard') }}">
+                        <span class="sidebar-link-icon"><i class="ti ti-book-2"></i></span>
                         <span>Tahfidz</span>
                     </a>
+                    <a class="sidebar-link {{ request()->routeIs('pelanggaran.*') ? 'active' : '' }}" href="{{ route('pelanggaran.dashboard') }}">
+                        <span class="sidebar-link-icon"><i class="ti ti-alert-triangle"></i></span>
+                        <span>Pelanggaran</span>
+                    </a>
                     <a class="sidebar-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}" href="{{ route('attendance.dashboard') }}">
-                        <span class="sidebar-link-icon">
-                            <i class="ti ti-calendar-check"></i>
-                        </span>
+                        <span class="sidebar-link-icon"><i class="ti ti-calendar-check"></i></span>
                         <span>Absensi</span>
                     </a>
                 @endif
