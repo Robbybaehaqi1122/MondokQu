@@ -32,7 +32,7 @@ class DetermineDashboardRouteAction
         }
 
         if ($user->hasRole('Musyrif/Ustadz')) {
-            return route('tahfidz.dashboard');
+            return route('musyrif.dashboard');
         }
 
         if ($user->hasRole('Wali Santri')) {

@@ -11,6 +11,7 @@ use App\Http\Controllers\AttendanceRecordController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\AttendanceSessionController;
 use App\Http\Controllers\DataExportDownloadController;
+use App\Http\Controllers\MusyrifDashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengurus\LeaveRequestController;
 use App\Http\Controllers\Pengurus\OperationalReportController;
@@ -233,7 +234,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Musyrif/Ustadz'])->group(function () {
-    Route::get('/musyrif', fn () => view('dashboard'))->name('musyrif.dashboard');
+    Route::get('/musyrif', MusyrifDashboardController::class)->name('musyrif.dashboard');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Bendahara'])->group(function () {
