@@ -150,7 +150,7 @@
                                         <label for="detail_role" class="form-label mb-2">Role Aktif</label>
                                         <div class="d-flex gap-2">
                                             <select id="detail_role" name="role" class="form-select form-select-pretty">
-                                                @foreach ($roles as $role)
+                                                @foreach ($assignableRoles as $role)
                                                     <option value="{{ $role->name }}" @selected($userDetail->roles->contains('name', $role->name))>
                                                         {{ $role->name }}
                                                     </option>

@@ -186,7 +186,7 @@
                                                     @method('PATCH')
                                                     <div class="user-control-stack">
                                                         <select name="role" class="form-select form-select-pretty user-control-select">
-                                                            @foreach ($roles as $role)
+                                                            @foreach ($assignableRoles as $role)
                                                                 <option value="{{ $role->name }}" @selected($managedUser->roles->contains('name', $role->name))>
                                                                     {{ $role->name }}
                                                                 </option>
