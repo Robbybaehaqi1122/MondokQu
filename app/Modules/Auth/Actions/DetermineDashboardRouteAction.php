@@ -31,6 +31,10 @@ class DetermineDashboardRouteAction
             return route('bendahara.dashboard');
         }
 
+        if ($user->hasRole('Musyrif/Ustadz')) {
+            return route('tahfidz.dashboard');
+        }
+
         if ($user->hasRole('Wali Santri')) {
             return route('wali-santri.dashboard');
         }
