@@ -159,6 +159,14 @@
                         </div>
 
                         <div class="modal-body">
+                            <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
+                                <i class="ti ti-alert-triangle"></i>
+                                <span>
+                                    <strong>Perhatian:</strong> Role bersifat <strong>global</strong> — perubahan permission akan mempengaruhi
+                                    <strong>semua user</strong> dengan role <strong>{{ $role->name }}</strong> di <strong>seluruh tenant</strong>.
+                                </span>
+                            </div>
+
                             <div class="row g-3">
                                 @foreach ($permissionGroups as $groupLabel => $groupPermissions)
                                     <div class="col-md-6 col-xl-4">

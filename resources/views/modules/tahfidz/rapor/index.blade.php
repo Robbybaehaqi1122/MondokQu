@@ -1,0 +1,179 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div>
+            <h2 class="page-title">Rapor Hafalan</h2>
+            <div class="text-secondary mt-1">Lihat progress hafalan Al-Quran santri per periode.</div>
+        </div>
+    </x-slot>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('tahfidz.rapor.index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Cari Santri</label>
+                    <input type="text" name="q" class="form-control" placeholder="Nama atau NIS..." value="{{ $filters['q'] }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Pilih Santri</label>
+                    <select name="santri" class="form-select" required>
+                        <option value="">Pilih Santri</option>
+                        @foreach ($santriOptions as $santri)
+                            <option value="{{ $santri->id }}" @selected($filters['santri'] == $santri->id)>
+                                {{ $santri->full_name }} ({{ $santri->nis }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Dari Tanggal</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ $filters['date_from'] }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Sampai Tanggal</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ $filters['date_to'] }}">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="ti ti-filter"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if ($raporData && $raporData->santri)
+        <div class="row row-cards mb-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="text-uppercase text-secondary small">Total Setoran</div>
+                            <div class="fs-2 fw-bold">{{ number_format($raporData->total_sessions) }}</div>
+                        </div>
+                        <span class="avatar bg-primary-lt text-primary">
+                            <i class="ti ti-clipboard-list"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="text-uppercase text-secondary small">Total Ayat</div>
+                            <div class="fs-2 fw-bold">{{ number_format($raporData->total_ayat) }}</div>
+                        </div>
+                        <span class="avatar bg-azure-lt text-azure">
+                            <i class="ti ti-book-2"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="text-uppercase text-secondary small">Lancar</div>
+                            <div class="fs-2 fw-bold text-success">{{ number_format($raporData->total_lancar) }}</div>
+                        </div>
+                        <span class="avatar bg-success-lt text-success">
+                            <i class="ti ti-check"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-body">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="text-uppercase text-secondary small">Perlu Pengulangan</div>
+                            <div class="fs-2 fw-bold text-warning">{{ number_format($raporData->total_perlu_pengulangan) }}</div>
+                        </div>
+                        <span class="avatar bg-warning-lt text-warning">
+                            <i class="ti ti-alert-triangle"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2 w-100">
+                    <div>
+                        <h3 class="card-title">Riwayat Setoran</h3>
+                        <div class="text-secondary small mt-1">
+                            Menampilkan {{ $raporData->total_sessions }} setoran untuk
+                            <strong>{{ $raporData->santri->full_name }}</strong>
+                            (NIS {{ $raporData->santri->nis }})
+                            @if ($raporData->date_from || $raporData->date_to)
+                                periode
+                                @if ($raporData->date_from) {{ \Carbon\Carbon::parse($raporData->date_from)->translatedFormat('d M Y') }} @endif
+                                -
+                                @if ($raporData->date_to) {{ \Carbon\Carbon::parse($raporData->date_to)->translatedFormat('d M Y') }} @endif
+                            @else
+                                sepanjang waktu
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Musyrif</th>
+                            <th>Ayat</th>
+                            <th>Penilaian</th>
+                            <th class="w-1">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($raporData->sessions as $session)
+                            <tr>
+                                <td>{{ $session->session_date?->translatedFormat('d M Y') ?? '-' }}</td>
+                                <td>{{ $session->musyrif?->name ?? '-' }}</td>
+                                <td>
+                                    @foreach ($session->records as $record)
+                                        <div class="small">{{ $record->surah?->name ?? '-' }}: {{ $record->verseRangeLabel() }}</div>
+                                    @endforeach
+                                </td>
+                                <td>
+                                    @foreach ($session->records as $record)
+                                        @php
+                                            $badge = match ($record->evaluation) {
+                                                'lancar' => 'bg-success-lt text-success',
+                                                'perlu_pengulangan' => 'bg-warning-lt text-warning',
+                                                'belum_lancar' => 'bg-danger-lt text-danger',
+                                                default => 'bg-secondary-lt text-secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $badge }}">{{ $record->evaluationLabel() }}</span>
+                                    @endforeach
+                                </td>
+                                <td>
+                                    <a href="{{ route('tahfidz.setoran.show', $session) }}" class="btn btn-outline-primary btn-sm btn-icon" aria-label="Detail">
+                                        <i class="ti ti-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-secondary">Belum ada setoran untuk santri ini pada periode yang dipilih.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @elseif ($filters['santri'] !== '')
+        <div class="alert alert-info">
+            Santri tidak ditemukan atau tidak memiliki akses.
+        </div>
+    @else
+        <div class="alert alert-secondary">
+            Pilih santri untuk melihat rapor hafalan.
+        </div>
+    @endif
+</x-app-layout>

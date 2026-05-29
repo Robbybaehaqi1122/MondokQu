@@ -5,8 +5,9 @@
     $userInitial = strtoupper(substr($user->name, 0, 1));
     $canOpenOperationalReports = $user->can('manage kamar') || $user->canAny(['create izin', 'approve izin']);
     $canOpenAbsensiModule = $user->can('manage absensi');
+    $canOpenTahfidzModule = $user->can('manage tahfidz');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenSantriModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenSantriModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -173,6 +174,41 @@
                                     <i class="ti ti-report-analytics"></i>
                                 </span>
                                 <span>Laporan Absensi</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenTahfidzModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('tahfidz.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('tahfidz.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-book-2"></i>
+                            </span>
+                            <span class="flex-grow-1">TahfidzQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('tahfidz.dashboard') ? 'active' : '' }}" href="{{ route('tahfidz.dashboard') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-dashboard"></i>
+                                </span>
+                                <span>Dashboard Tahfidz</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('tahfidz.setoran.*') ? 'active' : '' }}" href="{{ route('tahfidz.setoran.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-clipboard-list"></i>
+                                </span>
+                                <span>Setoran Hafalan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('tahfidz.rapor.*') ? 'active' : '' }}" href="{{ route('tahfidz.rapor.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-report-analytics"></i>
+                                </span>
+                                <span>Rapor Hafalan</span>
                             </a>
                         </div>
                     </details>
@@ -354,13 +390,19 @@
                     </a>
                 @endif
 
-                @if ($user->hasRole('Musyrif/Ustadz') && ! $canOpenAbsensiModule)
+                @if ($user->hasRole('Musyrif/Ustadz') && ! ($canOpenTahfidzModule || $canOpenAbsensiModule))
                     <div class="sidebar-section-title">Modul Musyrif</div>
-                    <a class="sidebar-link {{ request()->routeIs('musyrif.dashboard') ? 'active' : '' }}" href="{{ route('musyrif.dashboard') }}">
+                    <a class="sidebar-link {{ request()->routeIs('tahfidz.dashboard') || request()->routeIs('tahfidz.*') ? 'active' : '' }}" href="{{ route('tahfidz.dashboard') }}">
                         <span class="sidebar-link-icon">
                             <i class="ti ti-book-2"></i>
                         </span>
-                        <span>Tahfidz & Absensi</span>
+                        <span>Tahfidz</span>
+                    </a>
+                    <a class="sidebar-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}" href="{{ route('attendance.dashboard') }}">
+                        <span class="sidebar-link-icon">
+                            <i class="ti ti-calendar-check"></i>
+                        </span>
+                        <span>Absensi</span>
                     </a>
                 @endif
 

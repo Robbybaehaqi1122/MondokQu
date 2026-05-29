@@ -43,6 +43,12 @@ class RoleManagementController extends Controller
      */
     public function store(StoreRoleRequest $request): RedirectResponse
     {
+        if (! $request->user()->isSuperAdmin() && in_array($request->validated('name'), ['Superadmin', 'Admin'])) {
+            return redirect()
+                ->route('admin.roles')
+                ->with('error', 'Hanya Superadmin yang dapat membuat role Admin atau Superadmin.');
+        }
+
         $role = Role::query()->create([
             'name' => $request->validated('name'),
             'guard_name' => 'web',
@@ -66,6 +72,12 @@ class RoleManagementController extends Controller
      */
     public function updatePermissions(UpdateRolePermissionsRequest $request, Role $role): RedirectResponse
     {
+        if ($role->name === 'Superadmin' && ! $request->user()->isSuperAdmin()) {
+            return redirect()
+                ->route('admin.roles')
+                ->with('error', 'Hanya Superadmin yang dapat mengubah permission role Superadmin.');
+        }
+
         $previousPermissions = $role->permissions()
             ->orderBy('name')
             ->pluck('name')

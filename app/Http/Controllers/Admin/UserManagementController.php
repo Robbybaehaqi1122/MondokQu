@@ -156,8 +156,14 @@ class UserManagementController extends Controller
             ->limit(10)
             ->get();
 
+        $roles = Role::query()->orderBy('name')->get();
+        $assignableRoles = $roles->filter(function (Role $role) use ($currentUser) {
+            return $currentUser?->isSuperAdmin() || ! in_array($role->name, ['Superadmin', 'Admin']);
+        })->values();
+
         return view('admin.user-detail', [
             'activityLogs' => $activityLogs,
+            'assignableRoles' => $assignableRoles,
             'canManageTargetUser' => $canManageTargetUser,
             'canDeleteUser' => $currentUser?->can('delete', $user) ?? false,
             'canManageRoles' => $currentUser?->can('updateRole', $user) ?? false,
@@ -165,7 +171,7 @@ class UserManagementController extends Controller
             'guardianSantriOptions' => $guardianSantriOptions,
             'linkedGuardianSantriIds' => $user->guardianSantris->pluck('id')->all(),
             'roleHistory' => $roleHistory,
-            'roles' => Role::query()->orderBy('name')->get(),
+            'roles' => $roles,
             'statuses' => User::availableStatuses(),
             'userDetail' => $user,
         ]);
