@@ -45,6 +45,7 @@ class StoreUserRequest extends FormRequest
                 File::image()
                     ->types(config('user.avatar.allowed_extensions', ['jpg', 'jpeg', 'png', 'webp']))
                     ->max((int) config('user.avatar.max_size_kb', 2048)),
+                'mimes:'.implode(',', config('user.avatar.allowed_extensions', ['jpg', 'jpeg', 'png', 'webp'])),
                 'dimensions:min_width='.config('user.avatar.min_width', 200)
                     .',min_height='.config('user.avatar.min_height', 200)
                     .',max_width='.config('user.avatar.max_width', 2000)
