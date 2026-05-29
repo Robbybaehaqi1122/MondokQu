@@ -68,7 +68,15 @@ class ProfileController extends Controller
         }
 
         if ($emailChanged) {
-            $user->sendEmailVerificationNotification();
+            try {
+                $user->sendEmailVerificationNotification();
+
+                $request->session()->flash('email_verification_sent', true);
+            } catch (Throwable $exception) {
+                report($exception);
+
+                $request->session()->flash('email_verification_sent', false);
+            }
         }
 
         if ($previousAvatarPath && $previousAvatarPath !== $avatarPath) {

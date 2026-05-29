@@ -127,6 +127,11 @@
             @if (session('status') === 'profile-updated')
                 <span class="text-success">Tersimpan.</span>
             @endif
+            @if (session('email_verification_sent') === true)
+                <span class="text-info ms-2">Email verifikasi sudah dikirim ke alamat baru.</span>
+            @elseif (session('email_verification_sent') === false)
+                <span class="text-warning ms-2">Email verifikasi gagal dikirim. Periksa konfigurasi mailer.</span>
+            @endif
         </div>
     </form>
     </div>
