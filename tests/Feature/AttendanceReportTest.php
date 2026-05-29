@@ -33,17 +33,14 @@ test('user with manage absensi permission can view attendance reports with filte
     $santriAbsent = Santri::factory()->forTenant($admin->tenant)->create([
         'full_name' => 'Santri Sering Alpa',
         'room_id' => $roomA->id,
-        'room_name' => null,
     ]);
     $santriLate = Santri::factory()->forTenant($admin->tenant)->create([
         'full_name' => 'Santri Telat Datang',
         'room_id' => $roomB->id,
-        'room_name' => null,
     ]);
     $santriPresent = Santri::factory()->forTenant($admin->tenant)->create([
         'full_name' => 'Santri Rajin Hadir',
         'room_id' => $roomA->id,
-        'room_name' => null,
     ]);
 
     AttendanceRecord::factory()->forSessionAndSantri($session, $santriAbsent)->create([

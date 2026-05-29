@@ -37,8 +37,8 @@ class SaasDashboardController extends Controller
                 'expired_tenants' => Tenant::query()->where('subscription_status', Tenant::SUBSCRIPTION_EXPIRED)->count(),
                 'deleting_tenants' => Tenant::query()->where('subscription_status', Tenant::SUBSCRIPTION_DELETING)->count(),
                 'platform_users' => User::query()->count(),
-                'total_revenue' => (float) TenantBillingNote::query()->sum('amount'),
-                'revenue_this_month' => (float) TenantBillingNote::query()
+                'total_revenue' => (int) TenantBillingNote::query()->sum('amount'),
+                'revenue_this_month' => (int) TenantBillingNote::query()
                     ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
                     ->sum('amount'),
             ],
@@ -90,7 +90,7 @@ class SaasDashboardController extends Controller
 
                 return [
                     'label' => $month->translatedFormat('M Y'),
-                    'amount' => (float) TenantBillingNote::query()
+                    'amount' => (int) TenantBillingNote::query()
                         ->whereBetween('paid_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
                         ->sum('amount'),
                 ];

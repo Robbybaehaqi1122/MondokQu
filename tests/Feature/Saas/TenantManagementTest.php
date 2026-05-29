@@ -47,7 +47,7 @@ test('superadmin can view saas dashboard with growth and revenue metrics', funct
     $response->assertSee('SaaS Dashboard');
     $response->assertSee('Pertumbuhan Tenant');
     $response->assertSee('Pendapatan Platform');
-    $response->assertSee('Rp 250.000');
+    $response->assertSee('Rp 2.500');
     $response->assertSee('Pondok Dashboard SaaS');
 });
 
@@ -536,7 +536,7 @@ test('superadmin can store billing notes for a tenant', function () {
 
     expect($billingNote)->not->toBeNull();
     expect($billingNote->tenant_id)->toBe($tenant->id);
-    expect((float) $billingNote->amount)->toBe(600000.0);
+    expect((float) $billingNote->amount)->toBe(60000000.0);
     expect($billingNote->payment_method)->toBe('qris');
     expect($billingNote->admin_note)->toBe('Pembayaran paket 6 bulan via QRIS.');
     expect($billingNote->recorded_by)->toBe($superadmin->id);

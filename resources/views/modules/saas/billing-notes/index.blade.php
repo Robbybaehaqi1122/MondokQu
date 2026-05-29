@@ -46,7 +46,7 @@
                             <div class="card card-sm">
                                 <div class="card-body">
                                     <div class="text-uppercase text-secondary small">Total Pembayaran</div>
-                                    <div class="fs-3 fw-bold">Rp {{ number_format((float) $summary['total_amount'], 0, ',', '.') }}</div>
+                                    <div class="fs-3 fw-bold">Rp {{ number_format($summary['total_amount'] / 100, 0, ',', '.') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -189,7 +189,7 @@
                                         <div class="text-secondary small">{{ $billingNote->tenant?->slug ?? '-' }}</div>
                                     </td>
                                     <td class="text-secondary small">{{ $billingNote->paid_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>
-                                    <td class="fw-semibold">Rp {{ number_format((float) $billingNote->amount, 0, ',', '.') }}</td>
+                                    <td class="fw-semibold">Rp {{ number_format($billingNote->amount / 100, 0, ',', '.') }}</td>
                                     <td>{{ str($billingNote->payment_method)->headline() }}</td>
                                     <td>
                                         <div>{{ $billingNote->period_starts_at?->translatedFormat('d M Y') ?? '-' }}</div>

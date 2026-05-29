@@ -47,7 +47,7 @@ class UpdateSantriInvoiceRequest extends FormRequest
             'period_month' => ['nullable', 'integer', 'min:1', 'max:12'],
             'period_year' => ['nullable', 'integer', 'digits:4', 'min:'.$periodYearMin, 'max:'.$periodYearMax],
             'due_date' => ['required', 'date'],
-            'amount' => ['required', 'numeric', 'min:1', 'max:999999999.99'],
+            'amount' => ['required', 'numeric', 'min:100', 'max:99999999999'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
@@ -55,6 +55,13 @@ class UpdateSantriInvoiceRequest extends FormRequest
     /**
      * Configure the validator instance.
      */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount')) {
+            $this->merge(['amount' => (int) ((float) $this->input('amount') * 100)]);
+        }
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
@@ -71,14 +78,14 @@ class UpdateSantriInvoiceRequest extends FormRequest
                 return;
             }
 
-            $paidAmount = (float) $invoice->payments()->sum('amount');
+            $paidAmount = $invoice->payments()->sum('amount');
             $targetSantri = Santri::query()->find($this->input('santri_id'));
 
             if ($targetSantri && (int) $targetSantri->tenant_id !== (int) $invoice->tenant_id) {
                 $validator->errors()->add('santri_id', 'Santri pengganti harus berada di tenant yang sama dengan tagihan.');
             }
 
-            if ((float) $this->input('amount', 0) < $paidAmount) {
+            if ((int) $this->input('amount', 0) < $paidAmount) {
                 $validator->errors()->add('amount', 'Nominal tagihan tidak boleh lebih kecil dari total pembayaran yang sudah dicatat.');
             }
 

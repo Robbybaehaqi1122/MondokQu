@@ -51,8 +51,8 @@ class SantriInvoice extends Model
     {
         return [
             'due_date' => 'date',
-            'amount' => 'decimal:2',
-            'paid_amount' => 'decimal:2',
+            'amount' => 'integer',
+            'paid_amount' => 'integer',
             'period_month' => 'integer',
             'period_year' => 'integer',
         ];
@@ -161,9 +161,9 @@ class SantriInvoice extends Model
     /**
      * Resolve the remaining amount for this invoice.
      */
-    public function outstandingAmount(): float
+    public function outstandingAmount(): int
     {
-        return max(0, (float) $this->amount - (float) $this->paid_amount);
+        return max(0, $this->amount - $this->paid_amount);
     }
 
     /**
@@ -180,8 +180,8 @@ class SantriInvoice extends Model
      */
     public function refreshPaymentStatus(): void
     {
-        $paidAmount = (float) $this->payments()->sum('amount');
-        $invoiceAmount = (float) $this->amount;
+        $paidAmount = $this->payments()->sum('amount');
+        $invoiceAmount = $this->amount;
 
         if ($paidAmount > $invoiceAmount) {
             throw new DomainException('Total pembayaran tidak boleh melebihi nominal tagihan.');

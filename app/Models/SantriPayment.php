@@ -41,7 +41,7 @@ class SantriPayment extends Model
     {
         return [
             'paid_at' => 'datetime',
-            'amount' => 'decimal:2',
+            'amount' => 'integer',
         ];
     }
 

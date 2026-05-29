@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Room;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
@@ -46,26 +47,27 @@ test('admin dashboard shows monitoring statistics', function () {
     ]);
     $suspendedUser->assignRole('Bendahara');
 
+    $room = Room::factory()->forTenant($tenant)->create(['name' => 'Asrama A1']);
+
     $activeSantri = Santri::factory()->forTenant($tenant)->create([
         'status' => Santri::STATUS_ACTIVE,
         'full_name' => 'Santri Aktif A',
-        'room_name' => 'Asrama A1',
         'entry_year' => 2024,
         'created_at' => now()->startOfMonth()->addDay(),
+        'room_id' => $room->id,
     ]);
 
     Santri::factory()->forTenant($tenant)->create([
         'status' => Santri::STATUS_ALUMNI,
         'full_name' => 'Santri Alumni B',
-        'room_name' => 'Asrama A1',
         'entry_year' => 2023,
         'created_at' => now()->subMonths(2),
+        'room_id' => $room->id,
     ]);
 
     Santri::factory()->forTenant($tenant)->create([
         'status' => Santri::STATUS_EXITED,
         'full_name' => 'Santri Keluar C',
-        'room_name' => 'Asrama B2',
         'entry_year' => 2024,
         'created_at' => now()->subMonths(1),
     ]);
@@ -163,7 +165,7 @@ test('admin dashboard shows monitoring statistics', function () {
     expect($response->viewData('financeStats')['overdue_invoices'])->toBe(1);
     expect($response->viewData('monthlyRevenue'))->toHaveCount(6);
     expect($response->viewData('topOverdueInvoices')->first()['invoice_number'])->toBe('INV-OVERDUE-001');
-    expect($response->viewData('topOverdueInvoices')->first()['outstanding_amount'])->toBe(400000.0);
+    expect($response->viewData('topOverdueInvoices')->first()['outstanding_amount'])->toBe(400000);
     expect($response->viewData('tenantSummary')['title'])->toBe($tenant->name);
     expect($response->viewData('tenantSummary')['badge'])->toBe('Subscription Aktif');
     expect($response->viewData('roomDistribution')->first()['room_name'])->toBe('Asrama A1');

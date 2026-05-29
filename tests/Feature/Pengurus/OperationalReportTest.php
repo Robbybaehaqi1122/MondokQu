@@ -33,14 +33,12 @@ test('user can view room occupancy and leave request reports scoped to tenant', 
         'full_name' => 'Ahmad Izin',
         'status' => Santri::STATUS_ACTIVE,
         'room_id' => $roomA->id,
-        'room_name' => $roomA->name,
     ]);
     $santriB = Santri::factory()->forTenant($pengurus->tenant)->create([
         'nis' => 'S002',
         'full_name' => 'Budi Izin',
         'status' => Santri::STATUS_ACTIVE,
         'room_id' => $roomB->id,
-        'room_name' => $roomB->name,
     ]);
 
     LeaveRequest::query()->create([
@@ -90,7 +88,6 @@ test('user can view room occupancy and leave request reports scoped to tenant', 
     $otherSantri = Santri::factory()->forTenant($otherTenant)->create([
         'full_name' => 'Santri Tenant Lain',
         'room_id' => $otherRoom->id,
-        'room_name' => $otherRoom->name,
     ]);
     LeaveRequest::query()->withoutTenantScope()->create([
         'tenant_id' => $otherTenant->id,

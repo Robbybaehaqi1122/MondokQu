@@ -33,7 +33,7 @@ class StoreSantriPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric', 'min:1', 'max:999999999.99'],
+            'amount' => ['required', 'numeric', 'min:100', 'max:99999999999'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
             'payment_method' => ['required', 'string', Rule::in(SantriPayment::paymentMethods())],
             'reference_number' => ['nullable', 'string', 'max:100'],
@@ -44,6 +44,13 @@ class StoreSantriPaymentRequest extends FormRequest
     /**
      * Configure the validator instance.
      */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('amount')) {
+            $this->merge(['amount' => (int) ((float) $this->input('amount') * 100)]);
+        }
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
@@ -66,7 +73,7 @@ class StoreSantriPaymentRequest extends FormRequest
                 return;
             }
 
-            $amount = (float) $this->input('amount', 0);
+            $amount = (int) $this->input('amount', 0);
             if ($amount > $invoice->outstandingAmount()) {
                 $validator->errors()->add('amount', 'Nominal pembayaran melebihi sisa tagihan.');
             }

@@ -21,7 +21,7 @@ class SantriPaymentConfirmationFactory extends Factory
     public function definition(): array
     {
         return [
-            'amount' => fake()->randomFloat(2, 10000, 1000000),
+            'amount' => fake()->numberBetween(1000000, 100000000),
             'paid_at' => fake()->dateTimeBetween('-1 month', 'now'),
             'payment_method' => fake()->randomElement(['transfer bank', 'tunai']),
             'reference_number' => fake()->optional()->bothify('REF-########'),

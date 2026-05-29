@@ -68,7 +68,7 @@
                         </span>
                     </div>
                     <div class="fs-2 fw-bold mt-3">{{ number_format($summary['outstanding_invoices']) }}</div>
-                    <div class="text-secondary small">Rp {{ number_format((float) $summary['outstanding_amount'], 0, ',', '.') }}</div>
+                    <div class="text-secondary small">Rp {{ number_format($summary['outstanding_amount'] / 100, 0, ',', '.') }}</div>
                 </div>
             </div>
         </div>
@@ -97,7 +97,7 @@
                             <i class="ti ti-cash"></i>
                         </span>
                     </div>
-                    <div class="fs-2 fw-bold mt-3">Rp {{ number_format((float) $summary['paid_this_month'], 0, ',', '.') }}</div>
+                    <div class="fs-2 fw-bold mt-3">Rp {{ number_format($summary['paid_this_month'] / 100, 0, ',', '.') }}</div>
                 </div>
             </div>
         </div>
@@ -154,14 +154,14 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="text-secondary small">Sisa Tagihan</div>
-                                    <div class="fw-semibold mt-1">Rp {{ number_format((float) $childSummary['outstanding_amount'], 0, ',', '.') }}</div>
+                                    <div class="fw-semibold mt-1">Rp {{ number_format($childSummary['outstanding_amount'] / 100, 0, ',', '.') }}</div>
                                 </div>
                             </div>
 
                             <div class="border-top mt-4 pt-3">
                                 <div class="text-secondary small">Pembayaran Terakhir</div>
                                 @if ($lastPayment)
-                                    <div class="fw-semibold mt-1">Rp {{ number_format((float) $lastPayment->amount, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold mt-1">Rp {{ number_format($lastPayment->amount / 100, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">{{ $lastPayment->paid_at?->translatedFormat('d M Y H:i') }}</div>
                                 @else
                                     <div class="text-secondary mt-1">Belum ada pembayaran.</div>
@@ -377,7 +377,7 @@
                                     </td>
                                     <td>{{ $invoice->santri?->full_name ?? '-' }}</td>
                                     <td class="text-secondary">{{ $invoice->due_date?->translatedFormat('d M Y') ?? '-' }}</td>
-                                    <td>Rp {{ number_format($invoice->outstandingAmount(), 0, ',', '.') }}</td>
+                                    <td>Rp {{ number_format($invoice->outstandingAmount() / 100, 0, ',', '.') }}</td>
                                     <td>
                                         <span class="badge {{ $invoiceBadgeClasses[$displayStatus] ?? 'bg-secondary-lt text-secondary' }}">
                                             {{ $invoice->statusLabel() }}
@@ -439,7 +439,7 @@
                                 </div>
                                 <div class="wali-mobile-field wali-mobile-field-wide">
                                     <span>Sisa Tagihan</span>
-                                    <strong>Rp {{ number_format($invoice->outstandingAmount(), 0, ',', '.') }}</strong>
+                                    <strong>Rp {{ number_format($invoice->outstandingAmount() / 100, 0, ',', '.') }}</strong>
                                 </div>
                             </div>
 
@@ -476,7 +476,7 @@
                             </span>
                             <div class="flex-fill min-width-0">
                                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-1">
-                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format((float) $payment->amount, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">{{ $payment->paid_at?->translatedFormat('d M Y') }}</div>
                                 </div>
                                 <div class="wali-payment-meta text-secondary small mt-1">
@@ -543,10 +543,10 @@
                                         name="amount"
                                         type="number"
                                         min="1"
-                                        max="{{ (int) ceil($invoice->outstandingAmount()) }}"
+                                        max="{{ $invoice->outstandingAmount() / 100 }}"
                                         step="1"
                                         class="form-control @if($errors->paymentConfirmation->has('amount') && (string) old('confirmation_invoice_id') === (string) $invoice->id) is-invalid @endif"
-                                        value="{{ old('confirmation_invoice_id') == $invoice->id ? old('amount') : (int) ceil($invoice->outstandingAmount()) }}"
+                                        value="{{ old('confirmation_invoice_id') == $invoice->id ? old('amount') : $invoice->outstandingAmount() / 100 }}"
                                         required
                                     >
                                 </div>

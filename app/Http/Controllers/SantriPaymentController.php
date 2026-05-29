@@ -236,7 +236,7 @@ class SantriPaymentController extends Controller
                 periodMonth: (int) $validated['period_month'],
                 periodYear: (int) $validated['period_year'],
                 dueDate: $validated['due_date'],
-                amount: (float) $validated['amount'],
+                amount: (int) $validated['amount'],
                 notes: $validated['notes'] ?? null,
                 createdBy: $currentUser?->id,
                 dryRun: true
@@ -255,7 +255,7 @@ class SantriPaymentController extends Controller
             (int) $validated['period_month'],
             (int) $validated['period_year'],
             $validated['due_date'],
-            (float) $validated['amount'],
+            (int) $validated['amount'],
             $validated['notes'] ?? null,
             $currentUser?->id
         );
@@ -284,9 +284,9 @@ class SantriPaymentController extends Controller
                 ->where('tenant_id', $lockedInvoice->tenant_id)
                 ->findOrFail($validated['santri_id']);
 
-            $paidAmount = (float) $lockedInvoice->payments()->sum('amount');
+            $paidAmount = $lockedInvoice->payments()->sum('amount');
 
-            if ((float) $validated['amount'] < $paidAmount) {
+            if ((int) $validated['amount'] < $paidAmount) {
                 throw $this->invoiceValidationException(
                     'amount',
                     'Nominal tagihan tidak boleh lebih kecil dari total pembayaran yang sudah dicatat.'
@@ -412,9 +412,9 @@ class SantriPaymentController extends Controller
                 ->findOrFail($invoice->id);
 
             $recordedTotal = $lockedInvoice->payments()->sum('amount');
-            $maxAllowedAmount = max(0, (float) $lockedInvoice->amount - (float) $recordedTotal);
+            $maxAllowedAmount = max(0, $lockedInvoice->amount - $recordedTotal);
 
-            if (bccomp((string) $validated['amount'], (string) $maxAllowedAmount, 2) > 0) {
+            if ((int) $validated['amount'] > $maxAllowedAmount) {
                 throw $this->paymentValidationException(
                     'Nominal pembayaran melebihi sisa tagihan.',
                     'recordPayment'
@@ -490,9 +490,9 @@ class SantriPaymentController extends Controller
             $otherPaymentTotal = $lockedInvoice->payments()
                 ->whereKeyNot($lockedPayment->id)
                 ->sum('amount');
-            $maxAllowedAmount = max(0, (float) $lockedInvoice->amount - (float) $otherPaymentTotal);
+            $maxAllowedAmount = max(0, $lockedInvoice->amount - $otherPaymentTotal);
 
-            if (bccomp((string) $validated['amount'], (string) $maxAllowedAmount, 2) > 0) {
+            if ((int) $validated['amount'] > $maxAllowedAmount) {
                 throw $this->paymentValidationException(
                     'Nominal koreksi melebihi sisa tagihan setelah pembayaran lain.',
                     'updatePayment'

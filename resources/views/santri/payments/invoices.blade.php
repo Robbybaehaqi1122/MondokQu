@@ -25,28 +25,28 @@
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Total Tagihan</div>
                 <div class="fs-2 fw-bold">{{ number_format($summary['total_invoices']) }}</div>
-                <div class="text-secondary small">Rp {{ number_format((float) $summary['total_amount'], 0, ',', '.') }}</div>
+                <div class="text-secondary small">Rp {{ number_format($summary['total_amount'] / 100, 0, ',', '.') }}</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Lunas</div>
                 <div class="fs-2 fw-bold">{{ number_format($summary['paid_invoices']) }}</div>
-                <div class="text-secondary small">Rp {{ number_format((float) $summary['paid_amount'], 0, ',', '.') }}</div>
+                <div class="text-secondary small">Rp {{ number_format($summary['paid_amount'] / 100, 0, ',', '.') }}</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Belum Lunas</div>
                 <div class="fs-2 fw-bold">{{ number_format($summary['pending_invoices'] + $summary['partial_invoices']) }}</div>
-                <div class="text-secondary small">Rp {{ number_format((float) $summary['outstanding_amount'], 0, ',', '.') }}</div>
+                <div class="text-secondary small">Rp {{ number_format($summary['outstanding_amount'] / 100, 0, ',', '.') }}</div>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Tunggakan</div>
                 <div class="fs-2 fw-bold">{{ number_format($summary['overdue_invoices']) }}</div>
-                <div class="text-secondary small">Rp {{ number_format((float) $summary['overdue_amount'], 0, ',', '.') }}</div>
+                <div class="text-secondary small">Rp {{ number_format($summary['overdue_amount'] / 100, 0, ',', '.') }}</div>
             </div>
         </div>
     </div>
@@ -188,10 +188,10 @@
                                     -
                                 @endif
                             </td>
-                            <td>Rp {{ number_format((float) $invoice->amount, 0, ',', '.') }}</td>
+                            <td>Rp {{ number_format($invoice->amount / 100, 0, ',', '.') }}</td>
                             <td>
-                                <div>Rp {{ number_format((float) $invoice->paid_amount, 0, ',', '.') }}</div>
-                                <div class="text-secondary small">Sisa Rp {{ number_format($outstandingAmount, 0, ',', '.') }}</div>
+                                <div>Rp {{ number_format($invoice->paid_amount / 100, 0, ',', '.') }}</div>
+                                <div class="text-secondary small">Sisa Rp {{ number_format($outstandingAmount / 100, 0, ',', '.') }}</div>
                             </td>
                             <td>
                                 <span class="badge {{ $statusBadgeClasses[$displayStatus] ?? 'bg-secondary-lt text-secondary' }}">
@@ -271,16 +271,16 @@
                                                                     name="amount"
                                                                     type="number"
                                                                     min="1"
-                                                                    max="{{ $outstandingAmount }}"
-                                                                    step="1"
-                                                                    class="form-control @if(old('paying_invoice_id') == $invoice->id && $errors->recordPayment->has('amount')) is-invalid @endif"
-                                                                    value="{{ old('paying_invoice_id') == $invoice->id ? old('amount') : $outstandingAmount }}"
+                                                                    max="{{ $outstandingAmount / 100 }}"
+                                                                     step="1"
+                                                                     class="form-control @if(old('paying_invoice_id') == $invoice->id && $errors->recordPayment->has('amount')) is-invalid @endif"
+                                                                     value="{{ old('paying_invoice_id') == $invoice->id ? old('amount') : $outstandingAmount / 100 }}"
                                                                     required
                                                                 >
                                                                 @if (old('paying_invoice_id') == $invoice->id && $errors->recordPayment->has('amount'))
                                                                     <div class="invalid-feedback">{{ $errors->recordPayment->first('amount') }}</div>
                                                                 @else
-                                                                    <div class="form-hint mt-2">Sisa tagihan Rp {{ number_format($outstandingAmount, 0, ',', '.') }}.</div>
+                                                                    <div class="form-hint mt-2">Sisa tagihan Rp {{ number_format($outstandingAmount / 100, 0, ',', '.') }}.</div>
                                                                 @endif
                                                             </div>
 
@@ -434,11 +434,11 @@
 
                                                             <div class="col-md-3">
                                                                 <label for="edit_amount_{{ $invoice->id }}" class="form-label">Nominal</label>
-                                                                <input id="edit_amount_{{ $invoice->id }}" name="amount" type="number" min="{{ max(1, (float) $invoice->paid_amount) }}" step="1" class="form-control @if(old('editing_invoice_id') == $invoice->id && $errors->updateInvoice->has('amount')) is-invalid @endif" value="{{ old('editing_invoice_id') == $invoice->id ? old('amount') : (float) $invoice->amount }}" required>
+                                                                <input id="edit_amount_{{ $invoice->id }}" name="amount" type="number" min="{{ max(1, $invoice->paid_amount / 100) }}" step="1" class="form-control @if(old('editing_invoice_id') == $invoice->id && $errors->updateInvoice->has('amount')) is-invalid @endif" value="{{ old('editing_invoice_id') == $invoice->id ? old('amount') : $invoice->amount / 100 }}" required>
                                                                 @if (old('editing_invoice_id') == $invoice->id && $errors->updateInvoice->has('amount'))
                                                                     <div class="invalid-feedback">{{ $errors->updateInvoice->first('amount') }}</div>
                                                                 @else
-                                                                    <div class="form-hint mt-2">Minimal Rp {{ number_format((float) max(1, (float) $invoice->paid_amount), 0, ',', '.') }}.</div>
+                                                                    <div class="form-hint mt-2">Minimal Rp {{ number_format(max(1, $invoice->paid_amount / 100), 0, ',', '.') }}.</div>
                                                                 @endif
                                                             </div>
 
@@ -488,7 +488,7 @@
                                                                         <div class="row g-3">
                                                                             <div class="col-md-3">
                                                                                 <label for="edit_payment_amount_{{ $payment->id }}" class="form-label">Nominal</label>
-                                                                                <input id="edit_payment_amount_{{ $payment->id }}" name="amount" type="number" min="1" step="1" class="form-control @if(old('editing_payment_id') == $payment->id && $errors->updatePayment->has('amount')) is-invalid @endif" value="{{ old('editing_payment_id') == $payment->id ? old('amount') : (float) $payment->amount }}" required>
+                                                                                <input id="edit_payment_amount_{{ $payment->id }}" name="amount" type="number" min="1" step="1" class="form-control @if(old('editing_payment_id') == $payment->id && $errors->updatePayment->has('amount')) is-invalid @endif" value="{{ old('editing_payment_id') == $payment->id ? old('amount') : $payment->amount / 100 }}" required>
                                                                                 @if (old('editing_payment_id') == $payment->id && $errors->updatePayment->has('amount'))
                                                                                     <div class="invalid-feedback">{{ $errors->updatePayment->first('amount') }}</div>
                                                                                 @endif

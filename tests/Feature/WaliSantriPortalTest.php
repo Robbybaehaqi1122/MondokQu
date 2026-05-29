@@ -4,6 +4,7 @@ use App\Models\AttendanceActivity;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\LeaveRequest;
+use App\Models\Room;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
@@ -33,7 +34,6 @@ test('wali santri dashboard shows only linked santri and payment summary', funct
     $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
         'nis' => 'WALI001',
         'full_name' => 'Ahmad Anak Wali',
-        'room_name' => 'Asrama A1',
     ]);
     $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
         'full_name' => 'Santri Tidak Terhubung',
@@ -50,22 +50,22 @@ test('wali santri dashboard shows only linked santri and payment summary', funct
     $invoice = SantriInvoice::factory()->forSantri($linkedSantri)->create([
         'invoice_number' => 'INV-WALI-001',
         'title' => 'SPP Mei Wali',
-        'amount' => 500000,
-        'paid_amount' => 150000,
+        'amount' => 50000000,
+        'paid_amount' => 15000000,
         'status' => SantriInvoice::STATUS_PARTIAL,
         'due_date' => now()->subDay(),
     ]);
     SantriPayment::factory()->forInvoice($invoice)->create([
-        'amount' => 150000,
+        'amount' => 15000000,
         'paid_at' => now(),
     ]);
     SantriInvoice::factory()->forSantri($unlinkedSantri)->create([
         'title' => 'Tagihan Tidak Terlihat',
-        'amount' => 999000,
+        'amount' => 99900000,
     ]);
     SantriInvoice::factory()->forSantri($otherTenantSantri)->create([
         'title' => 'Tagihan Tenant Lain',
-        'amount' => 888000,
+        'amount' => 88800000,
     ]);
 
     $response = $this
@@ -263,21 +263,21 @@ test('wali santri can view linked invoice detail with payment history', function
     $invoice = SantriInvoice::factory()->forSantri($linkedSantri)->create([
         'invoice_number' => 'INV-WALI-DETAIL',
         'title' => 'SPP Detail Wali',
-        'amount' => 500000,
-        'paid_amount' => 150000,
+        'amount' => 50000000,
+        'paid_amount' => 15000000,
         'status' => SantriInvoice::STATUS_PARTIAL,
         'notes' => 'Dibayarkan sebelum akhir bulan.',
     ]);
 
     SantriPayment::factory()->forInvoice($invoice)->create([
-        'amount' => 100000,
+        'amount' => 10000000,
         'payment_method' => 'transfer bank',
         'reference_number' => 'REF-WALI-1',
         'note' => 'Pembayaran awal wali',
         'paid_at' => now()->subDays(2),
     ]);
     SantriPayment::factory()->forInvoice($invoice)->create([
-        'amount' => 50000,
+        'amount' => 5000000,
         'payment_method' => 'cash',
         'reference_number' => 'REF-WALI-2',
         'paid_at' => now()->subDay(),
@@ -326,8 +326,8 @@ test('wali santri can upload payment proof for linked invoice', function () {
     $invoice = SantriInvoice::factory()->forSantri($linkedSantri)->create([
         'invoice_number' => 'INV-PROOF-001',
         'title' => 'SPP Bukti Bayar',
-        'amount' => 500000,
-        'paid_amount' => 100000,
+        'amount' => 50000000,
+        'paid_amount' => 10000000,
         'status' => SantriInvoice::STATUS_PARTIAL,
     ]);
     $proof = UploadedFile::fake()->createWithContent(
@@ -359,7 +359,7 @@ test('wali santri can upload payment proof for linked invoice', function () {
     expect($confirmation->santri_id)->toBe($linkedSantri->id);
     expect($confirmation->submitted_by)->toBe($wali->id);
     expect($confirmation->status)->toBe(SantriPaymentConfirmation::STATUS_PENDING);
-    expect((float) $confirmation->amount)->toBe(400000.0);
+    expect($confirmation->amount)->toBe(40000000);
     Storage::disk('public')->assertExists($confirmation->proof_path);
     Notification::assertSentTo($admin, WaliPaymentProofSubmittedNotification::class);
 
@@ -376,7 +376,7 @@ test('wali santri can not upload payment proof for unlinked invoice', function (
     $wali = tenantUser('Wali Santri');
     $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
     $invoice = SantriInvoice::factory()->forSantri($unlinkedSantri)->create([
-        'amount' => 300000,
+        'amount' => 30000000,
     ]);
     $proof = UploadedFile::fake()->createWithContent(
         'bukti-bayar.png',
@@ -399,10 +399,12 @@ test('wali santri can not upload payment proof for unlinked invoice', function (
 
 test('wali santri can print linked invoice receipt', function () {
     $wali = tenantUser('Wali Santri');
+
+    $room = Room::factory()->forTenant($wali->tenant)->create(['name' => 'Asrama Print']);
     $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
         'nis' => 'WALI-PRINT',
         'full_name' => 'Hasan Anak Wali',
-        'room_name' => 'Asrama Print',
+        'room_id' => $room->id,
     ]);
 
     $wali->guardianSantris()->attach($linkedSantri->id, [
@@ -413,14 +415,14 @@ test('wali santri can print linked invoice receipt', function () {
     $invoice = SantriInvoice::factory()->forSantri($linkedSantri)->create([
         'invoice_number' => 'INV-WALI-PRINT',
         'title' => 'Kwitansi SPP Wali',
-        'amount' => 600000,
-        'paid_amount' => 600000,
+        'amount' => 60000000,
+        'paid_amount' => 60000000,
         'status' => SantriInvoice::STATUS_PAID,
         'notes' => 'Lunas untuk periode berjalan.',
     ]);
 
     SantriPayment::factory()->forInvoice($invoice)->create([
-        'amount' => 600000,
+        'amount' => 60000000,
         'payment_method' => 'qris',
         'reference_number' => 'QRIS-WALI-PRINT',
         'note' => 'Pembayaran penuh',
@@ -457,7 +459,7 @@ test('wali santri can not view invoice detail for unlinked santri', function () 
 
     $invoice = SantriInvoice::factory()->forSantri($unlinkedSantri)->create([
         'title' => 'Tagihan Santri Lain',
-        'amount' => 250000,
+        'amount' => 25000000,
     ]);
 
     $this
@@ -478,7 +480,7 @@ test('wali santri can not print receipt for unlinked santri invoice', function (
 
     $invoice = SantriInvoice::factory()->forSantri($unlinkedSantri)->create([
         'title' => 'Kwitansi Santri Lain',
-        'amount' => 250000,
+        'amount' => 25000000,
     ]);
 
     $this

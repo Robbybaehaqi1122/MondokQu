@@ -79,6 +79,7 @@ class UpdateSantriRequest extends FormRequest
                 'integer',
                 Rule::exists(Room::class, 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
             ],
+            'room_name' => ['nullable', 'string', 'max:255'],
             'guardian_user_ids' => ['sometimes', 'array', $this->guardianUsersExistRule()],
             'guardian_user_ids.*' => ['integer', 'distinct'],
             'notes' => ['nullable', 'string', 'max:1000'],

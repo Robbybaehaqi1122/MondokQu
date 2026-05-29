@@ -113,9 +113,10 @@ test('superadmin can update or delete santri from tenant operations', function (
         'emergency_contact' => '081234567891',
         'entry_date' => '2024-01-01',
         'entry_year' => 2024,
-        'room_name' => 'Asrama A1',
         'status' => Santri::STATUS_ACTIVE,
     ]);
+
+    $room = Room::factory()->forTenant($tenant)->create(['name' => 'Asrama B1']);
 
     $response = $this
         ->actingAs($superadmin)
@@ -133,7 +134,7 @@ test('superadmin can update or delete santri from tenant operations', function (
             'emergency_contact' => '081234567893',
             'entry_date' => '2024-01-01',
             'entry_year' => 2024,
-            'room_name' => 'Asrama B1',
+            'room_id' => $room->id,
             'status' => Santri::STATUS_ALUMNI,
         ]);
 
@@ -189,7 +190,6 @@ test('santri views prefer structured room relationship over stale legacy room na
     $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
         'full_name' => 'Santri Kamar Relasi',
         'room_id' => $room->id,
-        'room_name' => 'Asrama Lama Stale',
     ]);
 
     $this
@@ -414,6 +414,8 @@ test('nis can be reused by different tenants but remains unique within one tenan
         'nis' => 'NIS-SAMA',
     ]);
 
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama A1']);
+
     $response = $this
         ->actingAs($admin)
         ->from(route('santri.index'))
@@ -431,7 +433,7 @@ test('nis can be reused by different tenants but remains unique within one tenan
             'emergency_contact' => '081234567891',
             'entry_date' => '2024-01-01',
             'entry_year' => 2024,
-            'room_name' => 'Asrama A1',
+            'room_id' => $room->id,
             'status' => Santri::STATUS_ACTIVE,
         ]);
 
@@ -446,6 +448,7 @@ test('user with permission can create santri', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo('view santri');
     $admin->givePermissionTo('create santri');
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama A1']);
 
     $photo = function_exists('imagecreatetruecolor')
         ? UploadedFile::fake()->image('santri.png', 400, 400)->size(512)
@@ -465,7 +468,7 @@ test('user with permission can create santri', function () {
         'emergency_contact' => '081298765432',
         'entry_date' => '2024-07-10',
         'entry_year' => 2024,
-        'room_name' => 'Asrama A1',
+        'room_id' => $room->id,
         'notes' => 'Perlu pemantauan adaptasi awal.',
         'status' => Santri::STATUS_ACTIVE,
     ];
@@ -580,6 +583,7 @@ test('user can not assign santri to room from another tenant', function () {
 test('user can create santri with wali portal account', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo(['view santri', 'create santri']);
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama A1']);
     $wali = User::factory()->forTenant($admin->tenant)->create([
         'name' => 'Wali Portal Ahmad',
     ]);
@@ -601,7 +605,7 @@ test('user can create santri with wali portal account', function () {
             'emergency_contact' => '081234567891',
             'entry_date' => '2024-01-01',
             'entry_year' => 2024,
-            'room_name' => 'Asrama A1',
+            'room_id' => $room->id,
             'status' => Santri::STATUS_ACTIVE,
             'guardian_user_ids' => [$wali->id],
         ]);
@@ -634,6 +638,7 @@ test('user can create santri with wali portal account', function () {
 test('santri can not be created with entry date before birth date', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama B1']);
 
     $response = $this
         ->actingAs($admin)
@@ -652,7 +657,7 @@ test('santri can not be created with entry date before birth date', function () 
             'emergency_contact' => '081234567892',
             'entry_date' => '2010-01-01',
             'entry_year' => 2024,
-            'room_name' => 'Asrama B1',
+            'room_id' => $room->id,
             'status' => Santri::STATUS_ACTIVE,
         ]);
 
@@ -664,6 +669,7 @@ test('santri can not be created with entry date before birth date', function () 
 test('santri can not be created with invalid guardian phone number', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama B2']);
 
     $response = $this
         ->actingAs($admin)
@@ -682,7 +688,7 @@ test('santri can not be created with invalid guardian phone number', function ()
             'emergency_contact' => '081234567893',
             'entry_date' => '2024-01-01',
             'entry_year' => 2024,
-            'room_name' => 'Asrama B2',
+            'room_id' => $room->id,
             'status' => Santri::STATUS_ACTIVE,
         ]);
 
@@ -694,6 +700,7 @@ test('santri can not be created with invalid guardian phone number', function ()
 test('santri can be created with indonesian guardian phone number formats', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama C']);
 
     foreach (['081234567890', '6281234567890', '+6281234567890'] as $index => $phoneNumber) {
         $response = $this
@@ -712,7 +719,7 @@ test('santri can be created with indonesian guardian phone number formats', func
                 'emergency_contact' => '08123000000'.$index,
                 'entry_date' => '2024-01-01',
                 'entry_year' => 2024,
-                'room_name' => 'Asrama C'.$index,
+                'room_id' => $room->id,
                 'status' => Santri::STATUS_ACTIVE,
             ]);
 
@@ -723,6 +730,7 @@ test('santri can be created with indonesian guardian phone number formats', func
 test('santri can be created without guardian data', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama C1']);
 
     $response = $this
         ->actingAs($admin)
@@ -740,7 +748,7 @@ test('santri can be created without guardian data', function () {
             'emergency_contact' => '081234567894',
             'entry_date' => '2024-01-01',
             'entry_year' => 2024,
-            'room_name' => 'Asrama C1',
+            'room_id' => $room->id,
             'status' => Santri::STATUS_ACTIVE,
         ]);
 
@@ -756,6 +764,7 @@ test('santri can be created without guardian data', function () {
 test('guardian phone number is required when guardian name is filled', function () {
     $admin = tenantUser('Admin');
     $admin->givePermissionTo('create santri');
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama C2']);
 
     $response = $this
         ->actingAs($admin)
@@ -774,7 +783,7 @@ test('guardian phone number is required when guardian name is filled', function 
             'emergency_contact' => '081234567895',
             'entry_date' => '2024-01-01',
             'entry_year' => 2024,
-            'room_name' => 'Asrama C2',
+            'room_id' => $room->id,
             'status' => Santri::STATUS_ACTIVE,
         ]);
 
@@ -785,6 +794,7 @@ test('guardian phone number is required when guardian name is filled', function 
 test('santri can not be updated with future entry date', function () {
     $pengurus = tenantUser('Pengurus');
     $pengurus->givePermissionTo('update santri');
+    $room = Room::factory()->forTenant($pengurus->tenant)->create(['name' => 'Asrama B1']);
 
     $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
         'birth_date' => '2010-01-01',
@@ -808,7 +818,7 @@ test('santri can not be updated with future entry date', function () {
             'emergency_contact' => $santri->emergency_contact,
             'entry_date' => now()->addDay()->format('Y-m-d'),
             'entry_year' => $santri->entry_year,
-            'room_name' => $santri->room?->name,
+            'room_id' => $room->id,
             'notes' => $santri->notes,
             'status' => $santri->status,
             'editing_santri_id' => $santri->id,
@@ -853,6 +863,9 @@ test('user with permission can delete santri photo when requested during update'
         : UploadedFile::fake()->create('santri-lama.png', 300, 'image/png');
     $existingPath = $existingPhoto->store('santri-photos', 'public');
 
+    $room = Room::factory()->forTenant($pengurus->tenant)->create(['name' => 'Asrama Putra 1']);
+    $room2 = Room::factory()->forTenant($pengurus->tenant)->create(['name' => 'Asrama Putra 2']);
+
     $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
         'nis' => 'NIS4001',
         'full_name' => 'Nama Lama',
@@ -872,10 +885,10 @@ test('user with permission can delete santri photo when requested during update'
         'mother_name' => 'Ibu Contact',
         'guardian_phone_number' => '089999999998',
         'emergency_contact' => '081277777778',
-        'entry_date' => '2025-01-05',
-        'entry_year' => 2025,
-        'room_name' => 'Asrama Putra 1',
-        'notes' => 'Hapus foto lama saja.',
+            'entry_date' => '2025-01-05',
+            'entry_year' => 2025,
+            'room_id' => $room->id,
+            'notes' => 'Hapus foto lama saja.',
         'status' => Santri::STATUS_ACTIVE,
         'delete_photo' => '1',
         'editing_santri_id' => $santri->id,
@@ -907,6 +920,8 @@ test('user with permission can update santri', function () {
         ? UploadedFile::fake()->image('santri-lama-update.png', 300, 300)->store('santri-photos', 'public')
         : null;
 
+    $room = Room::factory()->forTenant($pengurus->tenant)->create(['name' => 'Asrama Putri 2']);
+
     $santri = Santri::factory()->forTenant($pengurus->tenant)->create([
         'nis' => 'NIS3001',
         'full_name' => 'Nama Lama',
@@ -926,10 +941,10 @@ test('user with permission can update santri', function () {
         'mother_name' => 'Ibu Kandung Baru',
         'guardian_phone_number' => '089999999999',
         'emergency_contact' => '081277777777',
-        'entry_date' => '2025-01-05',
-        'entry_year' => 2025,
-        'room_name' => 'Asrama Putri 2',
-        'notes' => 'Santri pindah kamar setelah semester pertama.',
+            'entry_date' => '2025-01-05',
+            'entry_year' => 2025,
+            'room_id' => $room->id,
+            'notes' => 'Santri pindah kamar setelah semester pertama.',
         'status' => Santri::STATUS_ALUMNI,
     ];
 
@@ -974,11 +989,13 @@ test('user can update wali portal accounts from santri management', function () 
         'name' => 'Wali Baru',
     ]);
     $newWali->assignRole('Wali Santri');
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama A1']);
     $santri = Santri::factory()->forTenant($admin->tenant)->create([
         'nis' => 'NIS-WALI-EDIT',
         'full_name' => 'Santri Relasi Wali',
         'guardian_name' => 'Wali Teks',
         'guardian_phone_number' => '081234567890',
+        'room_id' => $room->id,
     ]);
     $santri->guardians()->attach($oldWali->id, [
         'tenant_id' => $admin->tenant_id,
@@ -1001,7 +1018,7 @@ test('user can update wali portal accounts from santri management', function () 
             'emergency_contact' => $santri->emergency_contact,
             'entry_date' => $santri->entry_date->toDateString(),
             'entry_year' => $santri->entry_year,
-            'room_name' => $santri->room?->name,
+            'room_id' => $room->id,
             'notes' => $santri->notes,
             'status' => $santri->status,
             'guardian_user_ids' => [$newWali->id],
@@ -1029,10 +1046,12 @@ test('santri can not be linked to wali account from another tenant', function ()
         'name' => 'Wali Tenant Lain',
     ]);
     $otherWali->assignRole('Wali Santri');
+    $room = Room::factory()->forTenant($admin->tenant)->create(['name' => 'Asrama A1']);
     $santri = Santri::factory()->forTenant($admin->tenant)->create([
         'nis' => 'NIS-WALI-TENANT',
         'guardian_name' => 'Wali Teks',
         'guardian_phone_number' => '081234567890',
+        'room_id' => $room->id,
     ]);
 
     $response = $this
@@ -1052,7 +1071,7 @@ test('santri can not be linked to wali account from another tenant', function ()
             'emergency_contact' => $santri->emergency_contact,
             'entry_date' => $santri->entry_date->toDateString(),
             'entry_year' => $santri->entry_year,
-            'room_name' => $santri->room?->name,
+            'room_id' => $room->id,
             'notes' => $santri->notes,
             'status' => $santri->status,
             'guardian_user_ids' => [$otherWali->id],

@@ -29,9 +29,9 @@
         ],
     ];
 
-    $formatCurrency = fn ($amount) => 'Rp '.number_format((float) $amount, 0, ',', '.');
+    $formatCurrency = fn ($amount) => 'Rp '.number_format($amount / 100, 0, ',', '.');
     $formatCompactCurrency = function ($amount): string {
-        $amount = (float) $amount;
+        $amount = $amount / 100;
 
         if ($amount >= 1000000000) {
             return 'Rp '.number_format($amount / 1000000000, 1, ',', '.').' M';
@@ -49,7 +49,7 @@
     };
 
     $maxNewTenants = max((int) collect($tenantGrowthChart)->max('new_tenants'), 1);
-    $maxRevenue = max((float) collect($revenueChart)->max('amount'), 1);
+    $maxRevenue = max(collect($revenueChart)->max('amount'), 1);
 @endphp
 
 <x-app-layout>

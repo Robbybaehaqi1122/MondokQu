@@ -118,9 +118,9 @@ class SantriInvoiceCsvExport
                     $invoice->period_month,
                     $invoice->period_year,
                     $invoice->due_date?->toDateString(),
-                    number_format((float) $invoice->amount, 2, '.', ''),
-                    number_format((float) $invoice->paid_amount, 2, '.', ''),
-                    number_format($invoice->outstandingAmount(), 2, '.', ''),
+                    number_format($invoice->amount / 100, 2, '.', ''),
+                    number_format($invoice->paid_amount / 100, 2, '.', ''),
+                    number_format($invoice->outstandingAmount() / 100, 2, '.', ''),
                     $invoice->statusLabel(),
                     $invoice->notes,
                 ]);
