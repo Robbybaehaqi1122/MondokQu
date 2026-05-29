@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\PermissionManagementController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AttendanceActivityController;
+use App\Http\Controllers\BendaharaDashboardController;
+use App\Http\Controllers\BendaharaLaporanController;
 use App\Http\Controllers\AttendanceDashboardController;
 use App\Http\Controllers\AttendanceRecordController;
 use App\Http\Controllers\AttendanceReportController;
@@ -238,8 +240,8 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Bendahara'])->group(function () {
-    Route::get('/bendahara', fn () => view('bendahara.dashboard'))->name('bendahara.dashboard');
-    Route::get('/bendahara/laporan', fn () => view('bendahara.laporan'))->name('bendahara.laporan');
+    Route::get('/bendahara', BendaharaDashboardController::class)->name('bendahara.dashboard');
+    Route::get('/bendahara/laporan', BendaharaLaporanController::class)->name('bendahara.laporan');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Wali Santri|view portal wali', 'throttle:60,1'])->group(function () {
