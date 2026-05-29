@@ -83,6 +83,7 @@ class StoreSantriRequest extends FormRequest
                 File::image()
                     ->types(config('santri.photo.allowed_extensions', ['jpg', 'jpeg', 'png', 'webp']))
                     ->max((int) config('santri.photo.max_size_kb', 2048)),
+                'mimes:'.implode(',', config('santri.photo.allowed_extensions', ['jpg', 'jpeg', 'png', 'webp'])),
                 'dimensions:min_width='.config('santri.photo.min_width', 200)
                     .',min_height='.config('santri.photo.min_height', 200)
                     .',max_width='.config('santri.photo.max_width', 2000)
@@ -130,6 +131,7 @@ class StoreSantriRequest extends FormRequest
             'notes.max' => 'Catatan singkat maksimal 1000 karakter.',
             'status.required' => 'Status santri wajib dipilih.',
             'photo.image' => 'Foto harus berupa file gambar.',
+            'photo.mimes' => 'Foto hanya boleh berformat JPG, JPEG, PNG, atau WEBP.',
             'photo.max' => 'Ukuran foto maksimal 2 MB.',
             'photo.dimensions' => 'Dimensi foto minimal 200x200 px dan maksimal 2000x2000 px.',
         ];
