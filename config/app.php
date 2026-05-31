@@ -123,4 +123,12 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'ponpes_name' => env('PONPES_NAME', 'Mondok Qu'),
+    'ponpes_address' => env('PONPES_ADDRESS', 'Jl. Pendidikan No. 1, Kota Santri'),
+    'ponpes_phone' => env('PONPES_PHONE', '(021) 1234-5678'),
+    'ponpes_email' => env('PONPES_EMAIL', 'info@mondok-qu.sch.id'),
+    'ponpes_city' => env('PONPES_CITY', 'Kota Santri'),
+    'ponpes_headmaster' => env('PONPES_HEADMASTER', 'Kepala Pondok'),
+    'ponpes_treasurer' => env('PONPES_TREASURER', 'Bendahara'),
+
 ];

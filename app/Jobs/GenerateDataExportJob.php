@@ -2,12 +2,11 @@
 
 namespace App\Jobs;
 
-use App\Exports\SantriCsvExport;
-use App\Exports\SantriInvoiceCsvExport;
 use App\Models\DataExport;
 use App\Models\User;
 use App\Notifications\DataExportCompletedNotification;
 use App\Services\ActivityLogger;
+use App\Services\FormatDispatcher;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use RuntimeException;
@@ -41,9 +40,11 @@ class GenerateDataExportJob implements ShouldQueue
         $export->markProcessing();
 
         try {
+            $dispatcher = app(FormatDispatcher::class);
+
             [$path, $filename, $rowCount] = match ($export->type) {
-                DataExport::TYPE_SANTRI => app(SantriCsvExport::class)->store($export, $user, $export->filters ?? []),
-                DataExport::TYPE_SANTRI_INVOICES => app(SantriInvoiceCsvExport::class)->store($export, $user, $export->filters ?? []),
+                DataExport::TYPE_SANTRI => $dispatcher->storeSantri($export, $user, $export->filters ?? []),
+                DataExport::TYPE_SANTRI_INVOICES => $dispatcher->storeInvoices($export, $user, $export->filters ?? []),
                 default => throw new RuntimeException('Jenis export tidak dikenal.'),
             };
 

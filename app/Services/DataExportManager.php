@@ -18,12 +18,13 @@ class DataExportManager
         return max(0, (int) config('exports.inline_threshold', 5000));
     }
 
-    public function queue(User $user, string $type, string $name, string $filename, array $filters, int $rowCount): DataExport
+    public function queue(User $user, string $type, string $name, string $filename, array $filters, int $rowCount, string $format = 'csv'): DataExport
     {
         $export = DataExport::query()->create([
             'tenant_id' => $user->tenant_id,
             'user_id' => $user->id,
             'type' => $type,
+            'format' => $format,
             'name' => $name,
             'status' => DataExport::STATUS_QUEUED,
             'disk' => (string) config('exports.disk', 'local'),

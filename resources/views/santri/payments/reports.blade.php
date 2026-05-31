@@ -19,13 +19,13 @@
                 </div>
                 <div class="col-md-4">
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
-                        <a
-                            href="{{ route('santri.payments.reports.export', request()->only(['date_from', 'date_to'])) }}"
-                            class="btn btn-outline-primary"
-                        >
-                            Export CSV
-                        </a>
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        @php $exportQuery = request()->only(['date_from', 'date_to']); @endphp
+                        <div class="btn-group">
+                            <a href="{{ route('santri.payments.reports.export', array_merge($exportQuery, ['format' => 'csv'])) }}" class="btn btn-outline-primary">CSV</a>
+                            <a href="{{ route('santri.payments.reports.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="btn btn-outline-primary">Excel</a>
+                            <a href="{{ route('santri.payments.reports.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="btn btn-outline-primary">PDF</a>
+                        </div>
                         <a href="{{ route('santri.payments.reports') }}" class="btn btn-outline-secondary">Reset</a>
                     </div>
                 </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Santri\GenerateMonthlySantriInvoices;
+use App\Enums\ExportFormat;
 use App\Exports\SantriInvoiceCsvExport;
 use App\Exports\SantriPaymentReportCsvExport;
 use App\Http\Requests\Santri\GenerateMonthlySantriInvoicesRequest;
@@ -20,6 +21,7 @@ use App\Notifications\NewInvoiceNotification;
 use App\Services\ActivityLogger;
 use App\Services\DataExportManager;
 use App\Services\FinancialReportingService;
+use App\Services\FormatDispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -133,26 +135,34 @@ class SantriPaymentController extends Controller
     /**
      * Export filtered invoice list as CSV.
      */
-    public function exportInvoices(Request $request): RedirectResponse|StreamedResponse
+    public function exportInvoices(Request $request): RedirectResponse|StreamedResponse|\Illuminate\Http\Response
     {
         $currentUser = $request->user();
         $search = trim((string) $request->string('q'));
         $selectedStatus = trim((string) $request->string('status'));
         $selectedSantriId = trim((string) $request->string('santri'));
-        $rowCount = $this->invoiceCsvExport->rowCount($currentUser, $search, $selectedStatus, $selectedSantriId);
+        $format = ExportFormat::tryFrom($request->string('format', 'csv')) ?? ExportFormat::CSV;
+
+        $rowCount = $format === ExportFormat::CSV
+            ? $this->invoiceCsvExport->rowCount($currentUser, $search, $selectedStatus, $selectedSantriId)
+            : (new SantriInvoiceCsvExport)->rowCount($currentUser, $search, $selectedStatus, $selectedSantriId);
 
         if ($this->dataExportManager->shouldQueue($rowCount)) {
+            $filename = (new SantriInvoiceCsvExport)->filename();
+            $filename = str_replace('.csv', '.'.$format->extension(), $filename);
+
             $this->dataExportManager->queue(
                 $currentUser,
                 DataExport::TYPE_SANTRI_INVOICES,
                 'Export Tagihan Santri',
-                $this->invoiceCsvExport->filename(),
+                $filename,
                 [
                     'q' => $search,
                     'status' => $selectedStatus,
                     'santri' => $selectedSantriId,
                 ],
-                $rowCount
+                $rowCount,
+                $format->value
             );
 
             return redirect()
@@ -164,7 +174,7 @@ class SantriPaymentController extends Controller
                 ->with('success', 'Export tagihan sedang diproses di background. Link download akan muncul di daftar export terbaru setelah selesai.');
         }
 
-        return $this->invoiceCsvExport->download($currentUser, $search, $selectedStatus, $selectedSantriId);
+        return app(FormatDispatcher::class)->downloadInvoices($currentUser, $format, $search, $selectedStatus, $selectedSantriId);
     }
 
     /**
@@ -626,13 +636,13 @@ class SantriPaymentController extends Controller
     /**
      * Export filtered payment report as CSV.
      */
-    public function exportReports(Request $request): StreamedResponse
+    public function exportReports(Request $request): StreamedResponse|\Illuminate\Http\Response
     {
         [$dateFrom, $dateTo] = $this->reportDateRange($request);
-
         $currentUser = $request->user();
+        $format = ExportFormat::tryFrom($request->string('format', 'csv')) ?? ExportFormat::CSV;
 
-        return $this->paymentReportCsvExport->download($currentUser, $dateFrom, $dateTo);
+        return app(FormatDispatcher::class)->downloadPaymentReport($currentUser, $format, $dateFrom, $dateTo);
     }
 
     /**

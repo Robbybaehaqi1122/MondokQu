@@ -41,13 +41,12 @@
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center gap-2">
-                            <a
-                                href="{{ route('santri.export', request()->only(['q', 'gender', 'status'])) }}"
-                                class="btn btn-outline-primary"
-                            >
-                                <i class="ti ti-download me-1"></i>
-                                Export CSV
-                            </a>
+                            @php $exportQuery = request()->only(['q', 'gender', 'status']); @endphp
+                            <div class="btn-group">
+                                <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'csv'])) }}" class="btn btn-outline-primary">CSV</a>
+                                <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="btn btn-outline-primary">Excel</a>
+                                <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="btn btn-outline-primary">PDF</a>
+                            </div>
 
                             @if ($canCreateSantri)
                                 <button
