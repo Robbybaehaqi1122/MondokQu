@@ -8,6 +8,8 @@ use App\Models\TahfidzRecord;
 use App\Models\TahfidzSession;
 use App\Models\TahfidzSurah;
 use App\Modules\Tahfidz\Requests\StoreTahfidzSessionRequest;
+use App\Notifications\Concerns\NotifiesGuardians;
+use App\Notifications\NewTahfidzSessionNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +17,8 @@ use Illuminate\View\View;
 
 class TahfidzSetoranController extends Controller
 {
+    use NotifiesGuardians;
+
     public function __construct(
         protected ActivityLogger $activityLogger
     ) {}
@@ -115,6 +119,9 @@ class TahfidzSetoranController extends Controller
         }
 
         $santriName = $session->santri?->full_name ?? "Santri #{$session->santri_id}";
+
+        $session->load('records');
+        $this->notifyGuardians($santri, new NewTahfidzSessionNotification($session));
 
         $this->activityLogger->log(
             action: 'tahfidz_setoran_created',

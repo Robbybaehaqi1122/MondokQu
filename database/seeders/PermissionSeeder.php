@@ -44,6 +44,7 @@ class PermissionSeeder extends Seeder
             'manage tahfidz',
             'manage absensi',
             'manage pelanggaran',
+            'manage komunikasi',
             'view portal wali',
         ];
 
@@ -80,6 +81,7 @@ class PermissionSeeder extends Seeder
             'update pembayaran',
             'view laporan keuangan',
             'manage absensi',
+            'manage komunikasi',
         ])->get());
         $pengurus->syncPermissions(Permission::whereIn('name', [
             'manage kamar',
@@ -100,6 +102,7 @@ class PermissionSeeder extends Seeder
             'manage tahfidz',
             'manage absensi',
             'manage pelanggaran',
+            'manage komunikasi',
         ])->get());
         $waliSantri->syncPermissions(Permission::whereIn('name', [
             'view portal wali',

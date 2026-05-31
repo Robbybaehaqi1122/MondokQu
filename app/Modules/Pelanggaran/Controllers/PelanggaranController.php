@@ -7,6 +7,8 @@ use App\Models\Pelanggaran;
 use App\Models\PelanggaranKategori;
 use App\Models\Santri;
 use App\Modules\Pelanggaran\Requests\StorePelanggaranRequest;
+use App\Notifications\Concerns\NotifiesGuardians;
+use App\Notifications\NewPelanggaranNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +16,8 @@ use Illuminate\View\View;
 
 class PelanggaranController extends Controller
 {
+    use NotifiesGuardians;
+
     public function __construct(
         protected ActivityLogger $activityLogger
     ) {}
@@ -114,7 +118,10 @@ class PelanggaranController extends Controller
             'tanggal' => $validated['tanggal'],
         ]);
 
-        $santriName = $pelanggaran->santri?->full_name ?? "Santri #{$pelanggaran->santri_id}";
+        $santri = $pelanggaran->santri;
+        $santriName = $santri?->full_name ?? "Santri #{$pelanggaran->santri_id}";
+
+        $this->notifyGuardians($santri, new NewPelanggaranNotification($pelanggaran));
 
         $this->activityLogger->log(
             action: 'pelanggaran_created',
