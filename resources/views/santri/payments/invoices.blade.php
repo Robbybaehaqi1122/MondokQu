@@ -78,12 +78,12 @@
 
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('santri.payments.index') }}" class="btn btn-outline-secondary">Overview</a>
-                    <a
-                        href="{{ route('santri.payments.invoices.export', request()->only(['q', 'status', 'santri'])) }}"
-                        class="btn btn-outline-primary"
-                    >
-                        Export CSV
-                    </a>
+                    @php $exportQuery = request()->only(['q', 'status', 'santri']); @endphp
+                    <div class="btn-group">
+                        <a href="{{ route('santri.payments.invoices.export', array_merge($exportQuery, ['format' => 'csv'])) }}" class="btn btn-outline-primary">CSV</a>
+                        <a href="{{ route('santri.payments.invoices.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="btn btn-outline-primary">Excel</a>
+                        <a href="{{ route('santri.payments.invoices.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="btn btn-outline-primary">PDF</a>
+                    </div>
                     @if ($canCreateInvoice)
                         <button
                             type="button"

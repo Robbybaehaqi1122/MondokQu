@@ -30,6 +30,7 @@ class DataExport extends Model
         'tenant_id',
         'user_id',
         'type',
+        'format',
         'name',
         'status',
         'disk',

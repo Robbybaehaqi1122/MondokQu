@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ExportFormat;
 use App\Models\DataExport;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
@@ -21,8 +22,10 @@ class DataExportDownloadController extends Controller
         abort_unless(Storage::disk($dataExport->disk)->exists($dataExport->path), 404);
         abort_unless($this->userCanAccessExport($user, $dataExport->type), 404);
 
+        $format = ExportFormat::tryFrom($dataExport->format ?? 'csv') ?? ExportFormat::CSV;
+
         return Storage::disk($dataExport->disk)->download($dataExport->path, $dataExport->filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => $format->mimeType(),
         ]);
     }
 
