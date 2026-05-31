@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\AttendanceRecord;
 use App\Models\LeaveRequest;
+use App\Models\Pelanggaran;
+use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Models\SantriPaymentConfirmation;
+use App\Models\TahfidzRecord;
+use App\Models\TahfidzSession;
 use App\Models\User;
 use App\Http\Requests\WaliSantri\StorePaymentConfirmationRequest;
 use App\Notifications\WaliPaymentProofSubmittedNotification;
@@ -260,6 +264,125 @@ class WaliSantriDashboardController extends Controller
             'invoice' => $invoice,
             'payments' => $invoice->payments,
         ]);
+    }
+
+    /**
+     * Display attendance history for a linked santri.
+     */
+    public function riwayatAbsensi(Request $request, Santri $santri): View
+    {
+        $santri = $this->resolveLinkedSantri($request, $santri);
+        $currentUser = $request->user();
+
+        $dateFrom = $request->input('date_from', now()->subMonth()->toDateString());
+        $dateTo = $request->input('date_to', now()->toDateString());
+
+        $records = AttendanceRecord::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->whereHas('session', function ($query) use ($dateFrom, $dateTo): void {
+                $query->whereDate('session_date', '>=', $dateFrom)
+                    ->whereDate('session_date', '<=', $dateTo);
+            })
+            ->with(['session.activity'])
+            ->orderByDesc('recorded_at')
+            ->paginate(20);
+
+        return view('wali-santri.absensi', [
+            'santri' => $santri,
+            'records' => $records,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+        ]);
+    }
+
+    /**
+     * Display violation history for a linked santri.
+     */
+    public function riwayatPelanggaran(Request $request, Santri $santri): View
+    {
+        $santri = $this->resolveLinkedSantri($request, $santri);
+        $currentUser = $request->user();
+
+        $records = Pelanggaran::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->with(['kategori', 'pencatat'])
+            ->orderByDesc('tanggal')
+            ->paginate(20);
+
+        $totalPoin = Pelanggaran::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->sum('poin');
+
+        return view('wali-santri.pelanggaran', [
+            'santri' => $santri,
+            'records' => $records,
+            'totalPoin' => $totalPoin,
+        ]);
+    }
+
+    /**
+     * Display tahfidz progress for a linked santri.
+     */
+    public function riwayatTahfidz(Request $request, Santri $santri): View
+    {
+        $santri = $this->resolveLinkedSantri($request, $santri);
+        $currentUser = $request->user();
+
+        $totalAyat = TahfidzRecord::query()
+            ->visibleTo($currentUser)
+            ->whereIn('tahfidz_session_id', TahfidzSession::query()
+                ->where('santri_id', $santri->id)
+                ->select('id')
+            )
+            ->selectRaw('COALESCE(SUM(verse_end - verse_start + 1), 0) as total')
+            ->value('total');
+
+        $sessions = TahfidzSession::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->where('status', TahfidzSession::STATUS_COMPLETED)
+            ->with(['musyrif', 'records.surah'])
+            ->orderByDesc('session_date')
+            ->paginate(20);
+
+        return view('wali-santri.tahfidz', [
+            'santri' => $santri,
+            'sessions' => $sessions,
+            'totalAyat' => (int) $totalAyat,
+            'totalSesi' => $sessions->total(),
+        ]);
+    }
+
+    /**
+     * Display santri profile details.
+     */
+    public function profilSantri(Request $request, Santri $santri): View
+    {
+        $santri = $this->resolveLinkedSantri($request, $santri);
+        $santri->load(['room', 'guardians']);
+
+        return view('wali-santri.profil-santri', [
+            'santri' => $santri,
+        ]);
+    }
+
+    /**
+     * Resolve a santri that belongs to the current wali user's linked santri.
+     */
+    protected function resolveLinkedSantri(Request $request, Santri $santri): Santri
+    {
+        $currentUser = $request->user();
+        $santriIds = $currentUser
+            ->guardianSantris()
+            ->pluck('santris.id');
+
+        abort_if($santriIds->isEmpty(), 404);
+        abort_unless($santriIds->contains($santri->id), 404);
+
+        return $santri->load('room');
     }
 
     /**

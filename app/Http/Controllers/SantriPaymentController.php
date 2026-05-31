@@ -15,6 +15,8 @@ use App\Models\DataExport;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
+use App\Notifications\Concerns\NotifiesGuardians;
+use App\Notifications\NewInvoiceNotification;
 use App\Services\ActivityLogger;
 use App\Services\DataExportManager;
 use App\Services\FinancialReportingService;
@@ -29,6 +31,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SantriPaymentController extends Controller
 {
+    use NotifiesGuardians;
     protected DataExportManager $dataExportManager;
 
     protected FinancialReportingService $financialReportingService;
@@ -206,6 +209,8 @@ class SantriPaymentController extends Controller
             ipAddress: $request->ip(),
             userAgent: $request->userAgent()
         );
+
+        $this->notifyGuardians($santri, new NewInvoiceNotification($invoice));
 
         return redirect()
             ->route('santri.payments.invoices')

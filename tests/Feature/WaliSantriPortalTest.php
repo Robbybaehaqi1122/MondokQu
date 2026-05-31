@@ -539,3 +539,389 @@ test('admin can not attach wali account to santri from another tenant', function
         'santri_id' => $otherSantri->id,
     ]);
 });
+
+test('wali santri can view profil santri for linked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $room = Room::factory()->forTenant($wali->tenant)->create(['name' => 'Asrama Profil']);
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'nis' => 'PROF001',
+        'full_name' => 'Aisyah Anak Wali',
+        'room_id' => $room->id,
+        'birth_place' => 'Jakarta',
+        'birth_date' => '2010-05-15',
+        'father_name' => 'Ayah Aisyah',
+        'mother_name' => 'Ibu Aisyah',
+        'address' => 'Jl. Mawar No. 1',
+        'entry_year' => 2024,
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ibu',
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.profil-santri', $linkedSantri));
+
+    $response->assertOk();
+    $response->assertSee('Profil Santri');
+    $response->assertSee('Aisyah Anak Wali');
+    $response->assertSee('PROF001');
+    $response->assertSee('Asrama Profil');
+    $response->assertSee('Jakarta');
+    $response->assertSee('15 May 2010');
+    $response->assertSee('Ayah Aisyah');
+    $response->assertSee('Ibu Aisyah');
+    $response->assertSee('Jl. Mawar No. 1');
+    $response->assertSee('2024');
+    $response->assertSee(route('wali-santri.absensi', $linkedSantri), false);
+    $response->assertSee(route('wali-santri.pelanggaran', $linkedSantri), false);
+    $response->assertSee(route('wali-santri.tahfidz', $linkedSantri), false);
+});
+
+test('wali santri profil santri shows fallback text for missing room and optional fields', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'full_name' => 'Santri Tanpa Kamar',
+        'room_id' => null,
+        'nis' => 'NO-ROOM-01',
+        'notes' => null,
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.profil-santri', $linkedSantri));
+
+    $response->assertOk();
+    $response->assertSee('Santri Tanpa Kamar');
+    $response->assertSee('Belum diatur');
+});
+
+test('wali santri can not view profil of unlinked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.profil-santri', $unlinkedSantri))
+        ->assertNotFound();
+});
+
+test('wali santri can view absensi history for linked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'nis' => 'ABS001',
+        'full_name' => 'Umar Absensi',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $activity = AttendanceActivity::factory()->forTenant($wali->tenant)->create([
+        'name' => 'Halaqah Subuh',
+    ]);
+    $session = AttendanceSession::factory()->forActivity($activity)->create([
+        'session_date' => now()->toDateString(),
+    ]);
+    $previousSession = AttendanceSession::factory()->forActivity($activity)->create([
+        'session_date' => now()->subDay()->toDateString(),
+    ]);
+
+    AttendanceRecord::factory()->forSessionAndSantri($session, $linkedSantri)->create([
+        'status' => AttendanceRecord::STATUS_PRESENT,
+        'notes' => 'Tepat waktu.',
+        'recorded_at' => now(),
+    ]);
+    AttendanceRecord::factory()->forSessionAndSantri($previousSession, $linkedSantri)->create([
+        'status' => AttendanceRecord::STATUS_LATE,
+        'notes' => 'Datang terlambat 5 menit.',
+        'recorded_at' => now()->subDay(),
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.absensi', $linkedSantri));
+
+    $response->assertOk();
+    $response->assertSee('Riwayat Absensi');
+    $response->assertSee('Umar Absensi');
+    $response->assertSee('Halaqah Subuh');
+    $response->assertSee('Hadir');
+    $response->assertSee('Terlambat');
+    $response->assertSee('Tepat waktu.');
+    $response->assertSee('Datang terlambat 5 menit.');
+});
+
+test('wali santri can filter absensi by date range', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'full_name' => 'Santri Filter Absensi',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $activity = AttendanceActivity::factory()->forTenant($wali->tenant)->create();
+    $oldSession = AttendanceSession::factory()->forActivity($activity)->create([
+        'session_date' => now()->subMonths(2)->toDateString(),
+    ]);
+    $recentSession = AttendanceSession::factory()->forActivity($activity)->create([
+        'session_date' => now()->toDateString(),
+    ]);
+
+    AttendanceRecord::factory()->forSessionAndSantri($oldSession, $linkedSantri)->create([
+        'status' => AttendanceRecord::STATUS_ABSENT,
+        'recorded_at' => now()->subMonths(2),
+    ]);
+    AttendanceRecord::factory()->forSessionAndSantri($recentSession, $linkedSantri)->create([
+        'status' => AttendanceRecord::STATUS_PRESENT,
+        'recorded_at' => now(),
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.absensi', $linkedSantri, [
+            'date_from' => now()->subWeek()->toDateString(),
+            'date_to' => now()->toDateString(),
+        ]));
+
+    $response->assertOk();
+    $response->assertSee('Hadir');
+    $response->assertDontSee('Alpa');
+});
+
+test('wali santri can not view absensi of unlinked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.absensi', $unlinkedSantri))
+        ->assertNotFound();
+});
+
+test('wali santri can view pelanggaran history for linked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'nis' => 'PEL001',
+        'full_name' => 'Mahmud Pelanggaran',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $kategori = \App\Models\PelanggaranKategori::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'nama' => 'Terlambat Shalat',
+        'poin' => 10,
+        'created_by' => $wali->id,
+    ]);
+
+    \App\Models\Pelanggaran::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'santri_id' => $linkedSantri->id,
+        'kategori_id' => $kategori->id,
+        'keterangan' => 'Terlambat shalat subuh berjamaah.',
+        'poin' => 10,
+        'dicatat_oleh' => $wali->id,
+        'tanggal' => now()->toDateString(),
+    ]);
+
+    \App\Models\Pelanggaran::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'santri_id' => $linkedSantri->id,
+        'kategori_id' => $kategori->id,
+        'keterangan' => 'Terlambat shalat maghrib.',
+        'poin' => 5,
+        'dicatat_oleh' => $wali->id,
+        'tanggal' => now()->subDay()->toDateString(),
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.pelanggaran', $linkedSantri));
+
+    $response->assertOk();
+    $response->assertSee('Riwayat Pelanggaran');
+    $response->assertSee('Mahmud Pelanggaran');
+    $response->assertSee('Terlambat Shalat');
+    $response->assertSee('15');
+    $response->assertSee('Terlambat shalat subuh berjamaah.');
+    $response->assertSee('Terlambat shalat maghrib.');
+});
+
+test('wali santri can not view pelanggaran of unlinked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.pelanggaran', $unlinkedSantri))
+        ->assertNotFound();
+});
+
+test('wali santri can view tahfidz history for linked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'nis' => 'TAH001',
+        'full_name' => 'Zaid Tahfidz',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $surah = \App\Models\TahfidzSurah::query()->create([
+        'number' => 1,
+        'name' => 'Al-Fatihah',
+        'name_arabic' => 'الفاتحة',
+        'verses_count' => 7,
+        'juz' => 1,
+    ]);
+
+    $session = \App\Models\TahfidzSession::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'santri_id' => $linkedSantri->id,
+        'musyrif_id' => $wali->id,
+        'session_date' => now()->toDateString(),
+        'status' => \App\Models\TahfidzSession::STATUS_COMPLETED,
+        'notes' => 'Setoran perdana.',
+    ]);
+
+    \App\Models\TahfidzRecord::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'tahfidz_session_id' => $session->id,
+        'surah_id' => $surah->id,
+        'verse_start' => 1,
+        'verse_end' => 7,
+        'evaluation' => \App\Models\TahfidzRecord::EVALUATION_LANCAR,
+        'notes' => 'Lancar semua.',
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.tahfidz', $linkedSantri));
+
+    $response->assertOk();
+    $response->assertSee('Riwayat Tahfidz');
+    $response->assertSee('Zaid Tahfidz');
+    $response->assertSee('Al-Fatihah');
+    $response->assertSee('Ayat 1-7');
+    $response->assertSee('Lancar');
+    $response->assertSee('Setoran perdana.');
+});
+
+test('wali santri can view tahfidz summary stats', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'full_name' => 'Santri Tahfidz Stats',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $surah = \App\Models\TahfidzSurah::query()->create([
+        'number' => 112,
+        'name' => 'Al-Ikhlas',
+        'name_arabic' => 'الإخلاص',
+        'verses_count' => 4,
+        'juz' => 30,
+    ]);
+
+    $session = \App\Models\TahfidzSession::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'santri_id' => $linkedSantri->id,
+        'musyrif_id' => $wali->id,
+        'session_date' => now()->toDateString(),
+        'status' => \App\Models\TahfidzSession::STATUS_COMPLETED,
+    ]);
+
+    \App\Models\TahfidzRecord::query()->create([
+        'tenant_id' => $wali->tenant_id,
+        'tahfidz_session_id' => $session->id,
+        'surah_id' => $surah->id,
+        'verse_start' => 1,
+        'verse_end' => 4,
+        'evaluation' => \App\Models\TahfidzRecord::EVALUATION_LANCAR,
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.tahfidz', $linkedSantri));
+
+    $response->assertOk();
+    $response->assertSee('1');
+    $response->assertSee('4');
+});
+
+test('wali santri can not view tahfidz of unlinked santri', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+    $unlinkedSantri = Santri::factory()->forTenant($wali->tenant)->create();
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.tahfidz', $unlinkedSantri))
+        ->assertNotFound();
+});
+
+test('dashboard santri cards show navigation links to new pages', function () {
+    $wali = tenantUser('Wali Santri');
+    $linkedSantri = Santri::factory()->forTenant($wali->tenant)->create([
+        'nis' => 'NAV001',
+        'full_name' => 'Santri Navigasi',
+    ]);
+
+    $wali->guardianSantris()->attach($linkedSantri->id, [
+        'tenant_id' => $wali->tenant_id,
+        'relationship' => 'Ayah',
+    ]);
+
+    $response = $this
+        ->actingAs($wali)
+        ->get(route('wali-santri.dashboard'));
+
+    $response->assertOk();
+    $response->assertSee(route('wali-santri.profil-santri', $linkedSantri), false);
+    $response->assertSee(route('wali-santri.absensi', $linkedSantri), false);
+    $response->assertSee(route('wali-santri.pelanggaran', $linkedSantri), false);
+    $response->assertSee(route('wali-santri.tahfidz', $linkedSantri), false);
+});

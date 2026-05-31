@@ -3,10 +3,13 @@
 namespace App\Jobs;
 
 use App\Actions\Santri\GenerateMonthlySantriInvoices;
+use App\Models\Santri;
 use App\Models\User;
+use App\Notifications\BatchInvoiceNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Notification;
 
 class GenerateMonthlySantriInvoicesJob implements ShouldQueue
 {
@@ -58,5 +61,33 @@ class GenerateMonthlySantriInvoicesJob implements ShouldQueue
                 'eligible' => $result['eligible'],
             ]
         );
+
+        if ($result['created'] > 0) {
+            $periodLabel = \Carbon\Carbon::createFromDate($this->periodYear, $this->periodMonth, 1)->translatedFormat('F Y');
+
+            $guardianUserIds = Santri::query()
+                ->withoutTenantScope()
+                ->forTenant($this->tenantId)
+                ->where('status', Santri::STATUS_ACTIVE)
+                ->whereHas('guardians', fn ($q) => $q->where('status', User::STATUS_ACTIVE))
+                ->with('guardians')
+                ->get()
+                ->flatMap(fn ($santri) => $santri->guardians->pluck('id'))
+                ->unique()
+                ->values()
+                ->all();
+
+            if (! empty($guardianUserIds)) {
+                $guardians = User::query()->whereIn('id', $guardianUserIds)->get();
+
+                Notification::send($guardians, new BatchInvoiceNotification(
+                    count: $result['created'],
+                    title: $this->title,
+                    periodLabel: $periodLabel,
+                    amount: $this->amount,
+                    dueDate: $this->dueDate,
+                ));
+            }
+        }
     }
 }

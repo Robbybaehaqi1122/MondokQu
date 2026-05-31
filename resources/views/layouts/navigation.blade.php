@@ -7,8 +7,9 @@
     $canOpenAbsensiModule = $user->can('manage absensi');
     $canOpenTahfidzModule = $user->can('manage tahfidz');
     $canOpenPelanggaranModule = $user->can('manage pelanggaran');
+    $canOpenKomunikasiModule = $user->can('manage komunikasi');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenSantriModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenSantriModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -248,6 +249,15 @@
                     </details>
                 @endif
 
+                @if ($canOpenKomunikasiModule)
+                    <a class="sidebar-link {{ request()->routeIs('komunikasi.*') ? 'active' : '' }}" href="{{ route('komunikasi.index') }}">
+                        <span class="sidebar-link-icon">
+                            <i class="ti ti-message"></i>
+                        </span>
+                        <span>KomunikasiQu</span>
+                    </a>
+                @endif
+
                 @if ($canOpenSantriModule)
                     <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*')) open @endif>
                         <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') ? 'active' : '' }}">
@@ -424,7 +434,7 @@
                     </a>
                 @endif
 
-                @if ($user->hasRole('Musyrif/Ustadz') && ! ($canOpenTahfidzModule || $canOpenAbsensiModule || $canOpenPelanggaranModule))
+                @if ($user->hasRole('Musyrif/Ustadz') && ! ($canOpenTahfidzModule || $canOpenAbsensiModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule))
                     <div class="sidebar-section-title">Modul Musyrif</div>
                     <a class="sidebar-link {{ request()->routeIs('tahfidz.*') ? 'active' : '' }}" href="{{ route('tahfidz.dashboard') }}">
                         <span class="sidebar-link-icon"><i class="ti ti-book-2"></i></span>
@@ -447,6 +457,12 @@
                             <i class="ti ti-users-group"></i>
                         </span>
                         <span>Portal Orang Tua</span>
+                    </a>
+                    <a class="sidebar-link {{ request()->routeIs('wali-santri.komunikasi.*') ? 'active' : '' }}" href="{{ route('wali-santri.komunikasi.index') }}">
+                        <span class="sidebar-link-icon">
+                            <i class="ti ti-message"></i>
+                        </span>
+                        <span>Komunikasi</span>
                     </a>
                 @endif
             </div>

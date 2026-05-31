@@ -167,6 +167,27 @@
                                     <div class="text-secondary mt-1">Belum ada pembayaran.</div>
                                 @endif
                             </div>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{{ route('wali-santri.profil-santri', $santri) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="ti ti-user me-1"></i>
+                                    Profil Santri
+                                </a>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ route('wali-santri.absensi', $santri) }}" class="btn btn-outline-azure">
+                                        <i class="ti ti-clipboard-check me-1"></i>
+                                        Absensi
+                                    </a>
+                                    <a href="{{ route('wali-santri.pelanggaran', $santri) }}" class="btn btn-outline-danger">
+                                        <i class="ti ti-alert-triangle me-1"></i>
+                                        Pelanggaran
+                                    </a>
+                                    <a href="{{ route('wali-santri.tahfidz', $santri) }}" class="btn btn-outline-success">
+                                        <i class="ti ti-book me-1"></i>
+                                        Tahfidz
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
