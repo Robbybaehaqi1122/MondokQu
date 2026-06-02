@@ -8,8 +8,9 @@
     $canOpenTahfidzModule = $user->can('manage tahfidz');
     $canOpenPelanggaranModule = $user->can('manage pelanggaran');
     $canOpenKomunikasiModule = $user->can('manage komunikasi');
+    $canOpenAkademikModule = $user->can('manage akademik');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenSantriModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenSantriModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -211,6 +212,39 @@
                                     <i class="ti ti-report-analytics"></i>
                                 </span>
                                 <span>Rapor Hafalan</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenAkademikModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('akademik.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('akademik.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-books"></i>
+                            </span>
+                            <span class="flex-grow-1">AkademikQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('akademik.dashboard') ? 'active' : '' }}" href="{{ route('akademik.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('akademik.mata-pelajaran.*') ? 'active' : '' }}" href="{{ route('akademik.mata-pelajaran.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-list-details"></i></span>
+                                <span>Mata Pelajaran</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('akademik.nilai.*') ? 'active' : '' }}" href="{{ route('akademik.nilai.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-edit-circle"></i></span>
+                                <span>Nilai Santri</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('akademik.rapor.*') ? 'active' : '' }}" href="{{ route('akademik.rapor.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
+                                <span>Rapor Digital</span>
                             </a>
                         </div>
                     </details>
