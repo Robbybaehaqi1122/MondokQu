@@ -1,8 +1,8 @@
 <?php
 
 use App\Actions\Santri\GenerateMonthlySantriInvoices;
-use App\Http\Controllers\SantriPaymentController;
-use App\Http\Requests\Santri\UpdateSantriInvoiceRequest;
+use App\Modules\Payment\Controllers\SantriPaymentController;
+use App\Modules\Payment\Requests\UpdateSantriInvoiceRequest;
 use App\Jobs\GenerateDataExportJob;
 use App\Jobs\GenerateMonthlySantriInvoicesJob;
 use App\Models\DataExport;
