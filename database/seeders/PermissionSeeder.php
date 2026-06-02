@@ -46,6 +46,7 @@ class PermissionSeeder extends Seeder
             'manage pelanggaran',
             'manage komunikasi',
             'manage akademik',
+            'manage branding',
             'view portal wali',
         ];
 
@@ -84,6 +85,7 @@ class PermissionSeeder extends Seeder
             'manage absensi',
             'manage komunikasi',
             'manage akademik',
+            'manage branding',
         ])->get());
         $pengurus->syncPermissions(Permission::whereIn('name', [
             'manage kamar',

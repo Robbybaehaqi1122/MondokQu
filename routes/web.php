@@ -268,3 +268,4 @@ require base_path('app/Modules/Tahfidz/Routes/web.php');
 require base_path('app/Modules/Pelanggaran/Routes/web.php');
 require base_path('app/Modules/Komunikasi/Routes/web.php');
 require base_path('app/Modules/Akademik/Routes/web.php');
+require base_path('app/Modules/Branding/Routes/web.php');
