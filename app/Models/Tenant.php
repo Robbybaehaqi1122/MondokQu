@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasTenantSettings;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tenant extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenantSettings;
 
     public const SUBSCRIPTION_TRIAL = 'trial';
 
@@ -38,6 +39,7 @@ class Tenant extends Model
         'subscription_ends_at',
         'grace_ends_at',
         'owner_id',
+        'settings',
     ];
 
     /**
@@ -52,6 +54,7 @@ class Tenant extends Model
             'subscription_starts_at' => 'datetime',
             'subscription_ends_at' => 'datetime',
             'grace_ends_at' => 'datetime',
+            'settings' => 'array',
         ];
     }
 

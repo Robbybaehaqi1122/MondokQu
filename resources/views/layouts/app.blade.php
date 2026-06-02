@@ -5,13 +5,48 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.ponpes_name', config('app.name', 'Laravel')) }}</title>
+
+        @if ($faviconUrl = config('app.tenant_favicon'))
+            <link rel="icon" type="image/png" href="{{ $faviconUrl }}">
+        @else
+            <link rel="icon" href="{{ asset('favicon.ico') }}">
+        @endif
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css">
+
+        @php
+            $themeColor = config('app.tenant_theme_color', '#206bc4');
+        @endphp
+        <style>
+            :root {
+                --tblr-primary: {{ $themeColor }};
+            }
+            .btn-primary, .bg-primary, .badge.bg-primary,
+            .page-item.active .page-link,
+            .nav-pills .nav-link.active {
+                background-color: {{ $themeColor }} !important;
+                border-color: {{ $themeColor }} !important;
+            }
+            .btn-outline-primary {
+                color: {{ $themeColor }};
+                border-color: {{ $themeColor }};
+            }
+            .btn-outline-primary:hover {
+                background-color: {{ $themeColor }};
+                border-color: {{ $themeColor }};
+                color: #fff;
+            }
+            .sidebar-link.active, .sidebar-sublink.active,
+            .sidebar-dropdown[open] > .sidebar-link {
+                color: {{ $themeColor }};
+            }
+        </style>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>

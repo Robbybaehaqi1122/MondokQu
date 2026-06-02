@@ -405,6 +405,15 @@
                                 </a>
                             @endcan
 
+                            @can('manage branding')
+                                <a class="sidebar-sublink {{ request()->routeIs('branding.*') ? 'active' : '' }}" href="{{ route('branding.edit') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-palette"></i>
+                                    </span>
+                                    <span>Branding Pondok</span>
+                                </a>
+                            @endcan
+
                             @if ($user->hasRole('Superadmin') || $user->can('view activity logs'))
                                 <a class="sidebar-sublink {{ request()->routeIs('admin.activity-logs') ? 'active' : '' }}" href="{{ route('admin.activity-logs') }}">
                                     <span class="sidebar-link-icon">
