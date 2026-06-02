@@ -255,6 +255,8 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/wali-santri/santri/{santri}/absensi', [WaliSantriDashboardController::class, 'riwayatAbsensi'])->name('wali-santri.absensi');
     Route::get('/wali-santri/santri/{santri}/pelanggaran', [WaliSantriDashboardController::class, 'riwayatPelanggaran'])->name('wali-santri.pelanggaran');
     Route::get('/wali-santri/santri/{santri}/tahfidz', [WaliSantriDashboardController::class, 'riwayatTahfidz'])->name('wali-santri.tahfidz');
+    Route::get('/wali-santri/santri/{santri}/akademik', [WaliSantriDashboardController::class, 'riwayatAkademik'])->name('wali-santri.akademik');
+    Route::get('/wali-santri/santri/{santri}/rapor', [WaliSantriDashboardController::class, 'raporSantri'])->name('wali-santri.rapor');
     Route::get('/wali-santri/komunikasi', [WaliSantriKomunikasiController::class, 'index'])->name('wali-santri.komunikasi.index');
     Route::get('/wali-santri/komunikasi/{santri}', [WaliSantriKomunikasiController::class, 'show'])->name('wali-santri.komunikasi.show');
     Route::post('/wali-santri/komunikasi', [WaliSantriKomunikasiController::class, 'store'])->name('wali-santri.komunikasi.store');
@@ -265,3 +267,4 @@ require base_path('app/Modules/Saas/Routes/web.php');
 require base_path('app/Modules/Tahfidz/Routes/web.php');
 require base_path('app/Modules/Pelanggaran/Routes/web.php');
 require base_path('app/Modules/Komunikasi/Routes/web.php');
+require base_path('app/Modules/Akademik/Routes/web.php');

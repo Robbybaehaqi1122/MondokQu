@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\AttendanceRecord;
 use App\Models\LeaveRequest;
+use App\Models\MataPelajaran;
+use App\Models\NilaiSantri;
 use App\Models\Pelanggaran;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
@@ -356,8 +358,86 @@ class WaliSantriDashboardController extends Controller
         ]);
     }
 
+    public function riwayatAkademik(Request $request, Santri $santri): View
+    {
+        $santri = $this->resolveLinkedSantri($request, $santri);
+        $currentUser = $request->user();
+
+        $semesters = NilaiSantri::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->distinct()
+            ->orderBy('semester', 'desc')
+            ->pluck('semester');
+
+        $nilais = NilaiSantri::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->with(['mataPelajaran', 'inputBy'])
+            ->orderByDesc('semester')
+            ->get();
+
+        return view('wali-santri.akademik', [
+            'santri' => $santri,
+            'nilais' => $nilais,
+            'semesters' => $semesters,
+        ]);
+    }
+
+    public function raporSantri(Request $request, Santri $santri): View
+    {
+        $santri = $this->resolveLinkedSantri($request, $santri);
+        $currentUser = $request->user();
+        $semester = $request->input('semester');
+
+        if (! $semester) {
+            $semester = NilaiSantri::query()
+                ->visibleTo($currentUser)
+                ->where('santri_id', $santri->id)
+                ->orderBy('semester', 'desc')
+                ->value('semester');
+        }
+
+        $nilais = NilaiSantri::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->where('semester', $semester)
+            ->with(['mataPelajaran', 'inputBy'])
+            ->get();
+
+        $tahfidzStats = TahfidzRecord::query()
+            ->visibleTo($currentUser)
+            ->whereIn('tahfidz_session_id', TahfidzSession::query()
+                ->where('santri_id', $santri->id)
+                ->select('id')
+            )
+            ->selectRaw('COALESCE(SUM(verse_end - verse_start + 1), 0) as total_ayat')
+            ->selectRaw('COUNT(*) as total_record')
+            ->first();
+
+        $totalPoinPelanggaran = Pelanggaran::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->sum('poin');
+
+        $semesters = NilaiSantri::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->distinct()
+            ->orderBy('semester', 'desc')
+            ->pluck('semester');
+
+        return view('wali-santri.rapor-santri', [
+            'santri' => $santri,
+            'semester' => $semester,
+            'semesters' => $semesters,
+            'nilais' => $nilais,
+            'tahfidzStats' => $tahfidzStats,
+            'totalPoinPelanggaran' => $totalPoinPelanggaran,
+        ]);
+    }
+
     /**
-     * Display santri profile details.
      */
     public function profilSantri(Request $request, Santri $santri): View
     {

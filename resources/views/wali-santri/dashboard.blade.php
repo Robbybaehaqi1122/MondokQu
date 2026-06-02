@@ -186,6 +186,14 @@
                                         <i class="ti ti-book me-1"></i>
                                         Tahfidz
                                     </a>
+                                    <a href="{{ route('wali-santri.akademik', $santri) }}" class="btn btn-outline-info">
+                                        <i class="ti ti-books me-1"></i>
+                                        Akademik
+                                    </a>
+                                    <a href="{{ route('wali-santri.rapor', $santri) }}" class="btn btn-outline-warning">
+                                        <i class="ti ti-report-analytics me-1"></i>
+                                        Rapor
+                                    </a>
                                 </div>
                             </div>
                         </div>
