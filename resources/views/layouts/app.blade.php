@@ -48,6 +48,37 @@
         </style>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        @php
+            $themeColor = config('app.tenant_theme_color', '#206bc4');
+        @endphp
+        <style>
+            :root {
+                --tblr-primary: {{ $themeColor }};
+            }
+            .btn-primary, .bg-primary, .badge.bg-primary,
+            .page-item.active .page-link,
+            .nav-pills .nav-link.active {
+                background-color: {{ $themeColor }} !important;
+                border-color: {{ $themeColor }} !important;
+            }
+            .btn-outline-primary {
+                color: {{ $themeColor }};
+                border-color: {{ $themeColor }};
+            }
+            .btn-outline-primary:hover {
+                background-color: {{ $themeColor }};
+                border-color: {{ $themeColor }};
+                color: #fff;
+            }
+            a, .link-primary, .text-primary {
+                color: {{ $themeColor }} !important;
+            }
+            .sidebar-link.active, .sidebar-sublink.active,
+            .sidebar-dropdown[open] > .sidebar-link {
+                color: {{ $themeColor }};
+            }
+        </style>
     </head>
     <body>
         <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
