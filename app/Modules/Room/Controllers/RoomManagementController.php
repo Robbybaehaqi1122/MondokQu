@@ -80,12 +80,10 @@ class RoomManagementController extends \App\Http\Controllers\Controller
      */
     public function store(StoreRoomRequest $request): RedirectResponse
     {
+        $this->authorize('create', Room::class);
+
         $validated = $request->validated();
         $currentUser = $request->user();
-
-        if (! $currentUser?->tenant_id) {
-            abort(403);
-        }
 
         $room = Room::query()->create([
             'tenant_id' => $currentUser->tenant_id,

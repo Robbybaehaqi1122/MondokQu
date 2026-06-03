@@ -71,12 +71,10 @@ class LeaveRequestController extends \App\Http\Controllers\Controller
      */
     public function store(StoreLeaveRequestRequest $request): RedirectResponse
     {
+        $this->authorize('create', LeaveRequest::class);
+
         $validated = $request->validated();
         $currentUser = $request->user();
-
-        if (! $currentUser?->tenant_id) {
-            abort(403);
-        }
 
         $leaveRequest = LeaveRequest::query()->create([
             'tenant_id' => $currentUser->tenant_id,
@@ -113,9 +111,9 @@ class LeaveRequestController extends \App\Http\Controllers\Controller
      */
     public function edit(LeaveRequest $leaveRequest): View|RedirectResponse
     {
-        $currentUser = request()->user();
-        abort_unless($currentUser?->can('create izin'), 403);
+        $this->authorize('update', $leaveRequest);
 
+        $currentUser = request()->user();
         $leaveRequest = LeaveRequest::query()
             ->visibleTo($currentUser)
             ->with(['santri' => fn ($q) => $q->select('id', 'full_name', 'nis')])
@@ -146,6 +144,8 @@ class LeaveRequestController extends \App\Http\Controllers\Controller
      */
     public function update(UpdateLeaveRequestRequest $request, LeaveRequest $leaveRequest): RedirectResponse
     {
+        $this->authorize('update', $leaveRequest);
+
         $currentUser = $request->user();
         $leaveRequest = LeaveRequest::query()
             ->visibleTo($currentUser)
@@ -193,9 +193,9 @@ class LeaveRequestController extends \App\Http\Controllers\Controller
      */
     public function approve(Request $request, LeaveRequest $leaveRequest): RedirectResponse
     {
-        $currentUser = $request->user();
-        abort_unless($currentUser?->can('approve izin'), 403);
+        $this->authorize('approve', $leaveRequest);
 
+        $currentUser = $request->user();
         $leaveRequest = LeaveRequest::query()
             ->visibleTo($currentUser)
             ->findOrFail($leaveRequest->id);
@@ -236,9 +236,9 @@ class LeaveRequestController extends \App\Http\Controllers\Controller
      */
     public function reject(Request $request, LeaveRequest $leaveRequest): RedirectResponse
     {
-        $currentUser = $request->user();
-        abort_unless($currentUser?->can('approve izin'), 403);
+        $this->authorize('reject', $leaveRequest);
 
+        $currentUser = $request->user();
         $leaveRequest = LeaveRequest::query()
             ->visibleTo($currentUser)
             ->findOrFail($leaveRequest->id);
@@ -279,9 +279,9 @@ class LeaveRequestController extends \App\Http\Controllers\Controller
      */
     public function complete(Request $request, LeaveRequest $leaveRequest): RedirectResponse
     {
-        $currentUser = $request->user();
-        abort_unless($currentUser?->can('approve izin'), 403);
+        $this->authorize('complete', $leaveRequest);
 
+        $currentUser = $request->user();
         $leaveRequest = LeaveRequest::query()
             ->visibleTo($currentUser)
             ->findOrFail($leaveRequest->id);
@@ -320,9 +320,9 @@ class LeaveRequestController extends \App\Http\Controllers\Controller
      */
     public function destroy(Request $request, LeaveRequest $leaveRequest): RedirectResponse
     {
-        $currentUser = $request->user();
-        abort_unless($currentUser?->can('create izin'), 403);
+        $this->authorize('delete', $leaveRequest);
 
+        $currentUser = $request->user();
         $leaveRequest = LeaveRequest::query()
             ->visibleTo($currentUser)
             ->findOrFail($leaveRequest->id);

@@ -92,11 +92,9 @@ class AdminKomunikasiController extends Controller
 
     public function store(Request $request, Santri $santri): RedirectResponse
     {
-        $currentUser = $request->user();
+        $this->authorize('create', Communication::class);
 
-        if (! $currentUser?->tenant_id) {
-            abort(403);
-        }
+        $currentUser = $request->user();
 
         $santri = Santri::query()
             ->visibleTo($currentUser)

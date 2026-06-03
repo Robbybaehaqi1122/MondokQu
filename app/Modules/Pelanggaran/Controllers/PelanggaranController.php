@@ -96,12 +96,9 @@ class PelanggaranController extends Controller
 
     public function store(StorePelanggaranRequest $request): RedirectResponse
     {
+        $this->authorize('create', Pelanggaran::class);
+
         $currentUser = $request->user();
-
-        if (! $currentUser?->tenant_id) {
-            abort(403);
-        }
-
         $validated = $request->validated();
 
         $kategori = PelanggaranKategori::query()

@@ -71,12 +71,10 @@ class AttendanceSessionController extends Controller
 
     public function store(StoreAttendanceSessionRequest $request): RedirectResponse
     {
+        $this->authorize('create', AttendanceSession::class);
+
         $validated = $request->validated();
         $currentUser = $request->user();
-
-        if (! $currentUser?->tenant_id) {
-            abort(403);
-        }
 
         $activity = AttendanceActivity::query()
             ->visibleTo($currentUser)

@@ -63,12 +63,10 @@ class AttendanceActivityController extends Controller
 
     public function store(StoreAttendanceActivityRequest $request): RedirectResponse
     {
+        $this->authorize('create', AttendanceActivity::class);
+
         $validated = $request->validated();
         $currentUser = $request->user();
-
-        if (! $currentUser?->tenant_id) {
-            abort(403);
-        }
 
         $activity = AttendanceActivity::query()->create([
             'tenant_id' => $currentUser->tenant_id,

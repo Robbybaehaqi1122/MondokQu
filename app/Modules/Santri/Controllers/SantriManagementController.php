@@ -169,12 +169,8 @@ class SantriManagementController extends \App\Http\Controllers\Controller
         $this->authorize('create', Santri::class);
 
         $validated = $request->validated();
-        $tenantId = (int) $request->user()?->tenant_id;
+        $tenantId = (int) $request->user()->tenant_id;
         $guardianUserIds = $request->guardianUserIds();
-
-        if (! $tenantId) {
-            abort(403);
-        }
 
         $photoPath = $this->santriPhotoUploader->store($request->file('photo'));
 

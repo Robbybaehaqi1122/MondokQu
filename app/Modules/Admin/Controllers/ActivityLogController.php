@@ -110,6 +110,8 @@ class ActivityLogController extends \App\Http\Controllers\Controller
      */
     public function destroyAll(Request $request): RedirectResponse
     {
+        $this->authorize('delete', ActivityLog::class);
+
         $currentUser = $request->user();
 
         ActivityLog::query()
