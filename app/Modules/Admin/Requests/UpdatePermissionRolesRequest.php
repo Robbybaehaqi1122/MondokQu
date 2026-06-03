@@ -2,9 +2,9 @@
 
 namespace App\Modules\Admin\Requests;
 
+use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
 
 class UpdatePermissionRolesRequest extends FormRequest
 {
@@ -25,7 +25,9 @@ class UpdatePermissionRolesRequest extends FormRequest
     {
         return [
             'roles' => ['nullable', 'array'],
-            'roles.*' => ['integer', Rule::exists(Role::class, 'id')],
+            'roles.*' => ['integer', Rule::exists(Role::class, 'id')
+                ->where(fn ($query) => $query->where('tenant_id', $this->user()?->isSuperAdmin() ? null : $this->user()?->tenant_id)),
+            ],
         ];
     }
 }

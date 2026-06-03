@@ -2,9 +2,9 @@
 
 namespace App\Modules\Admin\Requests;
 
+use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
 
 class UpdateUserRoleRequest extends FormRequest
 {
@@ -24,7 +24,9 @@ class UpdateUserRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'role' => ['required', 'string', Rule::exists(Role::class, 'name')],
+            'role' => ['required', 'string', Rule::exists(Role::class, 'name')
+                ->where(fn ($query) => $query->where('tenant_id', $this->user()?->isSuperAdmin() ? null : $this->user()?->tenant_id)),
+            ],
         ];
     }
 }

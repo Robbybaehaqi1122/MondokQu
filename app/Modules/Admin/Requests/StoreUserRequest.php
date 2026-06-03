@@ -2,13 +2,13 @@
 
 namespace App\Modules\Admin\Requests;
 
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\Rules\Password;
-use Spatie\Permission\Models\Role;
 
 class StoreUserRequest extends FormRequest
 {
@@ -51,7 +51,9 @@ class StoreUserRequest extends FormRequest
                     .',max_width='.config('user.avatar.max_width', 2000)
                     .',max_height='.config('user.avatar.max_height', 2000),
             ],
-            'role' => ['required', 'string', Rule::exists(Role::class, 'name')],
+            'role' => ['required', 'string', Rule::exists(Role::class, 'name')
+                ->where(fn ($query) => $query->where('tenant_id', $this->user()?->isSuperAdmin() ? null : $this->user()?->tenant_id)),
+            ],
             'status' => ['required', 'string', Rule::in(User::availableStatuses())],
             'password' => ['required', Password::min(8), 'confirmed'],
         ];

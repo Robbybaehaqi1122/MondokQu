@@ -2,19 +2,19 @@
 
 namespace App\Modules\Auth\Controllers;
 
+use App\Actions\Saas\CreateTenantRoles;
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
-use App\Modules\Auth\Requests\StoreUserRequest;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Spatie\Permission\Models\Role;
 
 class RegisteredUserController extends Controller
 {
@@ -64,8 +64,9 @@ class RegisteredUserController extends Controller
                 'password_change_required' => false, // Publik registrasi tidak perlu force change
             ]);
 
-            Role::findOrCreate('Admin', 'web');
-            $user->syncRoles(['Admin']);
+            app(CreateTenantRoles::class)->handle($tenant);
+            $adminRole = Role::where('tenant_id', $tenant->id)->where('name', 'Admin')->firstOrFail();
+            $user->syncRoles([$adminRole]);
 
             $tenant->update(['owner_id' => $user->id]);
 

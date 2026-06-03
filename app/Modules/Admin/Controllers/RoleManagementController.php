@@ -4,11 +4,11 @@ namespace App\Modules\Admin\Controllers;
 
 use App\Modules\Admin\Requests\StoreRoleRequest;
 use App\Modules\Admin\Requests\UpdateRolePermissionsRequest;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class RoleManagementController extends \App\Http\Controllers\Controller
 {
@@ -16,11 +16,9 @@ class RoleManagementController extends \App\Http\Controllers\Controller
         protected ActivityLogger $activityLogger
     ) {}
 
-    /**
-     * Display the role management panel.
-     */
     public function index(): View
     {
+        $currentUser = request()->user();
         $permissions = Permission::query()
             ->orderBy('name')
             ->get()
@@ -28,6 +26,7 @@ class RoleManagementController extends \App\Http\Controllers\Controller
 
         return view('admin.roles', [
             'roles' => Role::query()
+                ->forTenant($currentUser?->isSuperAdmin() ? null : $currentUser?->tenant_id)
                 ->with('permissions')
                 ->withCount('permissions')
                 ->withCount('users')
@@ -37,9 +36,6 @@ class RoleManagementController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    /**
-     * Store a newly created role.
-     */
     public function store(StoreRoleRequest $request): RedirectResponse
     {
         if (! $request->user()->isSuperAdmin() && in_array($request->validated('name'), ['Superadmin', 'Admin'])) {
@@ -66,15 +62,20 @@ class RoleManagementController extends \App\Http\Controllers\Controller
             ->with('success', 'Role baru berhasil dibuat.');
     }
 
-    /**
-     * Sync permissions for the selected role.
-     */
     public function updatePermissions(UpdateRolePermissionsRequest $request, Role $role): RedirectResponse
     {
-        if ($role->name === 'Superadmin' && ! $request->user()->isSuperAdmin()) {
+        $currentUser = $request->user();
+
+        if ($role->name === 'Superadmin' && ! $currentUser->isSuperAdmin()) {
             return redirect()
                 ->route('admin.roles')
                 ->with('error', 'Hanya Superadmin yang dapat mengubah permission role Superadmin.');
+        }
+
+        if (! $currentUser->isSuperAdmin() && $role->tenant_id !== $currentUser->tenant_id) {
+            return redirect()
+                ->route('admin.roles')
+                ->with('error', 'Anda tidak dapat mengubah role dari tenant pondok lain.');
         }
 
         $previousPermissions = $role->permissions()
@@ -94,7 +95,7 @@ class RoleManagementController extends \App\Http\Controllers\Controller
 
         $this->activityLogger->log(
             action: 'role_permissions_updated',
-            actor: $request->user(),
+            actor: $currentUser,
             target: $role,
             description: 'Permission untuk role diperbarui.',
             properties: [

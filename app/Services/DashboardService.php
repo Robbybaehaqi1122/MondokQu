@@ -3,19 +3,20 @@
 namespace App\Services;
 
 use App\Models\ActivityLog;
+use App\Models\Role;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
 
 class DashboardService
 {
     public function buildCachedDashboardData(?User $currentUser): array
     {
         $roles = Role::query()
+            ->forTenant($currentUser?->isSuperAdmin() ? null : $currentUser?->tenant_id)
             ->withCount([
                 'users' => fn ($query) => $query->visibleTo($currentUser),
             ])

@@ -2,18 +2,18 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::firstOrCreate(['name' => 'Superadmin']);
-        Role::firstOrCreate(['name' => 'Admin']);
-        Role::firstOrCreate(['name' => 'Pengurus']);
-        Role::firstOrCreate(['name' => 'Bendahara']);
-        Role::firstOrCreate(['name' => 'Musyrif/Ustadz']);
-        Role::firstOrCreate(['name' => 'Wali Santri']);
+        Role::firstOrCreate(['name' => 'Superadmin', 'tenant_id' => null]);
+        Role::firstOrCreate(['name' => 'Admin', 'tenant_id' => null]);
+        Role::firstOrCreate(['name' => 'Pengurus', 'tenant_id' => null]);
+        Role::firstOrCreate(['name' => 'Bendahara', 'tenant_id' => null]);
+        Role::firstOrCreate(['name' => 'Musyrif/Ustadz', 'tenant_id' => null]);
+        Role::firstOrCreate(['name' => 'Wali Santri', 'tenant_id' => null]);
     }
 }

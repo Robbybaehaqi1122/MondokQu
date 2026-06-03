@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSeeder extends Seeder
@@ -54,12 +54,12 @@ class PermissionSeeder extends Seeder
             Permission::findOrCreate($permission, 'web');
         }
 
-        $superadmin = Role::findByName('Superadmin', 'web');
-        $admin = Role::findByName('Admin', 'web');
-        $pengurus = Role::findByName('Pengurus', 'web');
-        $bendahara = Role::findByName('Bendahara', 'web');
-        $musyrif = Role::findByName('Musyrif/Ustadz', 'web');
-        $waliSantri = Role::findByName('Wali Santri', 'web');
+        $superadmin = Role::whereNull('tenant_id')->where('name', 'Superadmin')->firstOrFail();
+        $admin = Role::whereNull('tenant_id')->where('name', 'Admin')->firstOrFail();
+        $pengurus = Role::whereNull('tenant_id')->where('name', 'Pengurus')->firstOrFail();
+        $bendahara = Role::whereNull('tenant_id')->where('name', 'Bendahara')->firstOrFail();
+        $musyrif = Role::whereNull('tenant_id')->where('name', 'Musyrif/Ustadz')->firstOrFail();
+        $waliSantri = Role::whereNull('tenant_id')->where('name', 'Wali Santri')->firstOrFail();
 
         $superadmin->syncPermissions(Permission::whereIn('name', $permissions)->get());
         $admin->syncPermissions(Permission::whereIn('name', [
