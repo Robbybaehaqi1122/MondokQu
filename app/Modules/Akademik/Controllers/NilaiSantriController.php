@@ -90,8 +90,8 @@ class NilaiSantriController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', NilaiSantri::class);
         $currentUser = $request->user();
-        if (! $currentUser?->tenant_id) abort(403);
 
         $validated = $request->validate([
             'santri_id' => ['required', 'exists:santris,id'],
@@ -130,9 +130,8 @@ class NilaiSantriController extends Controller
 
     public function edit(Request $request, NilaiSantri $nilaiSantri): View
     {
+        $this->authorize('update', $nilaiSantri);
         $currentUser = $request->user();
-        if (! $currentUser?->tenant_id) abort(403);
-        if (! $currentUser->isSuperAdmin() && $nilaiSantri->tenant_id !== $currentUser->tenant_id) abort(403);
 
         $mapels = MataPelajaran::query()
             ->visibleTo($currentUser)
@@ -159,9 +158,8 @@ class NilaiSantriController extends Controller
 
     public function update(Request $request, NilaiSantri $nilaiSantri): RedirectResponse
     {
+        $this->authorize('update', $nilaiSantri);
         $currentUser = $request->user();
-        if (! $currentUser?->tenant_id) abort(403);
-        if (! $currentUser->isSuperAdmin() && $nilaiSantri->tenant_id !== $currentUser->tenant_id) abort(403);
 
         $validated = $request->validate([
             'nilai_pengetahuan' => ['required', 'integer', 'min:0', 'max:100'],
@@ -181,9 +179,8 @@ class NilaiSantriController extends Controller
 
     public function destroy(Request $request, NilaiSantri $nilaiSantri): RedirectResponse
     {
+        $this->authorize('delete', $nilaiSantri);
         $currentUser = $request->user();
-        if (! $currentUser?->tenant_id) abort(403);
-        if (! $currentUser->isSuperAdmin() && $nilaiSantri->tenant_id !== $currentUser->tenant_id) abort(403);
 
         $nilaiSantri->delete();
 

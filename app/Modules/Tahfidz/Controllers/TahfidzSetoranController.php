@@ -89,12 +89,9 @@ class TahfidzSetoranController extends Controller
 
     public function store(StoreTahfidzSessionRequest $request): RedirectResponse
     {
+        $this->authorize('create', TahfidzSession::class);
+
         $currentUser = $request->user();
-
-        if (! $currentUser?->tenant_id) {
-            abort(403);
-        }
-
         $validated = $request->validated();
 
         $session = TahfidzSession::query()->create([

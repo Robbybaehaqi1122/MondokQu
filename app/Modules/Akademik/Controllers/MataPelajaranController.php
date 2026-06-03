@@ -29,8 +29,8 @@ class MataPelajaranController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', MataPelajaran::class);
         $currentUser = $request->user();
-        if (! $currentUser?->tenant_id) abort(403);
 
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:255'],
@@ -60,9 +60,8 @@ class MataPelajaranController extends Controller
 
     public function update(Request $request, MataPelajaran $mataPelajaran): RedirectResponse
     {
+        $this->authorize('update', $mataPelajaran);
         $currentUser = $request->user();
-        if (! $currentUser?->tenant_id) abort(403);
-        if (! $currentUser->isSuperAdmin() && $mataPelajaran->tenant_id !== $currentUser->tenant_id) abort(403);
 
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:255'],
@@ -89,9 +88,8 @@ class MataPelajaranController extends Controller
 
     public function destroy(Request $request, MataPelajaran $mataPelajaran): RedirectResponse
     {
+        $this->authorize('delete', $mataPelajaran);
         $currentUser = $request->user();
-        if (! $currentUser?->tenant_id) abort(403);
-        if (! $currentUser->isSuperAdmin() && $mataPelajaran->tenant_id !== $currentUser->tenant_id) abort(403);
 
         if ($mataPelajaran->nilaiSantris()->exists()) {
             return back()->withErrors(['delete' => 'Tidak dapat menghapus mata pelajaran yang sudah memiliki nilai.']);
