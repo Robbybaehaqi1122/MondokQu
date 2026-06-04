@@ -23,7 +23,9 @@ class StoreRoleRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tenantId = $this->user()?->isSuperAdmin() ? null : $this->user()?->tenant_id;
+        $user = $this->user();
+        $isSuperAdmin = $user?->isSuperAdmin() ?? false;
+        $tenantId = $isSuperAdmin ? $this->input('tenant_id') ?: null : $user?->tenant_id;
 
         return [
             'name' => [
@@ -32,6 +34,11 @@ class StoreRoleRequest extends FormRequest
                 'max:255',
                 Rule::unique(Role::class, 'name')
                     ->where(fn ($query) => $query->where('tenant_id', $tenantId)),
+            ],
+            'tenant_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('tenants', 'id'),
             ],
         ];
     }
