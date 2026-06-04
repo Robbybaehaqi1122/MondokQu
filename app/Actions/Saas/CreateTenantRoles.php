@@ -20,7 +20,7 @@ class CreateTenantRoles
         foreach (self::TENANT_ROLES as $roleName) {
             $template = Role::whereNull('tenant_id')->where('name', $roleName)->first();
 
-            $tenantRole = Role::create([
+            $tenantRole = Role::firstOrCreate([
                 'name' => $roleName,
                 'guard_name' => 'web',
                 'tenant_id' => $tenant->id,

@@ -57,6 +57,13 @@
                                         <div class="text-secondary small">
                                             {{ $roleDescriptions[$role->name] ?? 'Role jabatan operasional sistem.' }}
                                         </div>
+                                        <div class="mt-1">
+                                            @if ($role->tenant_id)
+                                                <span class="badge bg-purple-lt text-purple">Tenant: {{ $role->tenant?->name ?? 'ID ' . $role->tenant_id }}</span>
+                                            @else
+                                                <span class="badge bg-muted-lt text-muted">Global</span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="badge bg-azure-lt text-azure">{{ $role->users_count }} user</span>
@@ -162,8 +169,13 @@
                             <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
                                 <i class="ti ti-alert-triangle"></i>
                                 <span>
-                                    <strong>Perhatian:</strong> Role bersifat <strong>global</strong> — perubahan permission akan mempengaruhi
-                                    <strong>semua user</strong> dengan role <strong>{{ $role->name }}</strong> di <strong>seluruh tenant</strong>.
+                                    @if ($role->tenant_id)
+                                        <strong>Perhatian:</strong> Role ini spesifik untuk <strong>{{ $role->tenant?->name ?? 'tenant ini' }}</strong> — perubahan permission hanya akan mempengaruhi
+                                        <strong>user</strong> dengan role <strong>{{ $role->name }}</strong> di tenant <strong>ini</strong>.
+                                    @else
+                                        <strong>Perhatian:</strong> Role bersifat <strong>global</strong> — perubahan permission akan mempengaruhi
+                                        <strong>semua user</strong> dengan role <strong>{{ $role->name }}</strong> di <strong>seluruh tenant</strong>.
+                                    @endif
                                 </span>
                             </div>
 
