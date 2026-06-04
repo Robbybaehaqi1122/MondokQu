@@ -24,9 +24,7 @@ class Role extends SpatieRole
             return $query->whereNull('tenant_id');
         }
 
-        return $query->where(function ($q) use ($tenantId) {
-            $q->where('tenant_id', $tenantId)->orWhereNull('tenant_id');
-        });
+        return $query->where('tenant_id', $tenantId);
     }
 
     protected static function booted(): void
