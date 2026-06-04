@@ -218,9 +218,7 @@ class UserManagementController extends \App\Http\Controllers\Controller
                     'password' => $validated['password'],
                 ]);
 
-                $tenantRole = Role::where('tenant_id', $resolvedTenantId)
-                    ->where('name', $validated['role'])
-                    ->firstOr(fn () => Role::whereNull('tenant_id')->where('name', $validated['role'])->firstOrFail());
+                $tenantRole = $this->resolveTenantRole($resolvedTenantId, $validated['role']);
                 $user->syncRoles([$tenantRole]);
 
                 $this->activityLogger->log(
@@ -272,9 +270,7 @@ class UserManagementController extends \App\Http\Controllers\Controller
 
         $previousRoles = $user->getRoleNames()->implode(', ');
         $roleName = $request->validated('role');
-        $tenantRole = Role::where('tenant_id', $user->tenant_id)
-            ->where('name', $roleName)
-            ->firstOr(fn () => Role::whereNull('tenant_id')->where('name', $roleName)->firstOrFail());
+        $tenantRole = $this->resolveTenantRole($user->tenant_id, $roleName);
         $user->syncRoles([$tenantRole]);
 
         $this->activityLogger->log(
@@ -687,5 +683,34 @@ class UserManagementController extends \App\Http\Controllers\Controller
         return redirect()
             ->route('admin.users')
             ->with('success', 'User berhasil dihapus.');
+    }
+
+    /**
+     * Resolve the appropriate role for a user, creating a tenant-specific
+     * role from the platform template when one does not yet exist.
+     */
+    private function resolveTenantRole(?int $tenantId, string $roleName): Role
+    {
+        if ($tenantId === null) {
+            return Role::whereNull('tenant_id')->where('name', $roleName)->firstOrFail();
+        }
+
+        $role = Role::where('tenant_id', $tenantId)->where('name', $roleName)->first();
+
+        if ($role) {
+            return $role;
+        }
+
+        $template = Role::whereNull('tenant_id')->where('name', $roleName)->firstOrFail();
+
+        $role = Role::query()->create([
+            'name' => $roleName,
+            'guard_name' => 'web',
+            'tenant_id' => $tenantId,
+        ]);
+
+        $role->syncPermissions($template->permissions);
+
+        return $role;
     }
 }
