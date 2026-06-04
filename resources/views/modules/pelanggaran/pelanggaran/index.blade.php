@@ -5,10 +5,10 @@
                 <h2 class="page-title">Catatan Pelanggaran</h2>
                 <div class="text-secondary mt-1">Daftar pelanggaran santri.</div>
             </div>
-            <a href="{{ route('pelanggaran.create') }}" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPelanggaranModal">
                 <i class="ti ti-plus me-1"></i>
                 Catat Pelanggaran
-            </a>
+            </button>
         </div>
     </x-slot>
 
@@ -102,4 +102,95 @@
             <div class="card-footer">{{ $pelanggarans->links() }}</div>
         @endif
     </div>
+
+    <div class="modal modal-blur fade" id="createPelanggaranModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('pelanggaran.store') }}">
+                    @csrf
+
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title">Catat Pelanggaran</h5>
+                            <div class="text-secondary small mt-1">Catat pelanggaran yang dilakukan santri.</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if ($errors->any())
+                            <div class="alert alert-danger" role="alert">
+                                <div class="fw-semibold mb-2">Pelanggaran belum bisa disimpan.</div>
+                                <ul class="mb-0 ps-3">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="santri_id" class="form-label">Santri <span class="text-danger">*</span></label>
+                                <select id="santri_id" name="santri_id" class="form-select @error('santri_id') is-invalid @enderror" required>
+                                    <option value="">Pilih Santri</option>
+                                    @foreach ($santriOptions as $santri)
+                                        <option value="{{ $santri->id }}" @selected(old('santri_id') == $santri->id)>
+                                            {{ $santri->full_name }} (NIS {{ $santri->nis }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('santri_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="kategori_id" class="form-label">Kategori Pelanggaran <span class="text-danger">*</span></label>
+                                <select id="kategori_id" name="kategori_id" class="form-select @error('kategori_id') is-invalid @enderror" required>
+                                    <option value="">Pilih Kategori</option>
+                                    @foreach ($kategoriOptions as $kategori)
+                                        <option value="{{ $kategori->id }}" @selected(old('kategori_id') == $kategori->id)>
+                                            {{ $kategori->nama }} ({{ $kategori->poin }} poin)
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('kategori_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="tanggal" class="form-label">Tanggal Pelanggaran <span class="text-danger">*</span></label>
+                                <input type="date" id="tanggal" name="tanggal" class="form-control @error('tanggal') is-invalid @enderror"
+                                    value="{{ old('tanggal', now()->toDateString()) }}" required>
+                                @error('tanggal') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-12">
+                                <label for="keterangan" class="form-label">Keterangan</label>
+                                <textarea id="keterangan" name="keterangan" class="form-control @error('keterangan') is-invalid @enderror" rows="3" placeholder="Deskripsi pelanggaran...">{{ old('keterangan') }}</textarea>
+                                @error('keterangan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i>
+                            Simpan Pelanggaran
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        @if (old('santri_id') || $errors->any())
+            document.addEventListener('DOMContentLoaded', () => {
+                const modal = new bootstrap.Modal('#createPelanggaranModal');
+                modal.show();
+            });
+        @endif
+    </script>
+    @endpush
 </x-app-layout>
