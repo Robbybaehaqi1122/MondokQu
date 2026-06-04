@@ -42,10 +42,22 @@
 
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             @php $exportQuery = request()->only(['q', 'gender', 'status']); @endphp
-                            <div class="btn-group">
-                                <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'csv'])) }}" class="btn btn-outline-primary">CSV</a>
-                                <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="btn btn-outline-primary">Excel</a>
-                                <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="btn btn-outline-primary">PDF</a>
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ti ti-download me-1"></i>
+                                    Export
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end">
+                                    <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'csv'])) }}" class="dropdown-item">
+                                        <i class="ti ti-file-text me-2"></i> CSV
+                                    </a>
+                                    <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="dropdown-item">
+                                        <i class="ti ti-file-spreadsheet me-2"></i> Excel
+                                    </a>
+                                    <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="dropdown-item">
+                                        <i class="ti ti-file me-2"></i> PDF
+                                    </a>
+                                </div>
                             </div>
 
                             @if ($canCreateSantri)
