@@ -77,18 +77,15 @@ class RoleManagementController extends \App\Http\Controllers\Controller
     public function store(StoreRoleRequest $request): RedirectResponse
     {
         $currentUser = $request->user();
-        $isSuperAdmin = $currentUser?->isSuperAdmin() ?? false;
 
-        if (! $isSuperAdmin && in_array($request->validated('name'), ['Superadmin', 'Admin'])) {
-            return redirect()
-                ->route('admin.roles')
-                ->with('error', 'Hanya Superadmin yang dapat membuat role Admin atau Superadmin.');
+        if (! $currentUser->isSuperAdmin()) {
+            abort(403, 'Hanya Superadmin yang dapat membuat role baru.');
         }
 
         $role = Role::query()->create([
             'name' => $request->validated('name'),
             'guard_name' => 'web',
-            'tenant_id' => $isSuperAdmin ? ($request->validated('tenant_id') ?: null) : $currentUser->tenant_id,
+            'tenant_id' => $request->validated('tenant_id') ?: null,
         ]);
 
         $this->activityLogger->log(

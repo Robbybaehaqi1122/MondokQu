@@ -202,6 +202,7 @@
                                 <p class="text-secondary mb-0">Role di bawah ini spesifik untuk tenant Anda. Perubahan hanya berdampak di pondok ini.</p>
                             </div>
 
+                            @can('manage system settings')
                             <button
                                 type="button"
                                 class="btn btn-primary"
@@ -212,6 +213,7 @@
                                 <i class="ti ti-user-plus me-1"></i>
                                 Tambah Role
                             </button>
+                            @endcan
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -275,7 +277,8 @@
         @endif
     </div>
 
-    {{-- Create Role Modal --}}
+    {{-- Create Role Modal — only superadmin --}}
+    @can('manage system settings')
     <div class="modal modal-blur fade" id="createRoleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -334,6 +337,7 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- Permission Modals --}}
     @php
