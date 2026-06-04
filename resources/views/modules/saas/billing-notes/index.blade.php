@@ -228,7 +228,7 @@
                     <div class="modal-header">
                         <div>
                             <h5 class="modal-title">Tambah Billing Note</h5>
-                            <div class="text-secondary small mt-1">Catat pembayaran tenant secara manual agar jejak billing tetap rapi.</div>
+                            <div class="text-secondary small mt-1">Catat pembayaran tenant secara manual.</div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -375,7 +375,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan Billing Note</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
                     </div>
                 </form>
             </div>
