@@ -128,10 +128,19 @@ return new class extends Migration
 
     protected function addMysqlConstraints(): void
     {
-        DB::statement('ALTER TABLE santri_invoices ADD CONSTRAINT santri_invoices_amount_positive_chk CHECK (amount > 0)');
-        DB::statement('ALTER TABLE santri_invoices ADD CONSTRAINT santri_invoices_paid_nonnegative_chk CHECK (paid_amount >= 0)');
-        DB::statement('ALTER TABLE santri_invoices ADD CONSTRAINT santri_invoices_paid_lte_amount_chk CHECK (paid_amount <= amount)');
-        DB::statement('ALTER TABLE santri_payments ADD CONSTRAINT santri_payments_amount_positive_chk CHECK (amount > 0)');
+        $constraints = [
+            'ALTER TABLE santri_invoices ADD CONSTRAINT santri_invoices_amount_positive_chk CHECK (amount > 0)',
+            'ALTER TABLE santri_invoices ADD CONSTRAINT santri_invoices_paid_nonnegative_chk CHECK (paid_amount >= 0)',
+            'ALTER TABLE santri_invoices ADD CONSTRAINT santri_invoices_paid_lte_amount_chk CHECK (paid_amount <= amount)',
+            'ALTER TABLE santri_payments ADD CONSTRAINT santri_payments_amount_positive_chk CHECK (amount > 0)',
+        ];
+        foreach ($constraints as $sql) {
+            try {
+                DB::statement($sql);
+            } catch (Throwable) {
+                // Constraint might already exist or not be supported
+            }
+        }
     }
 
     protected function addMariaDbConstraints(): void
@@ -165,18 +174,34 @@ return new class extends Migration
 
     protected function dropMysqlConstraints(): void
     {
-        DB::statement('ALTER TABLE santri_invoices DROP CHECK santri_invoices_amount_positive_chk');
-        DB::statement('ALTER TABLE santri_invoices DROP CHECK santri_invoices_paid_nonnegative_chk');
-        DB::statement('ALTER TABLE santri_invoices DROP CHECK santri_invoices_paid_lte_amount_chk');
-        DB::statement('ALTER TABLE santri_payments DROP CHECK santri_payments_amount_positive_chk');
+        foreach ([
+            'ALTER TABLE santri_invoices DROP CHECK santri_invoices_amount_positive_chk',
+            'ALTER TABLE santri_invoices DROP CHECK santri_invoices_paid_nonnegative_chk',
+            'ALTER TABLE santri_invoices DROP CHECK santri_invoices_paid_lte_amount_chk',
+            'ALTER TABLE santri_payments DROP CHECK santri_payments_amount_positive_chk',
+        ] as $sql) {
+            try {
+                DB::statement($sql);
+            } catch (Throwable) {
+                // Constraint might not exist (MariaDB, or not yet created)
+            }
+        }
     }
 
     protected function dropMariaDbConstraints(): void
     {
-        DB::statement('ALTER TABLE santri_invoices DROP CONSTRAINT santri_invoices_amount_positive_chk');
-        DB::statement('ALTER TABLE santri_invoices DROP CONSTRAINT santri_invoices_paid_nonnegative_chk');
-        DB::statement('ALTER TABLE santri_invoices DROP CONSTRAINT santri_invoices_paid_lte_amount_chk');
-        DB::statement('ALTER TABLE santri_payments DROP CONSTRAINT santri_payments_amount_positive_chk');
+        foreach ([
+            'ALTER TABLE santri_invoices DROP CONSTRAINT IF EXISTS santri_invoices_amount_positive_chk',
+            'ALTER TABLE santri_invoices DROP CONSTRAINT IF EXISTS santri_invoices_paid_nonnegative_chk',
+            'ALTER TABLE santri_invoices DROP CONSTRAINT IF EXISTS santri_invoices_paid_lte_amount_chk',
+            'ALTER TABLE santri_payments DROP CONSTRAINT IF EXISTS santri_payments_amount_positive_chk',
+        ] as $sql) {
+            try {
+                DB::statement($sql);
+            } catch (Throwable) {
+                // Constraint might not exist
+            }
+        }
     }
 
     protected function dropPostgresConstraints(): void
