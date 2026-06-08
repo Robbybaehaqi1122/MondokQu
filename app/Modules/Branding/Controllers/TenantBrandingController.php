@@ -10,7 +10,7 @@ use Illuminate\View\View;
 
 class TenantBrandingController extends Controller
 {
-    public function edit(Request $request): View
+    public function edit(Request $request): View|RedirectResponse
     {
         $currentUser = $request->user();
         $tenant = $currentUser->tenant;
