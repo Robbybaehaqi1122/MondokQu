@@ -81,9 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     mobileSidebarLinks.forEach((link) => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth < 992) {
-                setMobileSidebarOpen(false);
+        link.addEventListener('click', (e) => {
+            if (window.innerWidth < 992 && link.getAttribute('href') === '#') {
+                e.preventDefault();
+                const details = link.closest('details');
+                if (details) {
+                    details.open = !details.open;
+                }
             }
         });
     });
