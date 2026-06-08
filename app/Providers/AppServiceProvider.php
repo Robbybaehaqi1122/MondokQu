@@ -35,6 +35,7 @@ use App\Policies\SantriPolicy;
 use App\Policies\TahfidzSessionPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -52,6 +53,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceScheme('https');
+
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Santri::class, SantriPolicy::class);
         Gate::policy(Room::class, RoomPolicy::class);
