@@ -82,11 +82,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mobileSidebarLinks.forEach((link) => {
         link.addEventListener('click', (e) => {
-            if (window.innerWidth < 992 && link.getAttribute('href') === '#') {
-                e.preventDefault();
+            if (window.innerWidth < 992) {
                 const details = link.closest('details');
-                if (details) {
+                if (details && link.tagName === 'SUMMARY') {
+                    e.preventDefault();
                     details.open = !details.open;
+                    return;
+                }
+                if (!link.closest('.sidebar-submenu') && !details) {
+                    return;
                 }
             }
         });
