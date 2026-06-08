@@ -238,9 +238,15 @@ class Santri extends Model
             return $this->photo_path;
         }
 
-        return str_starts_with($this->photo_path, '/')
-            ? $this->photo_path
-            : asset('storage/'.$this->photo_path);
+        if (str_starts_with($this->photo_path, '/')) {
+            return $this->photo_path;
+        }
+
+        if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($this->photo_path)) {
+            return null;
+        }
+
+        return asset('storage/'.$this->photo_path);
     }
 
     /**

@@ -314,8 +314,14 @@ class User extends Authenticatable implements MustVerifyEmailContract
             return $this->avatar_path;
         }
 
-        return str_starts_with($this->avatar_path, '/')
-            ? $this->avatar_path
-            : asset('storage/'.$this->avatar_path);
+        if (str_starts_with($this->avatar_path, '/')) {
+            return $this->avatar_path;
+        }
+
+        if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($this->avatar_path)) {
+            return null;
+        }
+
+        return asset('storage/'.$this->avatar_path);
     }
 }
