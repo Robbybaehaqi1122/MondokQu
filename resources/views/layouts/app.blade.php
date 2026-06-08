@@ -20,7 +20,7 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css">
 
         @php
-            $themeColor = config('app.tenant_theme_color', '#206bc4');
+            $themeColor = config('app.tenant_theme_color', '#0d9488');
         @endphp
         <style>
             :root {
@@ -28,7 +28,9 @@
             }
             .btn-primary, .bg-primary, .badge.bg-primary,
             .page-item.active .page-link,
-            .nav-pills .nav-link.active {
+            .nav-pills .nav-link.active,
+            .progress-bar,
+            .form-check-input:checked {
                 background-color: {{ $themeColor }} !important;
                 border-color: {{ $themeColor }} !important;
             }
@@ -41,9 +43,16 @@
                 border-color: {{ $themeColor }};
                 color: #fff;
             }
+            a, .link-primary, .text-primary,
             .sidebar-link.active, .sidebar-sublink.active,
             .sidebar-dropdown[open] > .sidebar-link {
                 color: {{ $themeColor }};
+            }
+            a:hover {
+                color: {{ $themeColor }}cc;
+            }
+            .border-primary {
+                border-color: {{ $themeColor }} !important;
             }
         </style>
 

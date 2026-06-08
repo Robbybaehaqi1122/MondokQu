@@ -2,7 +2,9 @@
 
 namespace App\Modules\Saas\Controllers;
 
+use App\Actions\Saas\CreateTenantRoles;
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Auth\Actions\SendEmailVerificationNotificationAction;
@@ -82,6 +84,8 @@ class TenantManagementController extends Controller
                 'owner_id' => null,
             ]);
 
+            app(CreateTenantRoles::class)->handle($tenant);
+
             if ($request->boolean('create_owner_account')) {
                 $owner = User::query()->create([
                     'tenant_id' => $tenant->id,
@@ -95,7 +99,8 @@ class TenantManagementController extends Controller
                     'password' => $validated['owner_password'],
                 ]);
 
-                $owner->syncRoles(['Admin']);
+                $adminRole = Role::where('tenant_id', $tenant->id)->where('name', 'Admin')->firstOrFail();
+                $owner->syncRoles([$adminRole]);
 
                 $tenant->forceFill([
                     'owner_id' => $owner->id,

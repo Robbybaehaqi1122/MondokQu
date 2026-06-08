@@ -25,6 +25,8 @@ class AttendanceRecordController extends Controller
 
     public function edit(Request $request, AttendanceSession $attendanceSession): View
     {
+        $this->authorize('inputRecords', $attendanceSession);
+
         $currentUser = $request->user();
         $session = AttendanceSession::query()
             ->visibleTo($currentUser)
@@ -65,6 +67,8 @@ class AttendanceRecordController extends Controller
 
     public function update(UpdateAttendanceRecordsRequest $request, AttendanceSession $attendanceSession): RedirectResponse
     {
+        $this->authorize('inputRecords', $attendanceSession);
+
         $currentUser = $request->user();
         $validated = $request->validated();
         $session = AttendanceSession::query()

@@ -26,6 +26,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/admin/roles', [RoleManagementController::class, 'index'])->name('admin.roles');
     Route::post('/admin/roles', [RoleManagementController::class, 'store'])->name('admin.roles.store');
     Route::patch('/admin/roles/{role}/permissions', [RoleManagementController::class, 'updatePermissions'])->name('admin.roles.update-permissions');
+    Route::post('/admin/roles/{role}/sync-from-template', [RoleManagementController::class, 'syncFromTemplate'])->name('admin.roles.sync-from-template');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage system settings', 'throttle:60,1'])->group(function () {

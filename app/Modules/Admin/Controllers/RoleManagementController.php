@@ -4,11 +4,13 @@ namespace App\Modules\Admin\Controllers;
 
 use App\Modules\Admin\Requests\StoreRoleRequest;
 use App\Modules\Admin\Requests\UpdateRolePermissionsRequest;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\Tenant;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class RoleManagementController extends \App\Http\Controllers\Controller
 {
@@ -16,46 +18,79 @@ class RoleManagementController extends \App\Http\Controllers\Controller
         protected ActivityLogger $activityLogger
     ) {}
 
-    /**
-     * Display the role management panel.
-     */
     public function index(): View
     {
+        $currentUser = request()->user();
         $permissions = Permission::query()
             ->orderBy('name')
             ->get()
             ->groupBy(fn (Permission $permission): string => (string) str($permission->name)->before(' ')->headline());
 
-        return view('admin.roles', [
-            'roles' => Role::query()
+        $isSuperAdmin = $currentUser?->isSuperAdmin() ?? false;
+
+        if ($isSuperAdmin) {
+            $globalRoles = Role::query()
+                ->whereNull('tenant_id')
                 ->with('permissions')
                 ->withCount('permissions')
                 ->withCount('users')
                 ->orderBy('name')
-                ->get(),
+                ->get();
+
+            $tenantRoles = Role::query()
+                ->whereNotNull('tenant_id')
+                ->with('permissions', 'tenant')
+                ->withCount('permissions')
+                ->withCount('users')
+                ->orderBy('name')
+                ->get()
+                ->groupBy(fn (Role $role) => $role->tenant?->name ?? 'Tenant #' . $role->tenant_id);
+
+            $tenants = Tenant::query()
+                ->orderBy('name')
+                ->get(['id', 'name']);
+
+            return view('admin.roles', [
+                'globalRoles' => $globalRoles,
+                'tenantRoles' => $tenantRoles,
+                'tenants' => $tenants,
+                'permissionGroups' => $permissions,
+                'isSuperAdmin' => true,
+            ]);
+        }
+
+        $roles = Role::query()
+            ->forTenant($currentUser?->tenant_id)
+            ->with('permissions')
+            ->withCount('permissions')
+            ->withCount('users')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.roles', [
+            'roles' => $roles,
             'permissionGroups' => $permissions,
+            'isSuperAdmin' => false,
         ]);
     }
 
-    /**
-     * Store a newly created role.
-     */
     public function store(StoreRoleRequest $request): RedirectResponse
     {
-        if (! $request->user()->isSuperAdmin() && in_array($request->validated('name'), ['Superadmin', 'Admin'])) {
-            return redirect()
-                ->route('admin.roles')
-                ->with('error', 'Hanya Superadmin yang dapat membuat role Admin atau Superadmin.');
+        $currentUser = $request->user();
+
+        if (! $currentUser->isSuperAdmin()) {
+            abort(403, 'Hanya Superadmin yang dapat membuat role baru.');
         }
 
         $role = Role::query()->create([
             'name' => $request->validated('name'),
             'guard_name' => 'web',
+            'tenant_id' => $request->validated('tenant_id') ?: null,
         ]);
 
         $this->activityLogger->log(
             action: 'role_created',
-            actor: $request->user(),
+            actor: $currentUser,
             target: $role,
             description: 'Role baru dibuat.',
             ipAddress: $request->ip()
@@ -66,15 +101,20 @@ class RoleManagementController extends \App\Http\Controllers\Controller
             ->with('success', 'Role baru berhasil dibuat.');
     }
 
-    /**
-     * Sync permissions for the selected role.
-     */
     public function updatePermissions(UpdateRolePermissionsRequest $request, Role $role): RedirectResponse
     {
-        if ($role->name === 'Superadmin' && ! $request->user()->isSuperAdmin()) {
+        $currentUser = $request->user();
+
+        if ($role->name === 'Superadmin' && ! $currentUser->isSuperAdmin()) {
             return redirect()
                 ->route('admin.roles')
                 ->with('error', 'Hanya Superadmin yang dapat mengubah permission role Superadmin.');
+        }
+
+        if (! $currentUser->isSuperAdmin() && $role->tenant_id !== $currentUser->tenant_id) {
+            return redirect()
+                ->route('admin.roles')
+                ->with('error', 'Anda tidak dapat mengubah role dari tenant pondok lain.');
         }
 
         $previousPermissions = $role->permissions()
@@ -94,7 +134,7 @@ class RoleManagementController extends \App\Http\Controllers\Controller
 
         $this->activityLogger->log(
             action: 'role_permissions_updated',
-            actor: $request->user(),
+            actor: $currentUser,
             target: $role,
             description: 'Permission untuk role diperbarui.',
             properties: [
@@ -110,5 +150,52 @@ class RoleManagementController extends \App\Http\Controllers\Controller
         return redirect()
             ->route('admin.roles')
             ->with('success', 'Permission untuk role berhasil diperbarui.');
+    }
+
+    public function syncFromTemplate(Request $request, Role $role): RedirectResponse
+    {
+        if (! $request->user()?->isSuperAdmin()) {
+            abort(403);
+        }
+
+        if ($role->tenant_id === null) {
+            return redirect()
+                ->route('admin.roles')
+                ->with('error', 'Role global tidak bisa di-sync dari template.');
+        }
+
+        $template = Role::whereNull('tenant_id')
+            ->where('name', $role->name)
+            ->first();
+
+        if (! $template) {
+            return redirect()
+                ->route('admin.roles')
+                ->with('error', 'Template global untuk role ' . $role->name . ' tidak ditemukan.');
+        }
+
+        $previousPermissions = $role->permissions()->pluck('name')->values()->all();
+
+        $role->syncPermissions($template->permissions);
+
+        $this->activityLogger->log(
+            action: 'role_synced_from_template',
+            actor: $request->user(),
+            target: $role,
+            description: 'Permission role diselaraskan dengan template global.',
+            properties: [
+                'tenant_id' => $role->tenant_id,
+                'role_name' => $role->name,
+                'permissions' => [
+                    'before' => $previousPermissions,
+                    'after' => $role->permissions()->pluck('name')->values()->all(),
+                ],
+            ],
+            ipAddress: $request->ip()
+        );
+
+        return redirect()
+            ->route('admin.roles')
+            ->with('success', 'Permission role ' . $role->name . ' berhasil diselaraskan dengan template global.');
     }
 }

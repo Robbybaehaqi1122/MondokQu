@@ -5,11 +5,11 @@ namespace App\Modules\Admin\Controllers;
 use App\Modules\Admin\Requests\StorePermissionRequest;
 use App\Modules\Admin\Requests\UpdatePermissionRequest;
 use App\Modules\Admin\Requests\UpdatePermissionRolesRequest;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class PermissionManagementController extends \App\Http\Controllers\Controller
 {
@@ -22,6 +22,8 @@ class PermissionManagementController extends \App\Http\Controllers\Controller
      */
     public function index(): View
     {
+        $currentUser = request()->user();
+
         return view('admin.permissions', [
             'permissions' => Permission::query()
                 ->with('roles')
@@ -29,6 +31,7 @@ class PermissionManagementController extends \App\Http\Controllers\Controller
                 ->orderBy('name')
                 ->get(),
             'roles' => Role::query()
+                ->forTenant($currentUser?->isSuperAdmin() ? null : $currentUser?->tenant_id)
                 ->orderBy('name')
                 ->get(),
         ]);
@@ -100,6 +103,7 @@ class PermissionManagementController extends \App\Http\Controllers\Controller
             ->map(fn (mixed $roleId): int => (int) $roleId);
 
         $roles = Role::query()
+            ->forTenant($request->user()?->isSuperAdmin() ? null : $request->user()?->tenant_id)
             ->whereIn('id', $roleIds)
             ->get();
 

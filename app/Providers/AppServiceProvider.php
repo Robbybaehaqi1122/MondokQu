@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\ActivityLog;
 use App\Models\AttendanceActivity;
+use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\Communication;
 use App\Models\LeaveRequest;
@@ -19,6 +20,7 @@ use App\Models\TahfidzSession;
 use App\Models\User;
 use App\Policies\ActivityLogPolicy;
 use App\Policies\AttendanceActivityPolicy;
+use App\Policies\AttendanceRecordPolicy;
 use App\Policies\AttendanceSessionPolicy;
 use App\Policies\CommunicationPolicy;
 use App\Policies\LeaveRequestPolicy;
@@ -58,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(LeaveRequest::class, LeaveRequestPolicy::class);
         Gate::policy(AttendanceSession::class, AttendanceSessionPolicy::class);
         Gate::policy(AttendanceActivity::class, AttendanceActivityPolicy::class);
+        Gate::policy(AttendanceRecord::class, AttendanceRecordPolicy::class);
         Gate::policy(ActivityLog::class, ActivityLogPolicy::class);
         Gate::policy(NilaiSantri::class, NilaiSantriPolicy::class);
         Gate::policy(MataPelajaran::class, MataPelajaranPolicy::class);

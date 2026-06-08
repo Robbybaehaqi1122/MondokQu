@@ -35,7 +35,7 @@ class TahfidzRaporController extends Controller
             ? Santri::query()->visibleTo($currentUser)->find($selectedSantriId)
             : null;
 
-        $raporData = collect();
+        $raporData = null;
         if ($selectedSantri) {
             $sessions = TahfidzSession::query()
                 ->visibleTo($currentUser)

@@ -15,6 +15,8 @@ class TenantBrandingController extends Controller
         $currentUser = $request->user();
         $tenant = $currentUser->tenant;
 
+        if (! $tenant) abort(403);
+
         return view('modules.branding.edit', [
             'tenant' => $tenant,
             'settings' => $tenant->settings ?? [],

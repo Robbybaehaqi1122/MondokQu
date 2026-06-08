@@ -68,25 +68,31 @@
                             <p class="text-secondary mb-0">Menampilkan siapa melakukan apa, targetnya siapa, kapan terjadi.</p>
                         </div>
 
-                        <div class="d-flex flex-wrap gap-2">
-                            <a
-                                href="{{ route('admin.activity-logs.export', request()->only(['search', 'action', 'actor_id', 'date_from', 'date_to'])) }}"
-                                class="btn btn-outline-primary"
-                            >
-                                <i class="ti ti-download me-1"></i>
-                                Export CSV
-                            </a>
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ti ti-dots-vertical me-1"></i>
+                                Aksi
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a
+                                    href="{{ route('admin.activity-logs.export', request()->only(['search', 'action', 'actor_id', 'date_from', 'date_to'])) }}"
+                                    class="dropdown-item"
+                                >
+                                    <i class="ti ti-download me-2"></i>
+                                    Export CSV
+                                </a>
 
-                            @if ($canManageActivityLogs)
-                                <form method="POST" action="{{ route('admin.activity-logs.destroy-all') }}" onsubmit="return confirm('Yakin ingin menghapus semua log activity? Tindakan ini tidak bisa dibatalkan.')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger">
-                                        <i class="ti ti-trash me-1"></i>
-                                        Hapus Semua Log
-                                    </button>
-                                </form>
-                            @endif
+                                @if ($canManageActivityLogs)
+                                    <form method="POST" action="{{ route('admin.activity-logs.destroy-all') }}" onsubmit="return confirm('Yakin ingin menghapus semua log activity? Tindakan ini tidak bisa dibatalkan.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="ti ti-trash me-2"></i>
+                                            Hapus Semua Log
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Saas\CreateTenantRoles;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\Pelanggaran\PelanggaranKategoriSeeder;
@@ -46,6 +48,10 @@ class DatabaseSeeder extends Seeder
 
         $user->syncRoles(['Superadmin']);
 
+        app(CreateTenantRoles::class)->handle($tenant);
+
+        $adminRole = Role::where('tenant_id', $tenant->id)->where('name', 'Admin')->firstOrFail();
+
         $tenantAdmin = User::updateOrCreate([
             'email' => 'pondok-admin@example.com',
         ], [
@@ -57,7 +63,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
 
-        $tenantAdmin->syncRoles(['Admin']);
+        $tenantAdmin->syncRoles([$adminRole]);
 
         $tenant->forceFill([
             'owner_id' => $tenantAdmin->id,

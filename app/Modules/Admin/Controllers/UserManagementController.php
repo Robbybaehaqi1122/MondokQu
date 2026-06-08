@@ -8,6 +8,7 @@ use App\Modules\Admin\Requests\UpdateUserProfileRequest;
 use App\Modules\Admin\Requests\UpdateUserRoleRequest;
 use App\Modules\Admin\Requests\UpdateUserStatusRequest;
 use App\Models\ActivityLog;
+use App\Models\Role;
 use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\User;
@@ -20,7 +21,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Spatie\Permission\Models\Role;
 use Throwable;
 
 class UserManagementController extends \App\Http\Controllers\Controller
@@ -39,6 +39,7 @@ class UserManagementController extends \App\Http\Controllers\Controller
 
         $currentUser = $request->user();
         $roles = Role::query()
+            ->forTenant($currentUser?->isSuperAdmin() ? null : $currentUser?->tenant_id)
             ->orderBy('name')
             ->get();
         $assignableRoles = $roles->filter(function (Role $role) use ($currentUser) {
@@ -155,7 +156,10 @@ class UserManagementController extends \App\Http\Controllers\Controller
             ->limit(10)
             ->get();
 
-        $roles = Role::query()->orderBy('name')->get();
+        $roles = Role::query()
+            ->forTenant($currentUser?->isSuperAdmin() ? null : $currentUser?->tenant_id)
+            ->orderBy('name')
+            ->get();
         $assignableRoles = $roles->filter(function (Role $role) use ($currentUser) {
             return $currentUser?->isSuperAdmin() || ! in_array($role->name, ['Superadmin', 'Admin']);
         })->values();
@@ -214,7 +218,8 @@ class UserManagementController extends \App\Http\Controllers\Controller
                     'password' => $validated['password'],
                 ]);
 
-                $user->syncRoles([$validated['role']]);
+                $tenantRole = $this->resolveTenantRole($resolvedTenantId, $validated['role']);
+                $user->syncRoles([$tenantRole]);
 
                 $this->activityLogger->log(
                     action: 'user_created',
@@ -264,7 +269,9 @@ class UserManagementController extends \App\Http\Controllers\Controller
         }
 
         $previousRoles = $user->getRoleNames()->implode(', ');
-        $user->syncRoles([$request->validated('role')]);
+        $roleName = $request->validated('role');
+        $tenantRole = $this->resolveTenantRole($user->tenant_id, $roleName);
+        $user->syncRoles([$tenantRole]);
 
         $this->activityLogger->log(
             action: 'user_role_updated',
@@ -676,5 +683,34 @@ class UserManagementController extends \App\Http\Controllers\Controller
         return redirect()
             ->route('admin.users')
             ->with('success', 'User berhasil dihapus.');
+    }
+
+    /**
+     * Resolve the appropriate role for a user, creating a tenant-specific
+     * role from the platform template when one does not yet exist.
+     */
+    private function resolveTenantRole(?int $tenantId, string $roleName): Role
+    {
+        if ($tenantId === null) {
+            return Role::whereNull('tenant_id')->where('name', $roleName)->firstOrFail();
+        }
+
+        $role = Role::where('tenant_id', $tenantId)->where('name', $roleName)->first();
+
+        if ($role) {
+            return $role;
+        }
+
+        $template = Role::whereNull('tenant_id')->where('name', $roleName)->firstOrFail();
+
+        $role = Role::query()->create([
+            'name' => $roleName,
+            'guard_name' => 'web',
+            'tenant_id' => $tenantId,
+        ]);
+
+        $role->syncPermissions($template->permissions);
+
+        return $role;
     }
 }

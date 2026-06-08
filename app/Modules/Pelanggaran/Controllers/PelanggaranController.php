@@ -56,6 +56,7 @@ class PelanggaranController extends Controller
 
         $kategoriOptions = PelanggaranKategori::query()
             ->visibleTo($currentUser)
+            ->orderBy('poin')
             ->orderBy('nama')
             ->get();
 

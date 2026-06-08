@@ -65,13 +65,24 @@
                             <label class="form-label">Warna Tema (Primary)</label>
                             <div class="input-group">
                                 <input type="color" name="theme_color" class="form-control form-control-color"
-                                    value="{{ old('theme_color', $settings['theme_color'] ?? '#206bc4') }}" style="width: 60px;">
+                                    value="{{ old('theme_color', $settings['theme_color'] ?? '#0d9488') }}" style="width: 60px;">
                                 <input type="text" name="theme_color_text" class="form-control"
-                                    value="{{ old('theme_color', $settings['theme_color'] ?? '#206bc4') }}"
+                                    value="{{ old('theme_color', $settings['theme_color'] ?? '#0d9488') }}"
                                     maxlength="7" pattern="^#[a-fA-F0-9]{6}$"
                                     oninput="this.previousElementSibling.value = this.value">
                             </div>
                             @error('theme_color') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                            <div class="mt-2 d-flex gap-1 flex-wrap">
+                                @php
+                                    $presets = ['#0d9488', '#059669', '#0891b2', '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#ca8a04', '#475569', '#206bc4'];
+                                @endphp
+                                @foreach ($presets as $preset)
+                                    <button type="button" class="btn p-0 border-0 rounded-circle color-preset"
+                                        data-color="{{ $preset }}"
+                                        style="width: 28px; height: 28px; background: {{ $preset }}; cursor: pointer;"
+                                        title="{{ $preset }}"></button>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -173,6 +184,13 @@
                 }
             });
         }
+        document.querySelectorAll('.color-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const color = btn.dataset.color;
+                colorInput.value = color;
+                textInput.value = color;
+            });
+        });
     </script>
     @endpush
 </x-app-layout>

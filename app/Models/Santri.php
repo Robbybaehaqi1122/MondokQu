@@ -158,6 +158,14 @@ class Santri extends Model
     }
 
     /**
+     * Scope to only active santri (status = 'active').
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_ACTIVE);
+    }
+
+    /**
      * Apply filters used by the santri management list and export.
      */
     public function scopeWithFilters(Builder $query, string $search = '', string $status = '', string $gender = ''): Builder

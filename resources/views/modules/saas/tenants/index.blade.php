@@ -258,6 +258,7 @@
                                         value="{{ old('subscription_tenant_id') == $tenant->id
                                             ? old('trial_ends_at')
                                             : optional($tenant->trial_ends_at?->isFuture() ? $tenant->trial_ends_at : now()->addDays((int) config('saas.trial_days', 14)))->format('Y-m-d\\TH:i') }}"
+
                                     >
                                     <label for="admin_note_activate_trial_{{ $tenant->id }}" class="form-label mt-2">Catatan Admin</label>
                                     <textarea
