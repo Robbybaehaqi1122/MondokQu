@@ -15,7 +15,10 @@ class TenantBrandingController extends Controller
         $currentUser = $request->user();
         $tenant = $currentUser->tenant;
 
-        if (! $tenant) abort(403);
+        if (! $tenant) {
+            return redirect()->route('saas.tenants.index')
+                ->with('error', 'Anda harus memiliki atau memilih tenant terlebih dahulu untuk mengelola branding.');
+        }
 
         return view('modules.branding.edit', [
             'tenant' => $tenant,
