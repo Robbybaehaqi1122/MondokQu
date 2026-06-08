@@ -27,6 +27,8 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::post('/admin/roles', [RoleManagementController::class, 'store'])->name('admin.roles.store');
     Route::patch('/admin/roles/{role}/permissions', [RoleManagementController::class, 'updatePermissions'])->name('admin.roles.update-permissions');
     Route::post('/admin/roles/{role}/sync-from-template', [RoleManagementController::class, 'syncFromTemplate'])->name('admin.roles.sync-from-template');
+    Route::post('/admin/roles/sync-tenant/{tenant}', [RoleManagementController::class, 'syncTenantRoles'])->name('admin.roles.sync-tenant');
+    Route::post('/admin/roles/sync-all-tenants', [RoleManagementController::class, 'syncAllTenants'])->name('admin.roles.sync-tenant-all');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage system settings', 'throttle:60,1'])->group(function () {

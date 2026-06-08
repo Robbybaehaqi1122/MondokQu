@@ -6,6 +6,7 @@ use App\Modules\Admin\Requests\StoreRoleRequest;
 use App\Modules\Admin\Requests\UpdateRolePermissionsRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Actions\Saas\CreateTenantRoles;
 use App\Models\Tenant;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
@@ -150,6 +151,36 @@ class RoleManagementController extends \App\Http\Controllers\Controller
         return redirect()
             ->route('admin.roles')
             ->with('success', 'Permission untuk role berhasil diperbarui.');
+    }
+
+    public function syncTenantRoles(Request $request, Tenant $tenant): RedirectResponse
+    {
+        if (! $request->user()?->isSuperAdmin()) {
+            abort(403);
+        }
+
+        app(CreateTenantRoles::class)->handle($tenant);
+
+        return redirect()
+            ->route('admin.roles')
+            ->with('success', 'Role untuk tenant ' . $tenant->name . ' berhasil disinkronisasi dari template global.');
+    }
+
+    public function syncAllTenants(Request $request): RedirectResponse
+    {
+        if (! $request->user()?->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $tenants = Tenant::query()->orderBy('name')->get(['id', 'name']);
+
+        foreach ($tenants as $tenant) {
+            app(CreateTenantRoles::class)->handle($tenant);
+        }
+
+        return redirect()
+            ->route('admin.roles')
+            ->with('success', 'Semua role untuk ' . $tenants->count() . ' tenant berhasil disinkronisasi dari template global.');
     }
 
     public function syncFromTemplate(Request $request, Role $role): RedirectResponse

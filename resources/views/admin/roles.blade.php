@@ -104,6 +104,17 @@
                                 </h3>
                                 <p class="text-secondary mb-0">Role spesifik untuk masing-masing pondok. Perubahan hanya berdampak di tenant tersebut. Klik <strong>Sync dari Global</strong> untuk menyelaraskan permission dengan template terbaru.</p>
                             </div>
+                            <div class="d-flex gap-2 flex-shrink-0">
+                                @if (! $tenantRoles->isEmpty())
+                                    <form method="POST" action="{{ route('admin.roles.sync-tenant-all') }}" class="d-inline"
+                                        onsubmit="return confirm('Sinkronisasi semua role di semua tenant dengan template global? Permission yang sudah diubah manual akan ditimpa.')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                            <i class="ti ti-refresh me-1"></i>Sync Semua Tenant
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -113,11 +124,21 @@
                         </div>
                     @else
                         @foreach ($tenantRoles as $tenantName => $roles)
+                            @php $tenantId = $roles->first()->tenant_id; @endphp
                             <details class="group" @if ($loop->first) open @endif>
                                 <summary class="px-3 py-2 d-flex align-items-center gap-2 border-bottom cursor-pointer" style="list-style: none;">
                                     <i class="ti ti-chevron-right group-open:rotate-90 transition-transform"></i>
                                     <span class="fw-semibold">{{ $tenantName }}</span>
                                     <span class="badge bg-purple-lt text-purple ms-1">{{ $roles->count() }} role</span>
+                                    <div class="ms-auto">
+                                        <form method="POST" action="{{ route('admin.roles.sync-tenant', $tenantId) }}" class="d-inline"
+                                            onsubmit="return confirm('Sinkronisasi semua role tenant ini dengan template global? Permission yang sudah diubah manual akan ditimpa.')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                <i class="ti ti-refresh me-1"></i>Sync Semua Role
+                                            </button>
+                                        </form>
+                                    </div>
                                 </summary>
                                 <div class="table-responsive">
                                     <table class="table table-vcenter card-table">
