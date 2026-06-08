@@ -10,19 +10,14 @@ use Illuminate\View\View;
 
 class TenantBrandingController extends Controller
 {
-    public function edit(Request $request): View|RedirectResponse
+    public function edit(Request $request): View
     {
         $currentUser = $request->user();
         $tenant = $currentUser->tenant;
 
-        if (! $tenant) {
-            return redirect()->route('saas.tenants.index')
-                ->with('error', 'Anda harus memiliki atau memilih tenant terlebih dahulu untuk mengelola branding.');
-        }
-
         return view('modules.branding.edit', [
             'tenant' => $tenant,
-            'settings' => $tenant->settings ?? [],
+            'settings' => $tenant?->settings ?? [],
         ]);
     }
 

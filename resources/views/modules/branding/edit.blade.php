@@ -3,7 +3,7 @@
         <div class="d-flex align-items-center justify-content-between">
             <div>
                 <h2 class="page-title">Pengaturan Branding</h2>
-                <div class="text-secondary mt-1">{{ $tenant->name }}</div>
+                <div class="text-secondary mt-1">{{ $tenant?->name ?? 'Superadmin (tanpa tenant)' }}</div>
             </div>
         </div>
     </x-slot>
@@ -25,7 +25,7 @@
                         <div class="mb-3">
                             <label class="form-label">Nama Pondok <span class="text-danger">*</span></label>
                             <input type="text" name="ponpes_name" class="form-control @error('ponpes_name') is-invalid @enderror"
-                                value="{{ old('ponpes_name', $settings['ponpes_name'] ?? $tenant->name) }}" required>
+                                value="{{ old('ponpes_name', $settings['ponpes_name'] ?? $tenant?->name ?? '') }}" required>
                             @error('ponpes_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="mb-3">
