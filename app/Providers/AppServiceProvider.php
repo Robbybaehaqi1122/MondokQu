@@ -53,7 +53,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        URL::forceScheme('https');
+        if (app()->isProduction()) {
+            URL::forceScheme('https');
+        }
 
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Santri::class, SantriPolicy::class);

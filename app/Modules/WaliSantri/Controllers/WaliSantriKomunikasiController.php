@@ -4,9 +4,11 @@ namespace App\Modules\WaliSantri\Controllers;
 
 use App\Models\Communication;
 use App\Models\Santri;
+use App\Models\User;
+use App\Notifications\NewReplyNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class WaliSantriKomunikasiController extends \App\Http\Controllers\Controller
@@ -33,7 +35,7 @@ class WaliSantriKomunikasiController extends \App\Http\Controllers\Controller
     public function show(Request $request, Santri $santri): View
     {
         $currentUser = $request->user();
-        $santriIds = $currentUser->guardianSantris()->pluck('id');
+        $santriIds = $currentUser->guardianSantris()->pluck('santris.id');
 
         if (! $santriIds->contains($santri->id)) {
             abort(403);
@@ -41,7 +43,7 @@ class WaliSantriKomunikasiController extends \App\Http\Controllers\Controller
 
         $communications = Communication::query()
             ->where('santri_id', $santri->id)
-            ->with('user')
+            ->with(['user', 'parent', 'replies.user', 'forwardedFrom'])
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -68,22 +70,40 @@ class WaliSantriKomunikasiController extends \App\Http\Controllers\Controller
         $validated = $request->validate([
             'santri_id' => ['required', 'exists:santris,id'],
             'message' => ['required', 'string', 'max:5000'],
+            'parent_id' => ['nullable', 'exists:communications,id'],
         ]);
 
-        $santriIds = $currentUser->guardianSantris()->pluck('id');
+        $santriIds = $currentUser->guardianSantris()->pluck('santris.id');
 
         if (! $santriIds->contains((int) $validated['santri_id'])) {
             abort(403);
         }
 
-        Communication::query()->create([
+        $communication = Communication::query()->create([
             'tenant_id' => $currentUser->tenant_id,
             'santri_id' => $validated['santri_id'],
             'user_id' => $currentUser->id,
             'message' => $validated['message'],
             'direction' => 'outgoing',
             'is_read' => false,
+            'parent_id' => $validated['parent_id'] ?? null,
         ]);
+
+        if ($validated['parent_id'] ?? null) {
+            Communication::query()
+                ->where('id', $validated['parent_id'])
+                ->update(['is_replied' => true]);
+        }
+
+        $staff = User::query()
+            ->where('tenant_id', $currentUser->tenant_id)
+            ->where('status', User::STATUS_ACTIVE)
+            ->permission('manage komunikasi')
+            ->get();
+
+        if ($staff->isNotEmpty()) {
+            Notification::send($staff, new NewReplyNotification($communication));
+        }
 
         return redirect()
             ->route('wali-santri.komunikasi.show', $validated['santri_id'])

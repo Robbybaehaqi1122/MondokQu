@@ -11,4 +11,5 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::get('/santri/{santri}', [AdminKomunikasiController::class, 'show'])->name('show');
         Route::post('/santri/{santri}', [AdminKomunikasiController::class, 'store'])->name('store');
         Route::patch('/{communication}/read', [AdminKomunikasiController::class, 'markAsRead'])->name('read');
+        Route::post('/santri/{santri}/forward/{communication}', [AdminKomunikasiController::class, 'forward'])->name('forward');
     });

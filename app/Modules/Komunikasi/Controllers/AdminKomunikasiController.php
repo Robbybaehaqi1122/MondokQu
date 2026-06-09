@@ -5,9 +5,12 @@ namespace App\Modules\Komunikasi\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Communication;
 use App\Models\Santri;
+use App\Models\User;
+use App\Notifications\NewReplyNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class AdminKomunikasiController extends Controller
@@ -80,13 +83,20 @@ class AdminKomunikasiController extends Controller
         $communications = Communication::query()
             ->visibleTo($currentUser)
             ->where('santri_id', $santri->id)
-            ->with('user')
+            ->with(['user', 'parent', 'replies.user', 'forwardedFrom'])
             ->orderBy('created_at', 'asc')
+            ->get();
+
+        $santriList = Santri::query()
+            ->visibleTo($currentUser)
+            ->where('id', '!=', $santri->id)
+            ->orderBy('full_name')
             ->get();
 
         return view('modules.komunikasi.show', [
             'santri' => $santri,
             'communications' => $communications,
+            'santriList' => $santriList,
         ]);
     }
 
@@ -102,16 +112,32 @@ class AdminKomunikasiController extends Controller
 
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:5000'],
+            'parent_id' => ['nullable', 'exists:communications,id'],
         ]);
 
-        Communication::query()->create([
+        $communication = Communication::query()->create([
             'tenant_id' => $currentUser->tenant_id,
             'santri_id' => $santri->id,
             'user_id' => $currentUser->id,
             'message' => $validated['message'],
             'direction' => 'incoming',
             'is_read' => false,
+            'parent_id' => $validated['parent_id'] ?? null,
         ]);
+
+        if ($validated['parent_id'] ?? null) {
+            Communication::query()
+                ->where('id', $validated['parent_id'])
+                ->update(['is_replied' => true]);
+        }
+
+        $guardians = $santri->guardians()
+            ->where('status', User::STATUS_ACTIVE)
+            ->get();
+
+        if ($guardians->isNotEmpty()) {
+            Notification::send($guardians, new NewReplyNotification($communication));
+        }
 
         $this->activityLogger->log(
             action: 'komunikasi_replied',
@@ -144,5 +170,64 @@ class AdminKomunikasiController extends Controller
         return redirect()
             ->route('komunikasi.show', $communication->santri_id)
             ->with('success', 'Pesan ditandai sudah dibaca.');
+    }
+
+    public function forward(Request $request, Santri $santri, Communication $communication): RedirectResponse
+    {
+        $this->authorize('create', Communication::class);
+
+        $currentUser = $request->user();
+
+        $santri = Santri::query()
+            ->visibleTo($currentUser)
+            ->findOrFail($santri->id);
+
+        $communication = Communication::query()
+            ->visibleTo($currentUser)
+            ->findOrFail($communication->id);
+
+        $validated = $request->validate([
+            'target_santri_id' => ['required', 'exists:santris,id'],
+        ]);
+
+        $targetSantri = Santri::query()
+            ->visibleTo($currentUser)
+            ->findOrFail($validated['target_santri_id']);
+
+        $forwarded = Communication::query()->create([
+            'tenant_id' => $currentUser->tenant_id,
+            'santri_id' => $targetSantri->id,
+            'user_id' => $currentUser->id,
+            'message' => $communication->message,
+            'direction' => 'incoming',
+            'is_read' => false,
+            'forwarded_from_id' => $communication->id,
+        ]);
+
+        $guardians = $targetSantri->guardians()
+            ->where('status', User::STATUS_ACTIVE)
+            ->get();
+
+        if ($guardians->isNotEmpty()) {
+            Notification::send($guardians, new NewReplyNotification($forwarded));
+        }
+
+        $this->activityLogger->log(
+            action: 'komunikasi_forwarded',
+            actor: $currentUser,
+            target: $targetSantri,
+            description: "Meneruskan pesan ke wali {$targetSantri->full_name}.",
+            properties: [
+                'original_santri_id' => $santri->id,
+                'target_santri_id' => $targetSantri->id,
+                'communication_id' => $communication->id,
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return redirect()
+            ->route('komunikasi.show', $targetSantri)
+            ->with('success', 'Pesan berhasil diteruskan.');
     }
 }

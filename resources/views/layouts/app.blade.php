@@ -122,6 +122,8 @@
             </div>
         </div>
 
+        @stack('scripts')
+
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const toastElement = document.querySelector('[data-login-toast]');

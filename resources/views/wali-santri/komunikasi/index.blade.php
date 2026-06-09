@@ -50,12 +50,21 @@
                             </td>
                             <td>
                                 <span class="text-truncate d-inline-block" style="max-width: 300px;">{{ $comm->message }}</span>
+                                @if ($comm->is_replied)
+                                    <span class="badge bg-green-lt text-green ms-1"><i class="ti ti-message-reply"></i></span>
+                                @endif
+                                @if ($comm->forwarded_from_id)
+                                    <span class="badge bg-warning-lt text-warning ms-1"><i class="ti ti-arrow-forward"></i></span>
+                                @endif
                             </td>
                             <td>
                                 @if ($comm->direction === 'incoming')
                                     <span class="badge bg-info-lt text-info">Pondok</span>
                                 @else
                                     <span class="badge bg-success-lt text-success">Wali</span>
+                                @endif
+                                @if ($comm->direction === 'outgoing' && $comm->is_read)
+                                    <span class="badge bg-blue-lt text-blue ms-1"><i class="ti ti-eye"></i></span>
                                 @endif
                             </td>
                             <td class="text-secondary">{{ $comm->created_at->translatedFormat('d M Y H:i') }}</td>

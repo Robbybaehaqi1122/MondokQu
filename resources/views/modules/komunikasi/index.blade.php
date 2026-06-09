@@ -48,6 +48,12 @@
                                 <i class="ti ti-arrow-down-left text-info"></i>
                             @endif
                             {{ $latestMessage->message }}
+                            @if ($latestMessage->is_replied)
+                                <span class="badge bg-green-lt text-green ms-1"><i class="ti ti-message-reply"></i></span>
+                            @endif
+                            @if ($latestMessage->forwarded_from_id)
+                                <span class="badge bg-warning-lt text-warning ms-1"><i class="ti ti-arrow-forward"></i></span>
+                            @endif
                             <span class="text-secondary ms-2">{{ $latestMessage->created_at->diffForHumans() }}</span>
                         </div>
                     @endif
