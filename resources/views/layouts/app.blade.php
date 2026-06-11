@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<script>
+    (function() {
+        var theme = localStorage.getItem('mondok-qu.theme');
+        if (!theme) {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-bs-theme', theme);
+    })();
+</script>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">

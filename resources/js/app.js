@@ -6,7 +6,45 @@ window.Alpine = Alpine;
 
 Alpine.start();
 
+const THEME_STORAGE_KEY = 'mondok-qu.theme';
+
+function getThemePreference() {
+    return localStorage.getItem(THEME_STORAGE_KEY)
+        || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+        var icon = toggle.querySelector('i');
+        if (icon) {
+            icon.className = theme === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+        }
+    }
+}
+
+function toggleTheme() {
+    var current = document.documentElement.getAttribute('data-bs-theme') || 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    applyTheme(getThemePreference());
+
+    var toggleBtn = document.getElementById('theme-toggle');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleTheme);
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+        if (!localStorage.getItem(THEME_STORAGE_KEY)) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+
     document.querySelectorAll('[data-error-fallback]').forEach((img) => {
         img.addEventListener('error', () => {
             img.classList.add('d-none');

@@ -522,6 +522,12 @@
         </div>
 
         <div class="navbar-nav flex-row order-md-last">
+            <div class="nav-item me-3">
+                <button type="button" class="btn btn-outline-secondary btn-icon" id="theme-toggle" aria-label="Toggle dark mode">
+                    <i class="ti ti-moon"></i>
+                </button>
+            </div>
+
             <div class="nav-item dropdown me-3">
                 <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" aria-label="Buka notifikasi">
                     <span class="position-relative d-inline-flex align-items-center">
