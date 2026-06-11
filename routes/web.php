@@ -52,3 +52,4 @@ require base_path('app/Modules/Pengurus/Routes/web.php');
 require base_path('app/Modules/Musyrif/Routes/web.php');
 require base_path('app/Modules/Bendahara/Routes/web.php');
 require base_path('app/Modules/WaliSantri/Routes/web.php');
+require base_path('app/Modules/KesehatanQu/Routes/web.php');

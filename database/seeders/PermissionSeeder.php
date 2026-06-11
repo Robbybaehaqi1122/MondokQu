@@ -48,6 +48,7 @@ class PermissionSeeder extends Seeder
             'manage akademik',
             'manage branding',
             'view portal wali',
+            'manage kesehatan',
         ];
 
         foreach ($permissions as $permission) {
@@ -87,6 +88,7 @@ class PermissionSeeder extends Seeder
             'manage komunikasi',
             'manage akademik',
             'manage branding',
+            'manage kesehatan',
         ])->get());
         $pengurus->syncPermissions(Permission::whereIn('name', [
             'manage kamar',
@@ -109,6 +111,7 @@ class PermissionSeeder extends Seeder
             'manage pelanggaran',
             'manage komunikasi',
             'manage akademik',
+            'manage kesehatan',
         ])->get());
         $waliSantri->syncPermissions(Permission::whereIn('name', [
             'view portal wali',

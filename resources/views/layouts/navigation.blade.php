@@ -9,8 +9,9 @@
     $canOpenPelanggaranModule = $user->can('manage pelanggaran');
     $canOpenKomunikasiModule = $user->can('manage komunikasi');
     $canOpenAkademikModule = $user->can('manage akademik');
+    $canOpenKesehatanModule = $user->can('manage kesehatan');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenSantriModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -290,6 +291,43 @@
                         </span>
                         <span>KomunikasiQu</span>
                     </a>
+                @endif
+
+                @if ($canOpenKesehatanModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('kesehatan.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('kesehatan.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-heartbeat"></i>
+                            </span>
+                            <span class="flex-grow-1">KesehatanQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('kesehatan.dashboard') ? 'active' : '' }}" href="{{ route('kesehatan.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kesehatan.rekam-medis.*') ? 'active' : '' }}" href="{{ route('kesehatan.rekam-medis.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-clipboard-heart"></i></span>
+                                <span>Rekam Medis</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kesehatan.pemeriksaan.*') ? 'active' : '' }}" href="{{ route('kesehatan.pemeriksaan.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-first-aid-kit"></i></span>
+                                <span>Kunjungan UKS</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kesehatan.obat.*') ? 'active' : '' }}" href="{{ route('kesehatan.obat.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-pill"></i></span>
+                                <span>Stok Obat</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kesehatan.laporan.*') ? 'active' : '' }}" href="{{ route('kesehatan.laporan.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
+                                <span>Laporan</span>
+                            </a>
+                        </div>
+                    </details>
                 @endif
 
                 @if ($canOpenSantriModule)

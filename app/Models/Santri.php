@@ -158,6 +158,14 @@ class Santri extends Model
     }
 
     /**
+     * Get the medical record for this santri.
+     */
+    public function rekamMedis(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(KesehatanRekamMedis::class, 'santri_id');
+    }
+
+    /**
      * Scope to only active santri (status = 'active').
      */
     public function scopeActive(Builder $query): Builder
