@@ -11,6 +11,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -59,20 +60,42 @@ class AttendanceReportController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return view('attendance.reports.index', [
-            'activityOptions' => AttendanceActivity::query()
+        $cacheTtl = 300;
+        $tenantId = $currentUser?->tenant_id;
+
+        $activityOptions = Cache::remember("attendance.filters.$tenantId.activities", $cacheTtl, fn () =>
+            AttendanceActivity::query()
                 ->visibleTo($currentUser)
                 ->orderBy('name')
-                ->get(['id', 'name']),
-            'santriOptions' => Santri::query()
+                ->get(['id', 'name'])
+        );
+
+        $santriOptions = Cache::remember("attendance.filters.$tenantId.santris", $cacheTtl, fn () =>
+            Santri::query()
                 ->visibleTo($currentUser)
                 ->orderBy('full_name')
                 ->limit(500)
-                ->get(['id', 'nis', 'full_name']),
-            'roomOptions' => Room::query()
+                ->get(['id', 'nis', 'full_name'])
+        );
+
+        $roomOptions = Cache::remember("attendance.filters.$tenantId.rooms", $cacheTtl, fn () =>
+            Room::query()
                 ->visibleTo($currentUser)
                 ->orderBy('name')
-                ->get(['id', 'name']),
+                ->get(['id', 'name'])
+        );
+
+        $statsQuery = (clone $baseQuery)->reorder()->select(
+            DB::raw('COUNT(*) as records'),
+            DB::raw('COUNT(DISTINCT attendance_records.attendance_session_id) as sessions'),
+            DB::raw('COUNT(DISTINCT attendance_records.santri_id) as santris'),
+            DB::raw("SUM(CASE WHEN attendance_records.status IN ('permission','sick','absent','late') THEN 1 ELSE 0 END) as issues"),
+        )->first();
+
+        return view('attendance.reports.index', [
+            'activityOptions' => $activityOptions,
+            'santriOptions' => $santriOptions,
+            'roomOptions' => $roomOptions,
             'filters' => $filters,
             'records' => $records,
             'statusOptions' => AttendanceRecord::statusOptions(),
@@ -82,10 +105,10 @@ class AttendanceReportController extends Controller
                 'count' => (int) $statusCounts->get($statusOption['value'], 0),
             ]),
             'reportStats' => [
-                'records' => (clone $baseQuery)->count(),
-                'sessions' => (clone $baseQuery)->distinct()->count('attendance_records.attendance_session_id'),
-                'santris' => (clone $baseQuery)->distinct()->count('attendance_records.santri_id'),
-                'issues' => (clone $baseQuery)->whereIn('attendance_records.status', $issueStatuses)->count(),
+                'records' => (int) ($statsQuery?->records ?? 0),
+                'sessions' => (int) ($statsQuery?->sessions ?? 0),
+                'santris' => (int) ($statsQuery?->santris ?? 0),
+                'issues' => (int) ($statsQuery?->issues ?? 0),
             ],
             'attentionSantris' => $this->attentionSantris((clone $baseQuery), $issueStatuses),
         ]);

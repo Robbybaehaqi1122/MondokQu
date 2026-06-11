@@ -76,37 +76,54 @@ class AttendanceRecordController extends Controller
             ->findOrFail($attendanceSession->id);
         $recordedAt = now();
         $records = collect($validated['records']);
-        $newAbsentRecordIds = [];
+        $newAbsentSantriIds = [];
 
-        DB::transaction(function () use (&$newAbsentRecordIds, $records, $session, $currentUser, $recordedAt): void {
-            foreach ($records as $recordPayload) {
-                $lookup = [
-                    'tenant_id' => $session->tenant_id,
-                    'attendance_session_id' => $session->id,
-                    'santri_id' => (int) $recordPayload['santri_id'],
-                ];
-                $existingRecord = AttendanceRecord::query()
-                    ->where($lookup)
-                    ->first();
-                $previousStatus = $existingRecord?->status;
-                $attendanceRecord = AttendanceRecord::query()->updateOrCreate(
-                    $lookup,
-                    [
-                        'status' => $recordPayload['status'],
-                        'notes' => $recordPayload['notes'] ?? null,
-                        'recorded_by' => $currentUser?->id,
-                        'recorded_at' => $recordedAt,
-                    ]
-                );
+        DB::transaction(function () use (&$newAbsentSantriIds, $records, $session, $currentUser, $recordedAt): void {
+            $existingRecords = AttendanceRecord::query()
+                ->where('tenant_id', $session->tenant_id)
+                ->where('attendance_session_id', $session->id)
+                ->whereIn('santri_id', $records->pluck('santri_id'))
+                ->get()
+                ->keyBy('santri_id');
+
+            $upsertData = $records->map(fn (array $payload) => [
+                'tenant_id' => $session->tenant_id,
+                'attendance_session_id' => $session->id,
+                'santri_id' => (int) $payload['santri_id'],
+                'status' => $payload['status'],
+                'notes' => $payload['notes'] ?? null,
+                'recorded_by' => $currentUser?->id,
+                'recorded_at' => $recordedAt,
+            ])->all();
+
+            AttendanceRecord::query()->upsert(
+                $upsertData,
+                ['tenant_id', 'attendance_session_id', 'santri_id'],
+                ['status', 'notes', 'recorded_by', 'recorded_at']
+            );
+
+            foreach ($records as $payload) {
+                $santriId = (int) $payload['santri_id'];
+                $previousStatus = $existingRecords->get($santriId)?->status;
 
                 if (
-                    $recordPayload['status'] === AttendanceRecord::STATUS_ABSENT
+                    $payload['status'] === AttendanceRecord::STATUS_ABSENT
                     && $previousStatus !== AttendanceRecord::STATUS_ABSENT
                 ) {
-                    $newAbsentRecordIds[] = $attendanceRecord->id;
+                    $newAbsentSantriIds[] = $santriId;
                 }
             }
         });
+
+        $newAbsentRecordIds = $newAbsentSantriIds === []
+            ? []
+            : AttendanceRecord::query()
+                ->where('tenant_id', $session->tenant_id)
+                ->where('attendance_session_id', $session->id)
+                ->whereIn('santri_id', $newAbsentSantriIds)
+                ->where('status', AttendanceRecord::STATUS_ABSENT)
+                ->pluck('id')
+                ->all();
 
         $this->notifyAbsentGuardians($newAbsentRecordIds);
 
@@ -161,13 +178,11 @@ class AttendanceRecordController extends Controller
         }
 
         AttendanceRecord::query()
-            ->with(['santri.guardians', 'session.activity'])
+            ->with(['santri.guardians' => fn ($q) => $q->where('status', User::STATUS_ACTIVE), 'session.activity'])
             ->whereIn('id', array_unique($recordIds))
             ->get()
             ->each(function (AttendanceRecord $attendanceRecord): void {
-                $guardians = collect($attendanceRecord->santri?->guardians)
-                    ->where('status', User::STATUS_ACTIVE)
-                    ->values();
+                $guardians = $attendanceRecord->santri?->guardians;
 
                 if ($guardians->isEmpty()) {
                     return;
