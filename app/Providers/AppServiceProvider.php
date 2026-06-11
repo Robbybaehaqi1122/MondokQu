@@ -57,6 +57,12 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        Gate::before(function ($user, $ability) {
+            if ($user instanceof User && $user->isSuperAdmin()) {
+                return true;
+            }
+        });
+
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Santri::class, SantriPolicy::class);
         Gate::policy(Room::class, RoomPolicy::class);
