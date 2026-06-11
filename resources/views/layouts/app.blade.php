@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<script>
-    (function() {
-        var theme = localStorage.getItem('mondok-qu.theme');
-        if (!theme) {
-            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-bs-theme', theme);
-    })();
-</script>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
+        <script>
+            try {
+                var theme = localStorage.getItem('mondok-qu.theme');
+                if (!theme) {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            } catch (e) {}
+        </script>
+
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">

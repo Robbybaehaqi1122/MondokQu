@@ -8,14 +8,28 @@ Alpine.start();
 
 const THEME_STORAGE_KEY = 'mondok-qu.theme';
 
+function getStoredTheme() {
+    try {
+        return localStorage.getItem(THEME_STORAGE_KEY);
+    } catch (e) {
+        return null;
+    }
+}
+
+function setStoredTheme(theme) {
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch (e) {}
+}
+
 function getThemePreference() {
-    return localStorage.getItem(THEME_STORAGE_KEY)
+    return getStoredTheme()
         || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 }
 
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-bs-theme', theme);
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    setStoredTheme(theme);
 
     var toggle = document.getElementById('theme-toggle');
     if (toggle) {
@@ -40,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-        if (!localStorage.getItem(THEME_STORAGE_KEY)) {
+        if (!getStoredTheme()) {
             applyTheme(e.matches ? 'dark' : 'light');
         }
     });
