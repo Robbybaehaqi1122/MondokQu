@@ -6,19 +6,26 @@ use App\Enums\ExportFormat;
 use App\Exports\SantriCsvExport;
 use App\Exports\SantriExcelExport;
 use App\Exports\SantriPdfExport;
-use App\Modules\Santri\Requests\StoreSantriRequest;
-use App\Modules\Santri\Requests\UpdateSantriRequest;
+use App\Exports\SantriTemplateExport;
+use App\Imports\SantriImport;
+use App\Jobs\ProcessSantriImportJob;
 use App\Models\DataExport;
+use App\Models\DataImport;
 use App\Models\Room;
 use App\Models\Santri;
 use App\Models\User;
+use App\Modules\Santri\Requests\ImportSantriRequest;
+use App\Modules\Santri\Requests\StoreSantriRequest;
+use App\Modules\Santri\Requests\UpdateSantriRequest;
 use App\Services\DataExportManager;
 use App\Services\FormatDispatcher;
 use App\Services\SantriService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SantriManagementController extends \App\Http\Controllers\Controller
@@ -190,6 +197,209 @@ class SantriManagementController extends \App\Http\Controllers\Controller
         return redirect()
             ->route('santri.index')
             ->with('success', 'Data santri berhasil dihapus.');
+    }
+
+    public function importIndex(Request $request): View
+    {
+        $this->authorize('create', Santri::class);
+
+        $currentUser = $request->user();
+
+        $dataImports = DataImport::query()
+            ->visibleTo($currentUser)
+            ->forType(DataImport::TYPE_SANTRI)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('santri.import.index', [
+            'dataImports' => $dataImports,
+        ]);
+    }
+
+    public function downloadTemplate(Request $request): StreamedResponse|\Illuminate\Http\Response|\Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $this->authorize('create', Santri::class);
+
+        $format = (string) $request->string('format', 'csv');
+
+        if ($format === 'xlsx') {
+            return Excel::download(
+                new SantriTemplateExport,
+                (new SantriTemplateExport)->filename()
+            );
+        }
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template-import-santri.csv"',
+        ];
+
+        $callback = function () {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, [
+                'nama',
+                'nis',
+                'nisn',
+                'tempat_lahir',
+                'tanggal_lahir',
+                'jenis_kelamin',
+                'alamat',
+                'nama_ayah',
+                'nama_ibu',
+                'no_telp_wali',
+                'kamar',
+                'status',
+            ]);
+            fputcsv($handle, [
+                'Ali bin Abi Thalib',
+                '2026001',
+                '1234567890',
+                'Jakarta',
+                '2010-06-17',
+                'laki-laki',
+                'Jl. Contoh No. 123, Jakarta',
+                'Abu Thalib',
+                'Fatimah',
+                '081234567890',
+                'Al-Ghazali',
+                'aktif',
+            ]);
+            fputcsv($handle, [
+                'Aisyah binti Abu Bakar',
+                '2026002',
+                '1234567891',
+                'Bandung',
+                '2011-08-22',
+                'perempuan',
+                'Jl. Contoh No. 456, Bandung',
+                'Abu Bakar',
+                'Ummi Rahmah',
+                '081234567891',
+                'Al-Farabi',
+                'aktif',
+            ]);
+            fclose($handle);
+        };
+
+        return response()->streamDownload($callback, 'template-import-santri.csv', $headers);
+    }
+
+    public function previewImport(ImportSantriRequest $request): View|RedirectResponse
+    {
+        $this->authorize('create', Santri::class);
+
+        $currentUser = $request->user();
+        $file = $request->file('file');
+
+        $importer = new SantriImport((int) $currentUser->tenant_id, (int) $currentUser->id);
+        $rows = Excel::toCollection($importer, $file)->first() ?? collect();
+
+        if ($rows->isEmpty()) {
+            return redirect()
+                ->route('santri.import.index')
+                ->with('error', 'File tidak mengandung data atau format tidak dikenali.');
+        }
+
+        $result = $importer->preview($rows);
+
+        $previewKey = 'santri_import_preview_' . $currentUser->id;
+        Storage::disk('local')->put(
+            "temp/{$previewKey}.json",
+            json_encode([
+                'rows' => $rows->toArray(),
+                'tenant_id' => $currentUser->tenant_id,
+                'user_id' => $currentUser->id,
+            ])
+        );
+
+        return view('santri.import.preview', [
+            'previewKey' => $previewKey,
+            'totalRows' => $result['total'],
+            'validCount' => $result['valid_count'],
+            'errorCount' => $result['error_count'],
+            'validRows' => $result['valid_rows'],
+            'errorRows' => $result['error_rows'],
+        ]);
+    }
+
+    public function processImport(Request $request): RedirectResponse
+    {
+        $this->authorize('create', Santri::class);
+
+        $currentUser = $request->user();
+        $previewKey = $request->input('preview_key');
+
+        if (! $previewKey || ! Storage::disk('local')->exists("temp/{$previewKey}.json")) {
+            return redirect()
+                ->route('santri.import.index')
+                ->with('error', 'Sesi import tidak valid. Silakan upload ulang file.');
+        }
+
+        $data = json_decode(Storage::disk('local')->get("temp/{$previewKey}.json"), true);
+        $rows = collect($data['rows']);
+
+        $importer = new SantriImport((int) $currentUser->tenant_id, (int) $currentUser->id);
+
+        $threshold = (int) config('imports.queue_threshold', 500);
+
+        if ($rows->count() >= $threshold) {
+            $import = DataImport::query()->create([
+                'tenant_id' => $currentUser->tenant_id,
+                'user_id' => $currentUser->id,
+                'type' => DataImport::TYPE_SANTRI,
+                'name' => 'Import Data Santri',
+                'status' => DataImport::STATUS_PENDING,
+                'total_rows' => $rows->count(),
+                'expires_at' => now()->addHours(24),
+            ]);
+
+            $importPath = "imports/{$import->id}/data.json";
+            Storage::disk('local')->put($importPath, json_encode($data));
+            $import->forceFill(['disk' => 'local', 'path' => $importPath])->save();
+
+            ProcessSantriImportJob::dispatch($import->id);
+
+            Storage::disk('local')->delete("temp/{$previewKey}.json");
+
+            return redirect()
+                ->route('santri.import.index')
+                ->with('success', 'Import data santri sedang diproses di background. Status import dapat dilihat di halaman ini.');
+        }
+
+        $result = $importer->import($rows);
+
+        Storage::disk('local')->delete("temp/{$previewKey}.json");
+
+        $this->logImportActivity($currentUser, $result, $request);
+
+        return redirect()
+            ->route('santri.import.index')
+            ->with('importResult', [
+                'success' => $result['success_rows'],
+                'failed' => $result['failed_rows'],
+                'total' => $result['total'],
+                'errors' => $result['errors'],
+            ]);
+    }
+
+    protected function logImportActivity(User $actor, array $result, Request $request): void
+    {
+        app(\App\Services\ActivityLogger::class)->log(
+            action: 'santri_imported',
+            actor: $actor,
+            target: null,
+            description: "Import data santri: {$result['success_rows']} berhasil, {$result['failed_rows']} gagal dari {$result['total']} baris.",
+            properties: [
+                'success_rows' => $result['success_rows'],
+                'failed_rows' => $result['failed_rows'],
+                'total_rows' => $result['total'],
+                'errors' => $result['errors']->toArray(),
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        );
     }
 
     protected function statusOptions(): Collection

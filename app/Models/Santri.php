@@ -34,6 +34,7 @@ class Santri extends Model
     protected $fillable = [
         'tenant_id',
         'nis',
+        'nisn',
         'full_name',
         'gender',
         'birth_place',

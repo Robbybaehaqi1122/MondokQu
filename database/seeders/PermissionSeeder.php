@@ -49,6 +49,7 @@ class PermissionSeeder extends Seeder
             'manage branding',
             'view portal wali',
             'manage kesehatan',
+            'import santri',
         ];
 
         foreach ($permissions as $permission) {
@@ -89,6 +90,7 @@ class PermissionSeeder extends Seeder
             'manage akademik',
             'manage branding',
             'manage kesehatan',
+            'import santri',
         ])->get());
         $pengurus->syncPermissions(Permission::whereIn('name', [
             'manage kamar',

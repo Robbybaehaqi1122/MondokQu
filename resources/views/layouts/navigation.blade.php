@@ -331,8 +331,8 @@
                 @endif
 
                 @if ($canOpenSantriModule)
-                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') || request()->routeIs('santri.import.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') || request()->routeIs('santri.import.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-school"></i>
                             </span>
@@ -349,6 +349,15 @@
                                         <i class="ti ti-users"></i>
                                     </span>
                                     <span>Manajemen Santri</span>
+                                </a>
+                            @endif
+
+                            @if ($user->can('import santri'))
+                                <a class="sidebar-sublink {{ request()->routeIs('santri.import.*') ? 'active' : '' }}" href="{{ route('santri.import.index') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-upload"></i>
+                                    </span>
+                                    <span>Import Santri</span>
                                 </a>
                             @endif
 

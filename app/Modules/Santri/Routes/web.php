@@ -9,12 +9,16 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/santri/export', [SantriManagementController::class, 'export'])->name('santri.export');
 });
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:view santri', 'throttle:120,1'])->group(function () {
-    Route::get('/santri/{santri}', [SantriManagementController::class, 'show'])->name('santri.show');
-});
-
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:create santri', 'throttle:60,1'])->group(function () {
     Route::post('/santri', [SantriManagementController::class, 'store'])->name('santri.store');
+    Route::get('/santri/import', [SantriManagementController::class, 'importIndex'])->name('santri.import.index');
+    Route::get('/santri/import/template', [SantriManagementController::class, 'downloadTemplate'])->name('santri.import.template');
+    Route::post('/santri/import/preview', [SantriManagementController::class, 'previewImport'])->name('santri.import.preview');
+    Route::post('/santri/import/process', [SantriManagementController::class, 'processImport'])->name('santri.import.process');
+});
+
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:view santri', 'throttle:120,1'])->group(function () {
+    Route::get('/santri/{santri}', [SantriManagementController::class, 'show'])->name('santri.show');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:update santri', 'throttle:60,1'])->group(function () {
