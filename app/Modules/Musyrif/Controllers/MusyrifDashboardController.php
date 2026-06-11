@@ -94,6 +94,7 @@ class MusyrifDashboardController extends \App\Http\Controllers\Controller
             'recentTahfidz' => $recentTahfidz,
             'recentPelanggaran' => $recentPelanggaran,
             'todayActivities' => $todayActivities,
+            'activeActivities' => $activeActivities,
             'today' => $today,
         ]);
     }
