@@ -105,6 +105,16 @@
                                 <p class="text-secondary mb-0">Role spesifik untuk masing-masing pondok. Perubahan hanya berdampak di tenant tersebut. Klik <strong>Sync dari Global</strong> untuk menyelaraskan permission dengan template terbaru.</p>
                             </div>
                             <div class="d-flex gap-2 flex-shrink-0">
+                                <button
+                                    type="button"
+                                    class="btn btn-primary"
+                                    id="open-create-role-modal"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#createRoleModal"
+                                >
+                                    <i class="ti ti-user-plus me-1"></i>
+                                    Tambah Role
+                                </button>
                                 @if (! $tenantRoles->isEmpty())
                                     <form method="POST" action="{{ route('admin.roles.sync-tenant-all') }}" class="d-inline"
                                         onsubmit="return confirm('Sinkronisasi semua role di semua tenant dengan template global? Permission yang sudah diubah manual akan ditimpa.')">
