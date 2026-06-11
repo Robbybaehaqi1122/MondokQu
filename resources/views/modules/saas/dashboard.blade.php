@@ -63,7 +63,7 @@
     <div class="row row-cards">
         <div class="col-12">
             <div class="row g-3">
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4">
                     <div class="card saas-stat-card saas-stat-card-revenue">
                         <div class="card-body">
                             <div class="text-secondary small text-uppercase fw-bold">Total Pendapatan</div>
@@ -72,7 +72,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4">
                     <div class="card saas-stat-card">
                         <div class="card-body">
                             <div class="text-secondary small text-uppercase fw-bold">Pendapatan Bulan Ini</div>
@@ -81,7 +81,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4">
                     <div class="card saas-stat-card">
                         <div class="card-body">
                             <div class="text-secondary small text-uppercase fw-bold">Total Tenant</div>
@@ -90,7 +90,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4">
                     <div class="card saas-stat-card">
                         <div class="card-body">
                             <div class="text-secondary small text-uppercase fw-bold">Tenant Baru Bulan Ini</div>
@@ -99,7 +99,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4">
                     <div class="card saas-stat-card saas-stat-card-trial">
                         <div class="card-body">
                             <div class="text-secondary small text-uppercase fw-bold">Trial</div>
@@ -108,7 +108,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4">
                     <div class="card saas-stat-card saas-stat-card-active">
                         <div class="card-body">
                             <div class="text-secondary small text-uppercase fw-bold">Active</div>
@@ -117,7 +117,7 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4">
                     <div class="card saas-stat-card saas-stat-card-expired">
                         <div class="card-body">
                             <div class="text-secondary small text-uppercase fw-bold">Expired</div>
@@ -126,11 +126,20 @@
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl-4">
                     <div class="card saas-stat-card">
                         <div class="card-body">
                             <div class="text-secondary small text-uppercase fw-bold">Total User</div>
                             <div class="fs-2 fw-bold mb-0">{{ number_format($stats['platform_users']) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-4">
+                    <div class="card saas-stat-card saas-stat-card-santri">
+                        <div class="card-body">
+                            <div class="text-secondary small text-uppercase fw-bold">Total Santri</div>
+                            <div class="fs-2 fw-bold mb-0">{{ number_format($stats['total_santri']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -212,6 +221,83 @@
                 </div>
             </div>
         </div>
+
+        @if ($expiringTenants->isNotEmpty())
+            <div class="col-12 col-xl-6">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title mb-1">Tenant Akan Expired</h3>
+                            <div class="text-secondary small">7 hari ke depan — prioritaskan follow-up.</div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>Tenant</th>
+                                    <th>Owner</th>
+                                    <th>Status</th>
+                                    <th>Batas Akses</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($expiringTenants as $tenant)
+                                    @php
+                                        $status = $statusUi[$tenant->subscription_status] ?? [
+                                            'label' => str($tenant->subscription_status)->headline(),
+                                            'meta' => 'Status belum dikenal',
+                                            'indicator' => 'tenant-subscription-indicator-unknown',
+                                        ];
+                                        $accessLimit = match ($tenant->subscription_status) {
+                                            Tenant::SUBSCRIPTION_TRIAL => [
+                                                'label' => 'Trial ends',
+                                                'value' => $tenant->trial_ends_at,
+                                            ],
+                                            Tenant::SUBSCRIPTION_ACTIVE => [
+                                                'label' => 'Subscription ends',
+                                                'value' => $tenant->subscription_ends_at,
+                                            ],
+                                            Tenant::SUBSCRIPTION_GRACE => [
+                                                'label' => 'Grace ends',
+                                                'value' => $tenant->grace_ends_at,
+                                            ],
+                                            default => [
+                                                'label' => 'Tidak ada batas aktif',
+                                                'value' => null,
+                                            ],
+                                        };
+                                    @endphp
+                                    <tr class="tenant-status-row tenant-status-row-{{ $tenant->subscription_status }}">
+                                        <td>
+                                            <div class="fw-semibold">{{ $tenant->name }}</div>
+                                            <div class="text-secondary small mt-1">{{ $tenant->slug }}</div>
+                                        </td>
+                                        <td>
+                                            <div>{{ $tenant->owner?->name ?? 'Belum ada owner' }}</div>
+                                            <div class="text-secondary small mt-1">{{ $tenant->contact_email ?: '-' }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="tenant-subscription-indicator {{ $status['indicator'] }}">
+                                                <span class="tenant-subscription-dot"></span>
+                                                <span class="tenant-subscription-copy">
+                                                    <span class="tenant-subscription-label">{{ $status['label'] }}</span>
+                                                    <span class="tenant-subscription-meta">{{ $status['meta'] }}</span>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>{{ $accessLimit['value']?->translatedFormat('d M Y H:i') ?? '-' }}</div>
+                                            <div class="text-secondary small mt-1">{{ $accessLimit['label'] }}</div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="col-12">
             <div class="card">

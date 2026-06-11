@@ -39,6 +39,17 @@ test('superadmin can view saas dashboard with growth and revenue metrics', funct
         'recorded_by' => $superadmin->id,
     ]);
 
+    Santri::factory()->create([
+        'tenant_id' => $tenant->id,
+    ]);
+
+    Tenant::factory()->create([
+        'name' => 'Pondok Expiring',
+        'slug' => 'pondok-expiring',
+        'subscription_status' => Tenant::SUBSCRIPTION_ACTIVE,
+        'subscription_ends_at' => now()->addDays(3),
+    ]);
+
     $response = $this
         ->actingAs($superadmin)
         ->get(route('saas.dashboard'));
@@ -49,6 +60,9 @@ test('superadmin can view saas dashboard with growth and revenue metrics', funct
     $response->assertSee('Pendapatan Platform');
     $response->assertSee('Rp 2.500');
     $response->assertSee('Pondok Dashboard SaaS');
+    $response->assertSee('Total Santri');
+    $response->assertSee('Tenant Akan Expired');
+    $response->assertSee('Pondok Expiring');
 });
 
 test('superadmin can view the tenant management page', function () {

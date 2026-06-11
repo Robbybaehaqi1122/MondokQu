@@ -3,6 +3,7 @@
 namespace App\Modules\Saas\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\TenantBillingNote;
 use App\Models\User;
@@ -22,8 +23,26 @@ class SaasDashboardController extends Controller
             ->latest()
             ->paginate(10);
 
+        $expiringTenants = Tenant::query()
+            ->with('owner')
+            ->where(function ($query) {
+                $query
+                    ->where(fn ($q) => $q
+                        ->where('subscription_status', Tenant::SUBSCRIPTION_TRIAL)
+                        ->whereBetween('trial_ends_at', [now(), now()->addDays(7)]))
+                    ->orWhere(fn ($q) => $q
+                        ->where('subscription_status', Tenant::SUBSCRIPTION_ACTIVE)
+                        ->whereBetween('subscription_ends_at', [now(), now()->addDays(7)]))
+                    ->orWhere(fn ($q) => $q
+                        ->where('subscription_status', Tenant::SUBSCRIPTION_GRACE)
+                        ->whereBetween('grace_ends_at', [now(), now()->addDays(7)]));
+            })
+            ->latest()
+            ->get();
+
         return view('modules.saas.dashboard', [
             'tenants' => $tenants,
+            'expiringTenants' => $expiringTenants,
             'tenantGrowthChart' => $this->buildTenantGrowthChart(),
             'revenueChart' => $this->buildRevenueChart(),
             'stats' => [
@@ -37,6 +56,7 @@ class SaasDashboardController extends Controller
                 'expired_tenants' => Tenant::query()->where('subscription_status', Tenant::SUBSCRIPTION_EXPIRED)->count(),
                 'deleting_tenants' => Tenant::query()->where('subscription_status', Tenant::SUBSCRIPTION_DELETING)->count(),
                 'platform_users' => User::query()->count(),
+                'total_santri' => Santri::query()->count(),
                 'total_revenue' => (int) TenantBillingNote::query()->sum('amount'),
                 'revenue_this_month' => (int) TenantBillingNote::query()
                     ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
@@ -46,20 +66,29 @@ class SaasDashboardController extends Controller
     }
 
     /**
-     * Build monthly tenant acquisition and cumulative growth data.
+     * Build monthly tenant acquisition and cumulative growth data for the current year.
      *
      * @return array<int, array{label: string, new_tenants: int, total_tenants: int}>
      */
-    protected function buildTenantGrowthChart(int $months = 6): array
+    protected function buildTenantGrowthChart(): array
     {
-        $start = now()->startOfMonth()->subMonths($months - 1);
+        $startOfYear = now()->startOfYear();
         $runningTotal = Tenant::query()
-            ->where('created_at', '<', $start)
+            ->where('created_at', '<', $startOfYear)
             ->count();
 
-        return collect(range(0, $months - 1))
-            ->map(function (int $offset) use (&$runningTotal, $start): array {
-                $month = $start->copy()->addMonths($offset);
+        return collect(range(0, 11))
+            ->map(function (int $offset) use (&$runningTotal, $startOfYear): array {
+                $month = $startOfYear->copy()->addMonths($offset);
+
+                if ($month->isAfter(now())) {
+                    return [
+                        'label' => $month->translatedFormat('M'),
+                        'new_tenants' => 0,
+                        'total_tenants' => $runningTotal,
+                    ];
+                }
+
                 $newTenants = Tenant::query()
                     ->whereBetween('created_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
                     ->count();
@@ -67,7 +96,7 @@ class SaasDashboardController extends Controller
                 $runningTotal += $newTenants;
 
                 return [
-                    'label' => $month->translatedFormat('M Y'),
+                    'label' => $month->translatedFormat('M'),
                     'new_tenants' => $newTenants,
                     'total_tenants' => $runningTotal,
                 ];
@@ -76,20 +105,27 @@ class SaasDashboardController extends Controller
     }
 
     /**
-     * Build monthly platform revenue data from tenant billing notes.
+     * Build monthly platform revenue data from tenant billing notes for the current year.
      *
      * @return array<int, array{label: string, amount: float}>
      */
-    protected function buildRevenueChart(int $months = 6): array
+    protected function buildRevenueChart(): array
     {
-        $start = now()->startOfMonth()->subMonths($months - 1);
+        $startOfYear = now()->startOfYear();
 
-        return collect(range(0, $months - 1))
-            ->map(function (int $offset) use ($start): array {
-                $month = $start->copy()->addMonths($offset);
+        return collect(range(0, 11))
+            ->map(function (int $offset) use ($startOfYear): array {
+                $month = $startOfYear->copy()->addMonths($offset);
+
+                if ($month->isAfter(now())) {
+                    return [
+                        'label' => $month->translatedFormat('M'),
+                        'amount' => 0,
+                    ];
+                }
 
                 return [
-                    'label' => $month->translatedFormat('M Y'),
+                    'label' => $month->translatedFormat('M'),
                     'amount' => (int) TenantBillingNote::query()
                         ->whereBetween('paid_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
                         ->sum('amount'),
