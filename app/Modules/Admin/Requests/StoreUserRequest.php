@@ -52,7 +52,8 @@ class StoreUserRequest extends FormRequest
                     .',max_height='.config('user.avatar.max_height', 2000),
             ],
             'role' => ['required', 'string', Rule::exists(Role::class, 'name')
-                ->where(fn ($query) => $query->where('tenant_id', $this->user()?->isSuperAdmin() ? null : $this->user()?->tenant_id)),
+                ->where(fn ($query) => $query->where('tenant_id', $this->user()?->isSuperAdmin() ? null : $this->user()?->tenant_id)
+                    ->orWhereNull('tenant_id')),
             ],
             'status' => ['required', 'string', Rule::in(User::availableStatuses())],
             'password' => ['required', Password::min(8), 'confirmed'],
