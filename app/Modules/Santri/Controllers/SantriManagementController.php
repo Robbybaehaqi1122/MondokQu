@@ -214,6 +214,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
 
         return view('santri.import.index', [
             'dataImports' => $dataImports,
+            'tenants' => $currentUser->isSuperAdmin() ? \App\Models\Tenant::query()->orderBy('name')->get() : collect(),
         ]);
     }
 
@@ -291,9 +292,10 @@ class SantriManagementController extends \App\Http\Controllers\Controller
         $this->authorize('create', Santri::class);
 
         $currentUser = $request->user();
+        $tenantId = $request->input('tenant_id', $currentUser->tenant_id);
         $file = $request->file('file');
 
-        $importer = new SantriImport((int) $currentUser->tenant_id, (int) $currentUser->id);
+        $importer = new SantriImport($tenantId, (int) $currentUser->id);
         $rows = Excel::toCollection($importer, $file)->first() ?? collect();
 
         if ($rows->isEmpty()) {
@@ -309,7 +311,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
             "temp/{$previewKey}.json",
             json_encode([
                 'rows' => $rows->toArray(),
-                'tenant_id' => $currentUser->tenant_id,
+                'tenant_id' => $tenantId,
                 'user_id' => $currentUser->id,
             ])
         );
@@ -339,8 +341,9 @@ class SantriManagementController extends \App\Http\Controllers\Controller
 
         $data = json_decode(Storage::disk('local')->get("temp/{$previewKey}.json"), true);
         $rows = collect($data['rows']);
+        $tenantId = $data['tenant_id'] ?? $currentUser->tenant_id;
 
-        $importer = new SantriImport((int) $currentUser->tenant_id, (int) $currentUser->id);
+        $importer = new SantriImport($tenantId, (int) $currentUser->id);
 
         $threshold = (int) config('imports.queue_threshold', 500);
 

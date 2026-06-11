@@ -39,8 +39,9 @@ class ProcessSantriImportJob implements ShouldQueue
 
             $data = json_decode(Storage::disk($import->disk ?? 'local')->get($import->path), true);
             $rows = collect($data['rows']);
+            $tenantId = $data['tenant_id'] ?? $user->tenant_id;
 
-            $importer = new SantriImport((int) $user->tenant_id, (int) $user->id);
+            $importer = new SantriImport($tenantId, (int) $user->id);
             $result = $importer->import($rows);
 
             $import->markCompleted(

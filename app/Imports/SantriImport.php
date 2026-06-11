@@ -17,7 +17,7 @@ class SantriImport implements WithHeadingRow, SkipsEmptyRows
 {
     use Importable;
 
-    protected int $tenantId;
+    protected ?int $tenantId;
 
     protected int $createdBy;
 
@@ -29,7 +29,7 @@ class SantriImport implements WithHeadingRow, SkipsEmptyRows
 
     protected array $roomCache = [];
 
-    public function __construct(int $tenantId, int $createdBy)
+    public function __construct(?int $tenantId, int $createdBy)
     {
         $this->tenantId = $tenantId;
         $this->createdBy = $createdBy;

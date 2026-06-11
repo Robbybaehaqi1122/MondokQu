@@ -110,6 +110,19 @@
                     <form method="POST" action="{{ route('santri.import.preview') }}" enctype="multipart/form-data">
                         @csrf
 
+                        @if ($tenants->isNotEmpty())
+                            <div class="mb-3">
+                                <label for="tenant_id" class="form-label">Pilih Pondok / Tenant</label>
+                                <select id="tenant_id" name="tenant_id" class="form-select" required>
+                                    <option value="">-- Pilih Tenant --</option>
+                                    @foreach ($tenants as $tenant)
+                                        <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="form-hint mt-1">Pilih tenant tujuan import data santri.</div>
+                            </div>
+                        @endif
+
                         <div class="mb-3">
                             <label for="file" class="form-label">Pilih File CSV atau Excel</label>
                             <input
