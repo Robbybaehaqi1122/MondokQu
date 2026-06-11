@@ -90,7 +90,7 @@ class UserManagementController extends \App\Http\Controllers\Controller
 
         return view('admin.users', [
             'assignableRoles' => $assignableRoles,
-            'canManageRoles' => $currentUser?->isSuperAdmin() ?? false,
+            'canManageRoles' => $currentUser?->isSuperAdmin() || $currentUser?->can('assign roles') ?? false,
             'availableTenants' => $currentUser?->isSuperAdmin()
                 ? Tenant::query()->orderBy('name')->get(['id', 'name', 'slug'])
                 : collect(),

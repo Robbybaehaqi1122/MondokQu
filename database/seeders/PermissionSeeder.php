@@ -70,6 +70,7 @@ class PermissionSeeder extends Seeder
             'update user status',
             'reset user passwords',
             'verify user emails',
+            'assign roles',
             'view activity logs',
             'view santri',
             'create santri',
