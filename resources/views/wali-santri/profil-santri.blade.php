@@ -107,29 +107,81 @@
 
             <div class="card mt-3">
                 <div class="card-header">
-                    <h3 class="card-title">Data Orang Tua / Wali</h3>
+                    <h3 class="card-title">Data Ayah</h3>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="text-secondary small">Nama Ayah</div>
+                            <div class="text-secondary small">Nama</div>
                             <div class="fw-semibold mt-1">{{ $santri->father_name ?: '-' }}</div>
                         </div>
                         <div class="col-md-6">
-                            <div class="text-secondary small">Nama Ibu</div>
+                            <div class="text-secondary small">No. HP</div>
+                            <div class="fw-semibold mt-1">{{ $santri->father_phone ?: '-' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Pendidikan</div>
+                            <div class="fw-semibold mt-1">{{ $santri->father_education ?: '-' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Pekerjaan</div>
+                            <div class="fw-semibold mt-1">{{ $santri->father_job ?: '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3 class="card-title">Data Ibu</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Nama</div>
                             <div class="fw-semibold mt-1">{{ $santri->mother_name ?: '-' }}</div>
                         </div>
                         <div class="col-md-6">
-                            <div class="text-secondary small">Nama Wali</div>
+                            <div class="text-secondary small">No. HP</div>
+                            <div class="fw-semibold mt-1">{{ $santri->mother_phone ?: '-' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Pendidikan</div>
+                            <div class="fw-semibold mt-1">{{ $santri->mother_education ?: '-' }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Pekerjaan</div>
+                            <div class="fw-semibold mt-1">{{ $santri->mother_job ?: '-' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3 class="card-title">Data Wali</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Nama</div>
                             <div class="fw-semibold mt-1">{{ $santri->displayGuardianName() }}</div>
                         </div>
                         <div class="col-md-6">
-                            <div class="text-secondary small">No. Telepon Wali</div>
+                            <div class="text-secondary small">No. HP</div>
                             <div class="fw-semibold mt-1">{{ $santri->displayGuardianPhone() }}</div>
                         </div>
-                        <div class="col-12">
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Hubungan</div>
+                            <div class="fw-semibold mt-1">{{ $santri->guardian_relation ?: '-' }}</div>
+                        </div>
+                        <div class="col-md-6">
                             <div class="text-secondary small">Kontak Darurat</div>
                             <div class="fw-semibold mt-1">{{ $santri->emergency_contact ?: '-' }}</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-secondary small">Alamat</div>
+                            <div class="fw-semibold mt-1">{{ $santri->guardian_address ?: '-' }}</div>
                         </div>
                     </div>
                 </div>

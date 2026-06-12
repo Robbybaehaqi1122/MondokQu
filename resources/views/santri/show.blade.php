@@ -141,7 +141,7 @@
             </div>
         </div>
 
-        <div class="col-lg-7">
+        <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Identitas Santri</h3>
@@ -179,10 +179,53 @@
             </div>
         </div>
 
-        <div class="col-lg-5">
+        <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Orang Tua, Wali & Administrasi</h3>
+                    <h3 class="card-title">Data Orang Tua</h3>
+                </div>
+                <div class="card-body user-detail-info-list">
+                    <div class="user-detail-info-row">
+                        <span>Nama Ayah</span>
+                        <strong class="user-detail-info-value">{{ $santri->father_name ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>No. HP Ayah</span>
+                        <strong class="user-detail-info-value">{{ $santri->father_phone ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>Pendidikan Ayah</span>
+                        <strong class="user-detail-info-value">{{ $santri->father_education ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>Pekerjaan Ayah</span>
+                        <strong class="user-detail-info-value">{{ $santri->father_job ?: '-' }}</strong>
+                    </div>
+                    <hr class="my-2">
+                    <div class="user-detail-info-row">
+                        <span>Nama Ibu</span>
+                        <strong class="user-detail-info-value">{{ $santri->mother_name ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>No. HP Ibu</span>
+                        <strong class="user-detail-info-value">{{ $santri->mother_phone ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>Pendidikan Ibu</span>
+                        <strong class="user-detail-info-value">{{ $santri->mother_education ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>Pekerjaan Ibu</span>
+                        <strong class="user-detail-info-value">{{ $santri->mother_job ?: '-' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Data Wali &amp; Administrasi</h3>
                 </div>
                 <div class="card-body user-detail-info-list">
                     <div class="user-detail-info-row">
@@ -190,16 +233,20 @@
                         <strong class="user-detail-info-value">{{ $santri->displayGuardianName() }}</strong>
                     </div>
                     <div class="user-detail-info-row">
-                        <span>Nama Ayah</span>
-                        <strong class="user-detail-info-value">{{ $santri->father_name ?: '-' }}</strong>
-                    </div>
-                    <div class="user-detail-info-row">
-                        <span>Nama Ibu</span>
-                        <strong class="user-detail-info-value">{{ $santri->mother_name ?: '-' }}</strong>
-                    </div>
-                    <div class="user-detail-info-row">
                         <span>No. HP Wali / Penanggung Jawab</span>
                         <strong class="user-detail-info-value">{{ $santri->displayGuardianPhone() }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>Hubungan dengan Santri</span>
+                        <strong class="user-detail-info-value">{{ $santri->guardian_relation ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>Alamat Wali</span>
+                        <strong class="user-detail-info-value">{{ $santri->guardian_address ?: '-' }}</strong>
+                    </div>
+                    <div class="user-detail-info-row">
+                        <span>Kontak Darurat</span>
+                        <strong class="user-detail-info-value">{{ $santri->emergency_contact ?: '-' }}</strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Akun Wali Portal</span>
@@ -212,16 +259,8 @@
                         </strong>
                     </div>
                     <div class="user-detail-info-row">
-                        <span>Kontak Darurat</span>
-                        <strong class="user-detail-info-value">{{ $santri->emergency_contact ?: '-' }}</strong>
-                    </div>
-                    <div class="user-detail-info-row">
                         <span>Tanggal Masuk</span>
                         <strong class="user-detail-info-value">{{ optional($santri->entry_date)->translatedFormat('d M Y') }}</strong>
-                    </div>
-                    <div class="user-detail-info-row">
-                        <span>Angkatan</span>
-                        <strong class="user-detail-info-value">{{ $santri->entry_year ?? '-' }}</strong>
                     </div>
                     <div class="user-detail-info-row">
                         <span>Status</span>

@@ -42,8 +42,16 @@ class SantriService
                     'address' => $validated['address'],
                     'guardian_name' => $validated['guardian_name'] ?: null,
                     'father_name' => $validated['father_name'],
+                    'father_phone' => $validated['father_phone'] ?: null,
+                    'father_education' => $validated['father_education'] ?: null,
+                    'father_job' => $validated['father_job'] ?: null,
                     'mother_name' => $validated['mother_name'],
+                    'mother_phone' => $validated['mother_phone'] ?: null,
+                    'mother_education' => $validated['mother_education'] ?: null,
+                    'mother_job' => $validated['mother_job'] ?: null,
                     'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
+                    'guardian_relation' => $validated['guardian_relation'] ?: null,
+                    'guardian_address' => $validated['guardian_address'] ?: null,
                     'emergency_contact' => $validated['emergency_contact'],
                     'entry_date' => $validated['entry_date'],
                     'entry_year' => $validated['entry_year'],
@@ -94,9 +102,11 @@ class SantriService
         $santri->loadMissing('room');
         $previousValues = $santri->only([
             'nis', 'full_name', 'gender', 'birth_place', 'birth_date',
-            'address', 'guardian_name', 'father_name', 'mother_name',
-            'guardian_phone_number', 'emergency_contact', 'entry_date',
-            'entry_year', 'room_id', 'notes', 'status', 'photo_path',
+            'address', 'guardian_name', 'father_name', 'father_phone',
+            'father_education', 'father_job', 'mother_name', 'mother_phone',
+            'mother_education', 'mother_job', 'guardian_phone_number',
+            'guardian_relation', 'guardian_address', 'emergency_contact',
+            'entry_date', 'entry_year', 'room_id', 'notes', 'status', 'photo_path',
         ]);
         $previousGuardianUserIds = $santri->guardians()
             ->pluck('users.id')
@@ -135,8 +145,16 @@ class SantriService
                     'address' => $validated['address'],
                     'guardian_name' => $validated['guardian_name'] ?: null,
                     'father_name' => $validated['father_name'],
+                    'father_phone' => $validated['father_phone'] ?: null,
+                    'father_education' => $validated['father_education'] ?: null,
+                    'father_job' => $validated['father_job'] ?: null,
                     'mother_name' => $validated['mother_name'],
+                    'mother_phone' => $validated['mother_phone'] ?: null,
+                    'mother_education' => $validated['mother_education'] ?: null,
+                    'mother_job' => $validated['mother_job'] ?: null,
                     'guardian_phone_number' => $validated['guardian_phone_number'] ?: null,
+                    'guardian_relation' => $validated['guardian_relation'] ?: null,
+                    'guardian_address' => $validated['guardian_address'] ?: null,
                     'emergency_contact' => $validated['emergency_contact'],
                     'entry_date' => $validated['entry_date'],
                     'entry_year' => $validated['entry_year'],
@@ -156,9 +174,11 @@ class SantriService
 
         $afterValues = $santri->only([
             'nis', 'full_name', 'gender', 'birth_place', 'birth_date',
-            'address', 'guardian_name', 'father_name', 'mother_name',
-            'guardian_phone_number', 'emergency_contact', 'entry_date',
-            'entry_year', 'room_id', 'room_name', 'notes', 'status', 'photo_path',
+            'address', 'guardian_name', 'father_name', 'father_phone',
+            'father_education', 'father_job', 'mother_name', 'mother_phone',
+            'mother_education', 'mother_job', 'guardian_phone_number',
+            'guardian_relation', 'guardian_address', 'emergency_contact',
+            'entry_date', 'entry_year', 'room_id', 'room_name', 'notes', 'status', 'photo_path',
         ]);
 
         $this->activityLogger->log(
