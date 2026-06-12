@@ -94,9 +94,11 @@ class TahfidzSetoranController extends Controller
         $currentUser = $request->user();
         $validated = $request->validated();
 
+        $santri = Santri::findOrFail($validated['santri_id']);
+
         $session = TahfidzSession::query()->create([
-            'tenant_id' => $currentUser->tenant_id,
-            'santri_id' => $validated['santri_id'],
+            'tenant_id' => $santri->tenant_id,
+            'santri_id' => $santri->id,
             'musyrif_id' => $currentUser->id,
             'session_date' => $validated['session_date'],
             'status' => $validated['status'] ?? TahfidzSession::STATUS_COMPLETED,
@@ -105,7 +107,7 @@ class TahfidzSetoranController extends Controller
 
         foreach ($validated['records'] as $record) {
             TahfidzRecord::query()->create([
-                'tenant_id' => $currentUser->tenant_id,
+                'tenant_id' => $santri->tenant_id,
                 'tahfidz_session_id' => $session->id,
                 'surah_id' => $record['surah_id'],
                 'verse_start' => $record['verse_start'],
@@ -153,6 +155,77 @@ class TahfidzSetoranController extends Controller
             'session' => $session,
             'evaluationOptions' => TahfidzRecord::availableEvaluations(),
         ]);
+    }
+
+    public function edit(Request $request, TahfidzSession $tahfidzSession): View
+    {
+        $currentUser = $request->user();
+
+        $session = TahfidzSession::query()
+            ->visibleTo($currentUser)
+            ->with(['santri', 'records.surah'])
+            ->findOrFail($tahfidzSession->id);
+
+        $surahOptions = TahfidzSurah::query()
+            ->orderBy('number')
+            ->get();
+
+        return view('modules.tahfidz.setoran.edit', [
+            'session' => $session,
+            'surahOptions' => $surahOptions,
+            'evaluationOptions' => TahfidzRecord::availableEvaluations(),
+        ]);
+    }
+
+    public function update(StoreTahfidzSessionRequest $request, TahfidzSession $tahfidzSession): RedirectResponse
+    {
+        $currentUser = $request->user();
+        $validated = $request->validated();
+
+        $session = TahfidzSession::query()
+            ->visibleTo($currentUser)
+            ->findOrFail($tahfidzSession->id);
+
+        $session->update([
+            'session_date' => $validated['session_date'],
+            'status' => $validated['status'] ?? TahfidzSession::STATUS_COMPLETED,
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        $session->records()->delete();
+
+        foreach ($validated['records'] as $record) {
+            TahfidzRecord::query()->create([
+                'tenant_id' => $session->tenant_id,
+                'tahfidz_session_id' => $session->id,
+                'surah_id' => $record['surah_id'],
+                'verse_start' => $record['verse_start'],
+                'verse_end' => $record['verse_end'],
+                'evaluation' => $record['evaluation'],
+                'notes' => $record['notes'] ?? null,
+            ]);
+        }
+
+        $santriName = $session->santri?->full_name ?? "Santri #{$session->santri_id}";
+
+        $this->activityLogger->log(
+            action: 'tahfidz_setoran_updated',
+            actor: $currentUser,
+            target: $session,
+            description: "Setoran hafalan untuk {$santriName} diperbarui.",
+            properties: [
+                'santri_id' => $session->santri_id,
+                'santri_name' => $santriName,
+                'session_date' => $session->session_date->toDateString(),
+                'records_count' => count($validated['records']),
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return redirect()
+            ->route('tahfidz.setoran.index')
+            ->with('success', "Setoran hafalan untuk {$santriName} berhasil diperbarui.");
     }
 
     public function destroy(Request $request, TahfidzSession $tahfidzSession): RedirectResponse

@@ -100,17 +100,29 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="d-flex gap-1">
-                                    <a href="{{ route('tahfidz.setoran.show', $session) }}" class="btn btn-outline-primary btn-sm btn-icon" aria-label="Detail">
-                                        <i class="ti ti-eye"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('tahfidz.setoran.destroy', $session) }}" onsubmit="return confirm('Yakin ingin menghapus setoran ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm btn-icon" aria-label="Hapus">
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </form>
+                                <div class="dropdown">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Aksi
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end">
+                                        <a href="{{ route('tahfidz.setoran.show', $session) }}" class="dropdown-item">
+                                            <i class="ti ti-eye me-2"></i>
+                                            Detail
+                                        </a>
+                                        <a href="{{ route('tahfidz.setoran.edit', $session) }}" class="dropdown-item">
+                                            <i class="ti ti-edit me-2"></i>
+                                            Update
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <form method="POST" action="{{ route('tahfidz.setoran.destroy', $session) }}" onsubmit="return confirm('Yakin ingin menghapus setoran ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="ti ti-trash me-2"></i>
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

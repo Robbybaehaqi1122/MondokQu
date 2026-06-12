@@ -132,6 +132,16 @@ class Santri extends Model
         return $this->hasMany(AttendanceRecord::class);
     }
 
+    public function tahfidzSessions(): HasMany
+    {
+        return $this->hasMany(TahfidzSession::class);
+    }
+
+    public function tahfidzTargets(): HasMany
+    {
+        return $this->hasMany(TahfidzTarget::class);
+    }
+
     /**
      * Get guardian link records for this santri.
      */

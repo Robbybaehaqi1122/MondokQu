@@ -5,6 +5,7 @@ namespace App\Modules\Tahfidz\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Santri;
 use App\Models\TahfidzSession;
+use App\Models\TahfidzTarget;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -65,6 +66,12 @@ class TahfidzRaporController extends Controller
                 }
             }
 
+            $targets = TahfidzTarget::query()
+                ->visibleTo($currentUser)
+                ->where('santri_id', $selectedSantri->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
             $raporData = (object) [
                 'santri' => $selectedSantri,
                 'sessions' => $sessions,
@@ -75,6 +82,7 @@ class TahfidzRaporController extends Controller
                 'total_belum_lancar' => $totalBelumLancar,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
+                'targets' => $targets,
             ];
         }
 

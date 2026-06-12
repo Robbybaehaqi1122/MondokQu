@@ -214,6 +214,12 @@
                                 </span>
                                 <span>Rapor Hafalan</span>
                             </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('tahfidz.targets.*') ? 'active' : '' }}" href="{{ route('tahfidz.targets.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-bullseye"></i>
+                                </span>
+                                <span>Target Hafalan</span>
+                            </a>
                         </div>
                     </details>
                 @endif
