@@ -142,14 +142,8 @@ class TenantBackupService
                 $compressed
             );
 
-            $backup->update([
-                'filename' => $filename,
-                'size_bytes' => strlen($compressed),
-                'tables_count' => $tablesCount,
-                'total_rows' => $totalRows,
-                'status' => Backup::STATUS_COMPLETED,
-                'completed_at' => now(),
-            ]);
+            $backup->filename = $filename;
+            $backup->markCompleted(strlen($compressed), $tablesCount, $totalRows);
 
             return $backup->fresh();
         } catch (\Throwable $e) {

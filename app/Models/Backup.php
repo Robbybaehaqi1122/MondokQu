@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class Backup extends Model
@@ -96,39 +97,57 @@ class Backup extends Model
 
     public function markProcessing(): void
     {
-        $this->forceFill([
+        DB::table('backups')->where('id', $this->id)->update([
             'status' => self::STATUS_PROCESSING,
             'progress' => 0,
             'error_message' => null,
-        ])->save();
+        ]);
+
+        $this->status = self::STATUS_PROCESSING;
+        $this->progress = 0;
     }
 
     public function markProgress(int $progress, string $currentTable = null): void
     {
-        $this->forceFill([
-            'progress' => min(max($progress, 0), 100),
+        $clamped = min(max($progress, 0), 100);
+
+        DB::table('backups')->where('id', $this->id)->update([
+            'progress' => $clamped,
             'current_table' => $currentTable,
-        ])->save();
+        ]);
+
+        $this->progress = $clamped;
+        $this->current_table = $currentTable;
     }
 
     public function markCompleted(int $sizeBytes, int $tablesCount, int $totalRows): void
     {
-        $this->forceFill([
+        DB::table('backups')->where('id', $this->id)->update([
             'status' => self::STATUS_COMPLETED,
             'size_bytes' => $sizeBytes,
             'tables_count' => $tablesCount,
             'total_rows' => $totalRows,
+            'progress' => 100,
             'completed_at' => Carbon::now(),
             'error_message' => null,
-        ])->save();
+        ]);
+
+        $this->status = self::STATUS_COMPLETED;
+        $this->progress = 100;
+        $this->size_bytes = $sizeBytes;
+        $this->tables_count = $tablesCount;
+        $this->total_rows = $totalRows;
+        $this->completed_at = Carbon::now();
     }
 
     public function markFailed(string $message): void
     {
-        $this->forceFill([
+        DB::table('backups')->where('id', $this->id)->update([
             'status' => self::STATUS_FAILED,
             'error_message' => str($message)->limit(2000)->toString(),
-        ])->save();
+        ]);
+
+        $this->status = self::STATUS_FAILED;
     }
 
     public function getFilePath(): string
@@ -175,7 +194,7 @@ class Backup extends Model
             if ($backup->fileExists()) {
                 Storage::disk($backup->disk)->delete($backup->getFilePath());
             }
-            $backup->delete();
+            DB::table('backups')->where('id', $backup->id)->delete();
             $count++;
         }
 
