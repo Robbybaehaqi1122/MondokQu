@@ -270,16 +270,22 @@
                             @csrf
                             <div class="col-md-3">
                                 <label for="doc_type" class="form-label">Jenis Dokumen</label>
-                                <select id="doc_type" name="type" class="form-select" required>
+                                <select id="doc_type" name="type" class="form-select @error('type') is-invalid @enderror" required>
                                     <option value="">-- Pilih --</option>
                                     @foreach (\App\Models\SantriDocument::types() as $type => $label)
                                         <option value="{{ $type }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
+                                @error('type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-4">
-                                <label for="doc_file" class="form-label">File (PDF/JPG/PNG, max 5MB)</label>
-                                <input id="doc_file" name="file" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <label for="doc_file" class="form-label">File (PDF/JPG/PNG, max 10MB)</label>
+                                <input id="doc_file" name="file" type="file" class="form-control @error('file') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" required>
+                                @error('file')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-3">
                                 <label for="doc_notes" class="form-label">Catatan (opsional)</label>

@@ -209,7 +209,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
 
         $validated = $request->validate([
             'type' => ['required', 'string', 'in:' . implode(',', array_keys(SantriDocument::types()))],
-            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
