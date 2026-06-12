@@ -11,6 +11,7 @@ use App\Imports\SantriImport;
 use App\Jobs\ProcessSantriImportJob;
 use App\Models\DataExport;
 use App\Models\DataImport;
+use App\Models\ActivityLog;
 use App\Models\Room;
 use App\Models\Santri;
 use App\Models\SantriDocument;
@@ -141,10 +142,18 @@ class SantriManagementController extends \App\Http\Controllers\Controller
 
         $currentUser = request()->user();
 
+        $activities = ActivityLog::query()
+            ->with('actor')
+            ->where('target_type', Santri::class)
+            ->where('target_id', $santri->id)
+            ->latest()
+            ->paginate(30);
+
         return view('santri.show', [
             'canDeleteSantri' => $currentUser?->can('delete', $santri) ?? false,
             'canUpdateSantri' => $currentUser?->can('update', $santri) ?? false,
             'santri' => $santri,
+            'activities' => $activities,
         ]);
     }
 

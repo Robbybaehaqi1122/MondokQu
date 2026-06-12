@@ -360,6 +360,77 @@
                     @endif
                 </div>
             </div>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Riwayat Aktivitas</h3>
+                    <div class="card-subtitle text-secondary ms-2 small">Terakhir 30 aktivitas</div>
+                </div>
+                <div class="card-body">
+                    @php
+                        $actionIcons = [
+                            'santri_created' => ['icon' => 'ti-user-plus', 'color' => 'bg-green-lt text-green'],
+                            'santri_updated' => ['icon' => 'ti-edit', 'color' => 'bg-blue-lt text-blue'],
+                            'santri_document_uploaded' => ['icon' => 'ti-upload', 'color' => 'bg-azure-lt text-azure'],
+                            'santri_document_deleted' => ['icon' => 'ti-trash', 'color' => 'bg-red-lt text-red'],
+                            'import_santri' => ['icon' => 'ti-file-import', 'color' => 'bg-indigo-lt text-indigo'],
+                            'santri_status_changed' => ['icon' => 'ti-toggle-left', 'color' => 'bg-orange-lt text-orange'],
+                            'room_transfer' => ['icon' => 'ti-arrows-shuffle', 'color' => 'bg-teal-lt text-teal'],
+                        ];
+                        $defaultIcon = ['icon' => 'ti-circle', 'color' => 'bg-secondary-lt text-secondary'];
+                    @endphp
+
+                    @if ($activities->isEmpty())
+                        <div class="text-secondary py-3 text-center">Belum ada aktivitas untuk santri ini.</div>
+                    @else
+                        <div class="timeline">
+                            @foreach ($activities as $activity)
+                                @php
+                                    $icon = $actionIcons[$activity->action] ?? $defaultIcon;
+                                    $groupedActions = [
+                                        'santri_created' => 'Santri baru',
+                                        'santri_updated' => 'Data diperbarui',
+                                        'santri_document_uploaded' => 'Dokumen diupload',
+                                        'santri_document_deleted' => 'Dokumen dihapus',
+                                        'import_santri' => 'Import santri',
+                                        'santri_status_changed' => 'Status berubah',
+                                        'room_transfer' => 'Mutasi kamar',
+                                    ];
+                                    $actionLabel = $groupedActions[$activity->action] ?? $activity->action;
+                                @endphp
+                                <div class="timeline-item">
+                                    <div class="timeline-item-icon {{ $icon['color'] }}">
+                                        <i class="ti {{ $icon['icon'] }}"></i>
+                                    </div>
+                                    <div class="timeline-item-content">
+                                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                            <strong class="text-nowrap">{{ $actionLabel }}</strong>
+                                            <span class="text-secondary small">{{ $activity->created_at->diffForHumans() }}</span>
+                                        </div>
+                                        @if ($activity->description)
+                                            <div class="text-secondary mb-1">{{ $activity->description }}</div>
+                                        @endif
+                                        <div class="d-flex flex-wrap align-items-center gap-2 text-secondary small">
+                                            <span>
+                                                <i class="ti ti-user me-1"></i>{{ $activity->actor?->name ?? $activity->actor_name ?? 'System' }}
+                                            </span>
+                                            <span>
+                                                <i class="ti ti-clock me-1"></i>{{ $activity->created_at->translatedFormat('d M Y H:i') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        @if ($activities->hasPages())
+                            <div class="mt-3">
+                                {{ $activities->links() }}
+                            </div>
+                        @endif
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 <script>
