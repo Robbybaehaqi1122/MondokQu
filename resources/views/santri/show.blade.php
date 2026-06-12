@@ -286,8 +286,10 @@
                                 <input id="doc_notes" name="notes" type="text" class="form-control" maxlength="500" placeholder="Mis: scan halaman 1-2">
                             </div>
                             <div class="col-md-2 d-grid">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ti ti-upload me-1"></i> Upload
+                                <button type="submit" class="btn btn-primary" id="upload-doc-btn">
+                                    <span id="upload-doc-icon"><i class="ti ti-upload me-1"></i></span>
+                                    <span id="upload-doc-spinner" class="spinner-border spinner-border-sm me-1" role="status" hidden></span>
+                                    <span id="upload-doc-text">Upload</span>
                                 </button>
                             </div>
                         </form>
@@ -354,4 +356,17 @@
             </div>
         </div>
     </div>
+<script>
+    document.querySelector('form[action*="documents/upload"]')?.addEventListener('submit', function() {
+        setTimeout(() => {
+            const btn = document.getElementById('upload-doc-btn');
+            if (btn) {
+                btn.disabled = true;
+                document.getElementById('upload-doc-icon').hidden = true;
+                document.getElementById('upload-doc-spinner').hidden = false;
+                document.getElementById('upload-doc-text').textContent = 'Mengupload...';
+            }
+        }, 50);
+    });
+</script>
 </x-app-layout>
