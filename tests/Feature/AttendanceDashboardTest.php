@@ -51,12 +51,17 @@ test('user with manage absensi permission can view attendance dashboard', functi
         ->get(route('attendance.dashboard'))
         ->assertOk()
         ->assertSee('Dashboard Absensi')
+        ->assertSee('Total Santri')
+        ->assertSee('Sudah Absen')
+        ->assertSee('Belum Absen')
+        ->assertSee('% Kehadiran')
         ->assertSee('Sesi Hari Ini')
-        ->assertSee('Belum Lengkap')
+        ->assertSee('Santri Belum Absen')
         ->assertSee('Halaqah Dashboard Pagi')
         ->assertSee('Muhadharah Dashboard')
         ->assertSee('Santri Perlu Perhatian')
-        ->assertSee('Santri Telat Dashboard');
+        ->assertSee('Santri Telat Dashboard')
+        ->assertSee('Santri Belum Diinput Dashboard');
 });
 
 test('attendance dashboard is scoped to the current tenant', function () {

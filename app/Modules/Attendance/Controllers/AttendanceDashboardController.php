@@ -5,6 +5,7 @@ namespace App\Modules\Attendance\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
+use App\Models\Room;
 use App\Models\Santri;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,6 +19,8 @@ class AttendanceDashboardController extends Controller
     {
         $currentUser = $request->user();
         $today = today();
+        $roomId = $request->integer('room') ?: null;
+
         $issueStatuses = [
             AttendanceRecord::STATUS_PERMISSION,
             AttendanceRecord::STATUS_SICK,
@@ -25,10 +28,37 @@ class AttendanceDashboardController extends Controller
             AttendanceRecord::STATUS_LATE,
         ];
 
-        $activeSantriCount = Santri::query()
+        $santriBase = Santri::query()
             ->visibleTo($currentUser)
-            ->where('status', Santri::STATUS_ACTIVE)
-            ->count();
+            ->where('status', Santri::STATUS_ACTIVE);
+
+        if ($roomId) {
+            $santriBase->where('room_id', $roomId);
+        }
+
+        $activeSantriCount = (clone $santriBase)->count();
+
+        $attendedTodayIds = $this->recordBaseQuery($currentUser)
+            ->whereDate('attendance_sessions.session_date', $today->toDateString())
+            ->distinct()
+            ->pluck('attendance_records.santri_id');
+
+        $attendedCount = $attendedTodayIds->count();
+        $notAttendedCount = $activeSantriCount - $attendedCount;
+        $attendancePercentage = $activeSantriCount > 0
+            ? round(($attendedCount / $activeSantriCount) * 100, 1)
+            : 0;
+
+        $notAttendedSantris = (clone $santriBase)
+            ->whereNotIn('id', $attendedTodayIds)
+            ->with('room')
+            ->orderBy('full_name')
+            ->get(['id', 'full_name', 'nis', 'room_id']);
+
+        $roomOptions = Room::query()
+            ->visibleTo($currentUser)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         $todaySessions = AttendanceSession::query()
             ->visibleTo($currentUser)
@@ -76,7 +106,13 @@ class AttendanceDashboardController extends Controller
 
         return view('attendance.dashboard', [
             'activeSantriCount' => $activeSantriCount,
+            'attendedCount' => $attendedCount,
+            'notAttendedCount' => $notAttendedCount,
+            'attendancePercentage' => $attendancePercentage,
+            'notAttendedSantris' => $notAttendedSantris,
             'attentionSantris' => $attentionSantris,
+            'roomOptions' => $roomOptions,
+            'selectedRoomId' => $roomId,
             'dashboardStats' => [
                 'sessions_today' => $todaySessions->count(),
                 'open_sessions' => $todaySessions->where('status', AttendanceSession::STATUS_OPEN)->count(),

@@ -18,7 +18,13 @@
         <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-3">
             <div>
                 <h2 class="page-title">Dashboard Absensi</h2>
-                <div class="text-secondary mt-1">Ringkasan operasional AbsenQu untuk {{ $today->translatedFormat('d M Y') }}.</div>
+                <div class="text-secondary mt-1">
+                    Pantauan absensi real-time untuk {{ $today->translatedFormat('d M Y') }}.
+                    <span class="badge bg-green-lt text-green ms-1" id="liveIndicator">
+                        <i class="ti ti-refresh me-1"></i>
+                        Live
+                    </span>
+                </div>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('attendance.sessions.index') }}" class="btn btn-outline-primary">
@@ -33,55 +39,80 @@
         </div>
     </x-slot>
 
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('attendance.dashboard') }}" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="room" class="form-label">Filter Kamar</label>
+                    <select id="room" name="room" class="form-select" onchange="this.form.submit()">
+                        <option value="">Semua Kamar</option>
+                        @foreach ($roomOptions as $roomOption)
+                            <option value="{{ $roomOption->id }}" @selected($selectedRoomId === $roomOption->id)>
+                                {{ $roomOption->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @if ($selectedRoomId)
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a href="{{ route('attendance.dashboard') }}" class="btn btn-outline-secondary">Reset</a>
+                    </div>
+                @endif
+            </form>
+        </div>
+    </div>
+
     <div class="row row-cards mb-3">
         <div class="col-sm-6 col-lg-3">
             <div class="card card-body">
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <div>
-                        <div class="text-uppercase text-secondary small">Sesi Hari Ini</div>
-                        <div class="fs-2 fw-bold">{{ number_format($dashboardStats['sessions_today']) }}</div>
-                    </div>
-                    <span class="avatar bg-primary-lt text-primary">
-                        <i class="ti ti-calendar-check"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Belum Lengkap</div>
-                        <div class="fs-2 fw-bold">{{ number_format($dashboardStats['needs_input']) }}</div>
-                    </div>
-                    <span class="avatar bg-warning-lt text-warning">
-                        <i class="ti ti-clipboard-list"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Sesi Dibuka</div>
-                        <div class="fs-2 fw-bold">{{ number_format($dashboardStats['open_sessions']) }}</div>
-                    </div>
-                    <span class="avatar bg-blue-lt text-blue">
-                        <i class="ti ti-lock-open"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Santri Aktif</div>
+                        <div class="text-uppercase text-secondary small">Total Santri</div>
                         <div class="fs-2 fw-bold">{{ number_format($activeSantriCount) }}</div>
                     </div>
-                    <span class="avatar bg-success-lt text-success">
+                    <span class="avatar bg-primary-lt text-primary">
                         <i class="ti ti-users"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-uppercase text-secondary small">Sudah Absen</div>
+                        <div class="fs-2 fw-bold text-success">{{ number_format($attendedCount) }}</div>
+                    </div>
+                    <span class="avatar bg-success-lt text-success">
+                        <i class="ti ti-check"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-uppercase text-secondary small">Belum Absen</div>
+                        <div class="fs-2 fw-bold {{ $notAttendedCount > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($notAttendedCount) }}</div>
+                    </div>
+                    <span class="avatar bg-warning-lt text-warning">
+                        <i class="ti ti-clock"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-uppercase text-secondary small">% Kehadiran</div>
+                        <div class="fs-2 fw-bold {{ $attendancePercentage >= 90 ? 'text-success' : ($attendancePercentage >= 75 ? 'text-warning' : 'text-danger') }}">
+                            {{ number_format($attendancePercentage, 1) }}%
+                        </div>
+                    </div>
+                    <span class="avatar bg-azure-lt text-azure">
+                        <i class="ti ti-chart-arcs"></i>
                     </span>
                 </div>
             </div>
@@ -113,7 +144,12 @@
                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2 w-100">
                         <div>
                             <h3 class="card-title">Sesi Hari Ini</h3>
-                            <div class="text-secondary small mt-2">Pantau progres input absensi untuk semua sesi hari ini.</div>
+                            <div class="text-secondary small mt-2">
+                                Pantau progres input absensi untuk semua sesi hari ini.
+                                @if ($dashboardStats['open_sessions'] > 0 || $dashboardStats['needs_input'] > 0)
+                                    <span class="badge bg-blue-lt text-blue ms-1">{{ $dashboardStats['open_sessions'] }} dibuka, {{ $dashboardStats['needs_input'] }} perlu input</span>
+                                @endif
+                            </div>
                         </div>
                         <a href="{{ route('attendance.sessions.index', ['date_from' => $today->toDateString(), 'date_to' => $today->toDateString()]) }}" class="btn btn-outline-secondary btn-sm">
                             <i class="ti ti-list me-1"></i>
@@ -184,23 +220,39 @@
             <div class="card h-100">
                 <div class="card-header">
                     <div>
-                        <h3 class="card-title">Belum Lengkap</h3>
-                        <div class="text-secondary small mt-2">Sesi hari ini yang masih perlu dilengkapi.</div>
+                        <h3 class="card-title">Santri Belum Absen</h3>
+                        <div class="text-secondary small mt-2">
+                            @if ($notAttendedCount > 0)
+                                {{ number_format($notAttendedCount) }} santri belum tercatat hari ini.
+                            @else
+                                Semua santri sudah absen hari ini.
+                            @endif
+                        </div>
                     </div>
                 </div>
-                <div class="list-group list-group-flush">
-                    @forelse ($sessionsNeedingInput as $session)
-                        <a href="{{ route('attendance.sessions.records.edit', $session) }}" class="list-group-item list-group-item-action">
+                <div class="list-group list-group-flush" style="max-height: 320px; overflow-y: auto;">
+                    @forelse ($notAttendedSantris as $santri)
+                        <div class="list-group-item">
                             <div class="d-flex align-items-start justify-content-between gap-3">
                                 <div class="min-width-0">
-                                    <div class="fw-semibold text-truncate">{{ $session->activity?->name ?? '-' }}</div>
-                                    <div class="text-secondary small">{{ number_format((int) $session->records_count) }} dari {{ number_format($activeSantriCount) }} santri terisi</div>
+                                    <div class="fw-semibold text-truncate">{{ $santri->full_name }}</div>
+                                    <div class="text-secondary small">
+                                        NIS {{ $santri->nis ?: '-' }}
+                                        @if ($santri->room)
+                                            &middot; {{ $santri->room->name }}
+                                        @endif
+                                    </div>
                                 </div>
-                                <i class="ti ti-chevron-right text-secondary"></i>
+                                <span class="badge bg-warning-lt text-warning">Belum</span>
                             </div>
-                        </a>
+                        </div>
                     @empty
-                        <div class="list-group-item text-secondary">Semua sesi hari ini sudah lengkap atau belum ada sesi.</div>
+                        <div class="list-group-item text-secondary">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="ti ti-check text-success"></i>
+                                Semua santri sudah absen hari ini.
+                            </div>
+                        </div>
                     @endforelse
                 </div>
             </div>
@@ -255,3 +307,25 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const indicator = document.getElementById('liveIndicator');
+        if (!indicator) return;
+
+        let countdown = 30;
+        indicator.textContent = 'Live \u2022 ' + countdown + 's';
+
+        setInterval(function () {
+            countdown--;
+            if (countdown <= 0) {
+                countdown = 30;
+                indicator.textContent = 'Memperbarui\u2026';
+                indicator.className = 'badge bg-yellow-lt text-yellow ms-1';
+                location.reload();
+            } else {
+                indicator.textContent = 'Live \u2022 ' + countdown + 's';
+            }
+        }, 1000);
+    });
+</script>
