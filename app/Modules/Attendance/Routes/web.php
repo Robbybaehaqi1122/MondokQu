@@ -17,6 +17,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::delete('/kegiatan/{attendanceActivity}', [AttendanceActivityController::class, 'destroy'])->name('activities.destroy');
 
         Route::get('/laporan', [AttendanceReportController::class, 'index'])->name('reports.index');
+        Route::get('/laporan/pdf', [AttendanceReportController::class, 'exportPdf'])->name('reports.pdf');
 
         Route::get('/sesi', [AttendanceSessionController::class, 'index'])->name('sessions.index');
         Route::post('/sesi', [AttendanceSessionController::class, 'store'])->name('sessions.store');
