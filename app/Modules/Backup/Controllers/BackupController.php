@@ -81,8 +81,17 @@ class BackupController extends Controller
             }
         }
 
+        $backup = Backup::query()->create([
+            'tenant_id' => $tenant->id,
+            'created_by' => $currentUser->id,
+            'filename' => '',
+            'disk' => config('backups.disk', 'local'),
+            'type' => Backup::TYPE_MANUAL,
+            'status' => Backup::STATUS_PENDING,
+        ]);
+
         if (config('backups.queue', 'default') !== 'sync') {
-            CreateTenantBackup::dispatch($tenant, $currentUser, Backup::TYPE_MANUAL);
+            CreateTenantBackup::dispatch($backup);
 
             return redirect()
                 ->route('backup.index')
@@ -90,7 +99,7 @@ class BackupController extends Controller
         }
 
         try {
-            $this->backupService->storeBackup($tenant, $currentUser, Backup::TYPE_MANUAL);
+            $this->backupService->storeBackup($backup);
 
             return redirect()
                 ->route('backup.index')

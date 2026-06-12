@@ -111,20 +111,19 @@ class TenantBackupService
         ];
     }
 
-    public function storeBackup(Tenant $tenant, User $user, string $type = Backup::TYPE_MANUAL): Backup
+    public function storeBackup(Backup $backup, Closure $onProgress = null): Backup
     {
-        $backup = Backup::query()->create([
-            'tenant_id' => $tenant->id,
-            'created_by' => $user->id,
-            'filename' => '',
-            'disk' => config('backups.disk', 'local'),
-            'type' => $type,
-            'status' => Backup::STATUS_PROCESSING,
-        ]);
+        $backup->markProcessing();
+
+        $tenant = $backup->tenant;
 
         try {
-            $result = $this->generateBackupSql($tenant, function (int $progress, ?string $table) use ($backup) {
+            $result = $this->generateBackupSql($tenant, function (int $progress, ?string $table) use ($backup, $onProgress) {
                 $backup->markProgress($progress, $table);
+
+                if ($onProgress) {
+                    $onProgress($progress, $table);
+                }
             });
             $content = $result['content'];
             $tablesCount = $result['tables_count'];
