@@ -266,7 +266,7 @@
 
                 <div class="card-body">
                     @if ($canUpdateSantri)
-                        <form method="POST" action="{{ route('santri.documents.upload', $santri) }}" enctype="multipart/form-data" class="row g-3 align-items-end mb-4 p-3 bg-secondary-lt rounded">
+                        <form id="upload-doc-form" method="POST" action="{{ route('santri.documents.upload', $santri) }}" enctype="multipart/form-data" class="row g-3 align-items-end mb-4 p-3 bg-secondary-lt rounded">
                             @csrf
                             <div class="col-md-3">
                                 <label for="doc_type" class="form-label">Jenis Dokumen</label>
@@ -357,7 +357,7 @@
         </div>
     </div>
 <script>
-    document.querySelector('form[action*="documents/upload"]')?.addEventListener('submit', function() {
+    document.getElementById('upload-doc-form')?.addEventListener('submit', function() {
         setTimeout(() => {
             const btn = document.getElementById('upload-doc-btn');
             if (btn) {
