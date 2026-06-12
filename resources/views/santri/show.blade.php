@@ -247,5 +247,114 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex flex-wrap align-items-center gap-3 w-100">
+                        <div>
+                            <h3 class="card-title">Dokumen Santri</h3>
+                            @php $missingDocs = $santri->missingDocumentTypes(); @endphp
+                            @if ($santri->isDocumentComplete())
+                                <span class="badge bg-success-lt text-success mt-1">Dokumen Lengkap</span>
+                            @else
+                                <span class="badge bg-warning-lt text-warning mt-1">Kurang: {{ collect($missingDocs)->map(fn($t) => \App\Models\SantriDocument::types()[$t] ?? $t)->implode(', ') }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @if ($canUpdateSantri)
+                        <form method="POST" action="{{ route('santri.documents.upload', $santri) }}" enctype="multipart/form-data" class="row g-3 align-items-end mb-4 p-3 bg-secondary-lt rounded">
+                            @csrf
+                            <div class="col-md-3">
+                                <label for="doc_type" class="form-label">Jenis Dokumen</label>
+                                <select id="doc_type" name="type" class="form-select" required>
+                                    <option value="">-- Pilih --</option>
+                                    @foreach (\App\Models\SantriDocument::types() as $type => $label)
+                                        <option value="{{ $type }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="doc_file" class="form-label">File (PDF/JPG/PNG, max 5MB)</label>
+                                <input id="doc_file" name="file" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="doc_notes" class="form-label">Catatan (opsional)</label>
+                                <input id="doc_notes" name="notes" type="text" class="form-control" maxlength="500" placeholder="Mis: scan halaman 1-2">
+                            </div>
+                            <div class="col-md-2 d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-upload me-1"></i> Upload
+                                </button>
+                            </div>
+                        </form>
+                    @endif
+
+                    @if ($santri->documents->isEmpty())
+                        <div class="text-secondary">Belum ada dokumen yang diupload.</div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        <th>Jenis Dokumen</th>
+                                        <th>Nama File</th>
+                                        <th>Ukuran</th>
+                                        <th>Catatan</th>
+                                        <th>Diupload</th>
+                                        <th class="w-1">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($santri->documents as $doc)
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-primary-lt text-primary">{{ $doc->typeLabel() }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-break">{{ $doc->original_name }}</span>
+                                            </td>
+                                            <td class="text-nowrap">{{ $doc->fileSizeForHumans() }}</td>
+                                            <td>{{ $doc->notes ?: '-' }}</td>
+                                            <td class="text-nowrap">
+                                                <div>{{ $doc->created_at->translatedFormat('d M Y') }}</div>
+                                                <div class="text-secondary small">{{ $doc->uploader?->name }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1">
+                                                    @if ($doc->fileUrl())
+                                                        <a href="{{ $doc->isImage() ? $doc->fileUrl() : route('santri.documents.download', [$santri, $doc]) }}"
+                                                           class="btn btn-icon btn-outline-primary"
+                                                           title="{{ $doc->isImage() ? 'Lihat' : 'Download' }}"
+                                                           {{ $doc->isImage() ? 'target=_blank' : '' }}>
+                                                            <i class="ti ti-{{ $doc->isImage() ? 'eye' : 'download' }}"></i>
+                                                        </a>
+                                                    @endif
+                                                    <a href="{{ route('santri.documents.download', [$santri, $doc]) }}" class="btn btn-icon btn-outline-secondary" title="Download">
+                                                        <i class="ti ti-download"></i>
+                                                    </a>
+                                                    @if ($canUpdateSantri)
+                                                        <form method="POST" action="{{ route('santri.documents.destroy', [$santri, $doc]) }}" onsubmit="return confirm('Hapus dokumen ini?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-icon btn-outline-danger" title="Hapus">
+                                                                <i class="ti ti-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
 </x-app-layout>

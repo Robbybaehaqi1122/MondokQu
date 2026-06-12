@@ -28,3 +28,9 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:delete santri', 'throttle:60,1'])->group(function () {
     Route::delete('/santri/{santri}', [SantriManagementController::class, 'destroy'])->name('santri.destroy');
 });
+
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:update santri', 'throttle:60,1'])->group(function () {
+    Route::post('/santri/{santri}/documents', [SantriManagementController::class, 'uploadDocument'])->name('santri.documents.upload');
+    Route::get('/santri/{santri}/documents/{document}/download', [SantriManagementController::class, 'downloadDocument'])->name('santri.documents.download');
+    Route::delete('/santri/{santri}/documents/{document}', [SantriManagementController::class, 'destroyDocument'])->name('santri.documents.destroy');
+});

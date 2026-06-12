@@ -13,6 +13,7 @@ use App\Models\DataExport;
 use App\Models\DataImport;
 use App\Models\Room;
 use App\Models\Santri;
+use App\Models\SantriDocument;
 use App\Models\User;
 use App\Modules\Santri\Requests\ImportSantriRequest;
 use App\Modules\Santri\Requests\StoreSantriRequest;
@@ -49,7 +50,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
         $baseQuery = Santri::query()->visibleTo($currentUser);
 
         $santris = (clone $baseQuery)
-            ->with(['creator', 'guardians', 'room'])
+            ->with(['creator', 'guardians', 'room', 'documents'])
             ->withFilters($query, $selectedStatus, $selectedGender)
             ->orderBy('full_name')
             ->paginate(10)
@@ -136,10 +137,13 @@ class SantriManagementController extends \App\Http\Controllers\Controller
     {
         $this->authorize('view', $santri);
 
-        $santri->load(['creator', 'guardians', 'room']);
+        $santri->load(['creator', 'guardians', 'room', 'documents']);
+
+        $currentUser = request()->user();
 
         return view('santri.show', [
-            'canDeleteSantri' => request()->user()?->can('delete', $santri) ?? false,
+            'canDeleteSantri' => $currentUser?->can('delete', $santri) ?? false,
+            'canUpdateSantri' => $currentUser?->can('update', $santri) ?? false,
             'santri' => $santri,
         ]);
     }
@@ -197,6 +201,94 @@ class SantriManagementController extends \App\Http\Controllers\Controller
         return redirect()
             ->route('santri.index')
             ->with('success', 'Data santri berhasil dihapus.');
+    }
+
+    public function uploadDocument(Request $request, Santri $santri): RedirectResponse
+    {
+        $this->authorize('update', $santri);
+
+        $validated = $request->validate([
+            'type' => ['required', 'string', 'in:' . implode(',', array_keys(SantriDocument::types()))],
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('santri-documents/' . $santri->id, 'public');
+
+        SantriDocument::query()->create([
+            'santri_id' => $santri->id,
+            'type' => $validated['type'],
+            'file_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'notes' => $validated['notes'],
+            'uploaded_by' => $request->user()->id,
+        ]);
+
+        app(\App\Services\ActivityLogger::class)->log(
+            action: 'santri_document_uploaded',
+            actor: $request->user(),
+            target: $santri,
+            description: "Upload dokumen {$validated['type']} untuk {$santri->full_name}.",
+            properties: [
+                'document_type' => $validated['type'],
+                'santri_id' => $santri->id,
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        );
+
+        return redirect()
+            ->route('santri.show', $santri)
+            ->with('success', 'Dokumen berhasil diupload.');
+    }
+
+    public function downloadDocument(Santri $santri, SantriDocument $document): \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\RedirectResponse
+    {
+        $this->authorize('view', $santri);
+
+        if ($document->santri_id !== $santri->id) {
+            abort(404);
+        }
+
+        if (! Storage::disk('public')->exists($document->file_path)) {
+            return redirect()
+                ->route('santri.show', $santri)
+                ->with('error', 'File dokumen tidak ditemukan.');
+        }
+
+        return Storage::disk('public')->download($document->file_path, $document->original_name);
+    }
+
+    public function destroyDocument(Request $request, Santri $santri, SantriDocument $document): RedirectResponse
+    {
+        $this->authorize('update', $santri);
+
+        if ($document->santri_id !== $santri->id) {
+            abort(404);
+        }
+
+        Storage::disk('public')->delete($document->file_path);
+        $document->delete();
+
+        app(\App\Services\ActivityLogger::class)->log(
+            action: 'santri_document_deleted',
+            actor: $request->user(),
+            target: $santri,
+            description: "Hapus dokumen {$document->typeLabel()} untuk {$santri->full_name}.",
+            properties: [
+                'document_type' => $document->type,
+                'santri_id' => $santri->id,
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        );
+
+        return redirect()
+            ->route('santri.show', $santri)
+            ->with('success', 'Dokumen berhasil dihapus.');
     }
 
     public function importIndex(Request $request): View

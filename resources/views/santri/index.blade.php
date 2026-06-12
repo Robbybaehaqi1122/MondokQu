@@ -132,6 +132,7 @@
                                 <th>Wali / Penanggung Jawab</th>
                                 <th>Tanggal Masuk</th>
                                 <th>Status</th>
+                                <th>Dokumen</th>
                                 <th class="w-1">Aksi</th>
                             </tr>
                         </thead>
@@ -184,6 +185,13 @@
                                         <span class="badge {{ $statusBadgeClasses[$managedSantri->status] ?? 'bg-secondary-lt text-secondary' }}">
                                             {{ $managedSantri->statusLabel() }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        @if ($managedSantri->isDocumentComplete())
+                                            <span class="badge bg-success-lt text-success">Lengkap</span>
+                                        @else
+                                            <span class="badge bg-warning-lt text-warning">Kurang</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="dropdown">

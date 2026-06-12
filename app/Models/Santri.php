@@ -313,4 +313,23 @@ class Santri extends Model
 
         return $primaryGuardian?->phone_number ?? ($this->guardian_phone_number ?: $fallback);
     }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(SantriDocument::class);
+    }
+
+    public function isDocumentComplete(): bool
+    {
+        $uploadedTypes = $this->documents->pluck('type')->unique()->values()->toArray();
+
+        return empty(array_diff(SantriDocument::requiredTypes(), $uploadedTypes));
+    }
+
+    public function missingDocumentTypes(): array
+    {
+        $uploadedTypes = $this->documents->pluck('type')->unique()->values()->toArray();
+
+        return array_values(array_diff(SantriDocument::requiredTypes(), $uploadedTypes));
+    }
 }
