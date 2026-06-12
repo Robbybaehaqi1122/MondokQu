@@ -324,27 +324,24 @@
                                                 <div class="text-secondary small">{{ $doc->uploader?->name }}</div>
                                             </td>
                                             <td>
-                                                <div class="d-flex gap-1">
-                                                    @if ($doc->fileUrl())
-                                                        <a href="{{ $doc->isImage() ? $doc->fileUrl() : route('santri.documents.download', [$santri, $doc]) }}"
-                                                           class="btn btn-icon btn-outline-primary"
-                                                           title="{{ $doc->isImage() ? 'Lihat' : 'Download' }}"
-                                                           {{ $doc->isImage() ? 'target=_blank' : '' }}>
-                                                            <i class="ti ti-{{ $doc->isImage() ? 'eye' : 'download' }}"></i>
+                                                <div class="dropdown">
+                                                    <button type="button" class="btn btn-outline-secondary btn-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="ti ti-dots-vertical"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                        <a href="{{ route('santri.documents.download', [$santri, $doc]) }}" class="dropdown-item">
+                                                            <i class="ti ti-download me-2"></i> Download
                                                         </a>
-                                                    @endif
-                                                    <a href="{{ route('santri.documents.download', [$santri, $doc]) }}" class="btn btn-icon btn-outline-secondary" title="Download">
-                                                        <i class="ti ti-download"></i>
-                                                    </a>
-                                                    @if ($canUpdateSantri)
-                                                        <form method="POST" action="{{ route('santri.documents.destroy', [$santri, $doc]) }}" onsubmit="return confirm('Hapus dokumen ini?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-icon btn-outline-danger" title="Hapus">
-                                                                <i class="ti ti-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    @endif
+                                                        @if ($canUpdateSantri)
+                                                            <form method="POST" action="{{ route('santri.documents.destroy', [$santri, $doc]) }}" onsubmit="return confirm('Hapus dokumen ini?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="dropdown-item text-danger">
+                                                                    <i class="ti ti-trash me-2"></i> Hapus
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
