@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Backup;
 use App\Models\Tenant;
 use App\Models\User;
+use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,9 +30,10 @@ class TenantBackupService
         return DB::connection()->getSchemaBuilder()->getColumnListing($table);
     }
 
-    public function generateBackupSql(Tenant $tenant): array
+    public function generateBackupSql(Tenant $tenant, Closure $onProgress = null): array
     {
-        $tables = $this->getTenantTables();
+        $allTables = $this->getTenantTables();
+        $totalTables = count($allTables);
 
         $sql = "-- Mondok Qu Database Backup\n";
         $sql .= "-- Tenant: {$tenant->name} (ID: {$tenant->id})\n";
@@ -42,8 +44,15 @@ class TenantBackupService
         $sql .= "START TRANSACTION;\n\n";
 
         $totalRows = 0;
+        $processedWithData = 0;
 
-        foreach ($tables as $table) {
+        foreach ($allTables as $index => $table) {
+            $stepProgress = $totalTables > 0 ? (int) round(($index / $totalTables) * 100) : 0;
+
+            if ($onProgress) {
+                $onProgress($stepProgress, $table);
+            }
+
             $columns = $this->getTableColumns($table);
 
             $rows = DB::table($table)
@@ -53,6 +62,8 @@ class TenantBackupService
             if ($rows->isEmpty()) {
                 continue;
             }
+
+            $processedWithData++;
 
             $totalRows += $rows->count();
 
@@ -89,9 +100,13 @@ class TenantBackupService
         $sql .= "SET FOREIGN_KEY_CHECKS = 1;\n";
         $sql .= "COMMIT;\n";
 
+        if ($onProgress) {
+            $onProgress(100, null);
+        }
+
         return [
             'content' => $sql,
-            'tables_count' => count($tables),
+            'tables_count' => $totalTables,
             'total_rows' => $totalRows,
         ];
     }
@@ -108,7 +123,9 @@ class TenantBackupService
         ]);
 
         try {
-            $result = $this->generateBackupSql($tenant);
+            $result = $this->generateBackupSql($tenant, function (int $progress, ?string $table) use ($backup) {
+                $backup->markProgress($progress, $table);
+            });
             $content = $result['content'];
             $tablesCount = $result['tables_count'];
             $totalRows = $result['total_rows'];

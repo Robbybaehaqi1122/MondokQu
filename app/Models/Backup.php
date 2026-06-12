@@ -34,6 +34,8 @@ class Backup extends Model
         'disk',
         'size_bytes',
         'type',
+        'progress',
+        'current_table',
         'status',
         'error_message',
         'tables_count',
@@ -45,6 +47,7 @@ class Backup extends Model
     {
         return [
             'size_bytes' => 'integer',
+            'progress' => 'integer',
             'tables_count' => 'integer',
             'total_rows' => 'integer',
             'completed_at' => 'datetime',
@@ -93,7 +96,19 @@ class Backup extends Model
 
     public function markProcessing(): void
     {
-        $this->forceFill(['status' => self::STATUS_PROCESSING, 'error_message' => null])->save();
+        $this->forceFill([
+            'status' => self::STATUS_PROCESSING,
+            'progress' => 0,
+            'error_message' => null,
+        ])->save();
+    }
+
+    public function markProgress(int $progress, string $currentTable = null): void
+    {
+        $this->forceFill([
+            'progress' => min(max($progress, 0), 100),
+            'current_table' => $currentTable,
+        ])->save();
     }
 
     public function markCompleted(int $sizeBytes, int $tablesCount, int $totalRows): void

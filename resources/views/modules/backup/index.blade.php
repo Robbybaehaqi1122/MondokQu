@@ -99,12 +99,26 @@
                                         default => 'bg-secondary-lt text-secondary',
                                     };
                                 @endphp
-                                <span class="badge {{ $statusBadge }}">
-                                    @if ($backup->isProcessing())
-                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                @if ($backup->isProcessing() || $backup->isPending())
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <div class="spinner-border spinner-border-sm text-info"></div>
+                                        <span>{{ $backup->progress }}%</span>
+                                    </div>
+                                    <div class="progress progress-sm" style="min-width: 120px">
+                                        <div class="progress-bar bg-info progress-bar-striped progress-bar-animated"
+                                            style="width: {{ $backup->progress }}%">
+                                        </div>
+                                    </div>
+                                    @if ($backup->current_table)
+                                        <small class="text-secondary mt-1 d-block">
+                                            {{ $backup->current_table }}
+                                        </small>
                                     @endif
-                                    {{ ucfirst($backup->status) }}
-                                </span>
+                                @else
+                                    <span class="badge {{ $statusBadge }}">
+                                        {{ ucfirst($backup->status) }}
+                                    </span>
+                                @endif
                                 @if ($backup->isFailed() && $backup->error_message)
                                     <br>
                                     <small class="text-danger">{{ $backup->error_message }}</small>
@@ -158,6 +172,23 @@
             </div>
         @endif
     </div>
+
+    @php
+        $hasActiveBackups = $backups->contains(fn ($b) => $b->isPending() || $b->isProcessing());
+    @endphp
+
+    @if ($hasActiveBackups)
+        <div class="alert alert-info">
+            <div class="d-flex align-items-center gap-2">
+                <div class="spinner-border spinner-border-sm"></div>
+                <span>Backup sedang diproses. Halaman akan diperbarui secara otomatis...</span>
+            </div>
+        </div>
+
+        <script>
+            setTimeout(() => location.reload(), 3000);
+        </script>
+    @endif
 
     <div class="card mt-3">
         <div class="card-header">
