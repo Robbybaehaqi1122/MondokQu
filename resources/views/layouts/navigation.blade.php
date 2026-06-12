@@ -480,8 +480,8 @@
                 @endif
 
                 @if ($user->hasRole('Superadmin'))
-                    <details class="sidebar-dropdown" @if (request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') || request()->routeIs('backup.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') || request()->routeIs('backup.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-building-bank"></i>
                             </span>
@@ -515,6 +515,12 @@
                                     <i class="ti ti-receipt-2"></i>
                                 </span>
                                 <span>Billing Notes</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('backup.*') ? 'active' : '' }}" href="{{ route('backup.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-cloud-upload"></i>
+                                </span>
+                                <span>Backup Database</span>
                             </a>
                         </div>
                     </details>

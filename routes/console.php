@@ -54,3 +54,13 @@ Schedule::command('exports:prune')
     ->dailyAt('01:00')
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('backup:tenant --all')
+    ->weeklyOn(0, '02:00')
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/backup-schedule.log'));
+
+Schedule::call(function () {
+    \App\Models\Backup::pruneOlderThan(config('backups.retention_days', 30));
+})->name('backups:prune')->dailyAt('03:00')->withoutOverlapping();
