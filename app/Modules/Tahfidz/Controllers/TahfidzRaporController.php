@@ -2,11 +2,14 @@
 
 namespace App\Modules\Tahfidz\Controllers;
 
+use App\Exports\TahfidzRaporPdfExport;
 use App\Http\Controllers\Controller;
+use App\Models\Room;
 use App\Models\Santri;
 use App\Models\TahfidzSession;
 use App\Models\TahfidzTarget;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class TahfidzRaporController extends Controller
@@ -91,9 +94,16 @@ class TahfidzRaporController extends Controller
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'nis']);
 
+        $roomOptions = Room::query()
+            ->visibleTo($currentUser)
+            ->where('status', Room::STATUS_ACTIVE)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return view('modules.tahfidz.rapor.index', [
             'santriList' => $santriList,
             'santriOptions' => $santriOptions,
+            'roomOptions' => $roomOptions,
             'raporData' => $raporData,
             'filters' => [
                 'q' => $search,
@@ -102,5 +112,47 @@ class TahfidzRaporController extends Controller
                 'date_to' => $dateTo,
             ],
         ]);
+    }
+
+    public function exportPdf(Request $request): Response
+    {
+        $currentUser = $request->user();
+        $santriId = (int) $request->integer('santri');
+        $dateFrom = trim((string) $request->string('date_from'));
+        $dateTo = trim((string) $request->string('date_to'));
+
+        if (! $santriId) {
+            abort(400, 'Santri harus dipilih untuk export PDF.');
+        }
+
+        $export = new TahfidzRaporPdfExport(
+            currentUser: $currentUser,
+            santriId: $santriId,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo,
+        );
+
+        return $export->download();
+    }
+
+    public function exportBatchPdf(Request $request): Response
+    {
+        $currentUser = $request->user();
+        $roomId = (int) $request->integer('room');
+        $dateFrom = trim((string) $request->string('date_from'));
+        $dateTo = trim((string) $request->string('date_to'));
+
+        if (! $roomId) {
+            abort(400, 'Kelas harus dipilih untuk export batch PDF.');
+        }
+
+        $export = new TahfidzRaporPdfExport(
+            currentUser: $currentUser,
+            roomId: $roomId,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo,
+        );
+
+        return $export->download();
     }
 }

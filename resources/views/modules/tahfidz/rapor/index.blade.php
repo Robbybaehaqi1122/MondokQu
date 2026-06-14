@@ -1,10 +1,49 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="page-title">Rapor Hafalan</h2>
-            <div class="text-secondary mt-1">Lihat progress hafalan Al-Quran santri per periode.</div>
+        <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-3">
+            <div>
+                <h2 class="page-title">Rapor Hafalan</h2>
+                <div class="text-secondary mt-1">Lihat progress hafalan Al-Quran santri per periode.</div>
+            </div>
+            @if ($raporData && $raporData->santri)
+                <a href="{{ route('tahfidz.rapor.pdf', request()->only(['santri', 'date_from', 'date_to'])) }}"
+                   class="btn btn-primary" target="_blank">
+                    <i class="ti ti-file-type-pdf me-1"></i>
+                    Export PDF Santri
+                </a>
+            @endif
         </div>
     </x-slot>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-nowrap fw-semibold">Export Per Kelas:</div>
+                <form method="GET" action="{{ route('tahfidz.rapor.pdf-batch') }}" class="row g-2 align-items-end flex-fill" target="_blank">
+                    <div class="col-md-4">
+                        <select name="room" class="form-select" required>
+                            <option value="">Pilih Kelas</option>
+                            @foreach ($roomOptions as $room)
+                                <option value="{{ $room->id }}">{{ $room->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="date_from" class="form-control" placeholder="Dari">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="date_to" class="form-control" placeholder="Sampai">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="ti ti-file-type-pdf me-1"></i>
+                            Export PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <div class="card mb-3">
         <div class="card-body">
@@ -245,6 +284,11 @@
                             @endif
                         </div>
                     </div>
+                    <a href="{{ route('tahfidz.rapor.pdf', request()->only(['santri', 'date_from', 'date_to'])) }}"
+                       class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="ti ti-file-type-pdf me-1"></i>
+                        Export PDF
+                    </a>
                 </div>
             </div>
             <div class="table-responsive">

@@ -16,6 +16,8 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::put('/setoran/{tahfidzSession}', [TahfidzSetoranController::class, 'update'])->name('setoran.update');
     Route::delete('/setoran/{tahfidzSession}', [TahfidzSetoranController::class, 'destroy'])->name('setoran.destroy');
     Route::get('/rapor', [TahfidzRaporController::class, 'index'])->name('rapor.index');
+    Route::get('/rapor/pdf', [TahfidzRaporController::class, 'exportPdf'])->name('rapor.pdf');
+    Route::get('/rapor/pdf-batch', [TahfidzRaporController::class, 'exportBatchPdf'])->name('rapor.pdf-batch');
     Route::get('/targets', [TahfidzTargetController::class, 'index'])->name('targets.index');
     Route::get('/targets/create', [TahfidzTargetController::class, 'create'])->name('targets.create');
     Route::post('/targets', [TahfidzTargetController::class, 'store'])->name('targets.store');
