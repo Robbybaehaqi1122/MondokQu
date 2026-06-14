@@ -3,12 +3,12 @@
 namespace App\Modules\Backup\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\CreateTenantBackup;
 use App\Models\Backup;
 use App\Models\Tenant;
 use App\Services\TenantBackupService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -59,6 +59,9 @@ class BackupController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        set_time_limit(0);
+        ignore_user_abort(true);
+
         $currentUser = $request->user();
 
         if ($currentUser->isSuperAdmin()) {
@@ -90,20 +93,12 @@ class BackupController extends Controller
             'status' => Backup::STATUS_PENDING,
         ]);
 
-        if (config('backups.queue', 'default') !== 'sync') {
-            CreateTenantBackup::dispatch($backup);
-
-            return redirect()
-                ->route('backup.index')
-                ->with('success', "Backup untuk {$tenant->name} sedang diproses.");
-        }
-
         try {
             $this->backupService->storeBackup($backup);
 
             return redirect()
                 ->route('backup.index')
-                ->with('success', "Backup untuk {$tenant->name} berhasil dibuat.");
+                ->with('success', "Backup untuk {$tenant->name} berhasil dibuat (" . number_format($backup->total_rows ?? 0) . " baris).");
         } catch (\Throwable $e) {
             return redirect()
                 ->route('backup.index')
@@ -128,28 +123,16 @@ class BackupController extends Controller
         );
     }
 
-    public function restore(Request $request, Backup $backup): RedirectResponse
+    public function markFailed(Request $request, Backup $backup): RedirectResponse
     {
-        $currentUser = $request->user();
+        DB::table('backups')->where('id', $backup->id)->update([
+            'status' => Backup::STATUS_FAILED,
+            'error_message' => 'Proses dihentikan oleh user karena stuck.',
+        ]);
 
-        if (! $currentUser->isSuperAdmin()) {
-            abort_unless((int) $backup->tenant_id === (int) $currentUser->tenant_id, 404);
-        }
-
-        abort_unless($backup->isCompleted(), 404);
-        abort_unless($backup->fileExists(), 404);
-
-        try {
-            $result = $this->backupService->restoreBackup($backup);
-
-            return redirect()
-                ->route('backup.index')
-                ->with('success', "Restore berhasil! {$result['statements_executed']} tabel dipulihkan.");
-        } catch (\Throwable $e) {
-            return redirect()
-                ->route('backup.index')
-                ->with('error', "Gagal restore: {$e->getMessage()}");
-        }
+        return redirect()
+            ->route('backup.index')
+            ->with('success', 'Backup ditandai sebagai gagal.');
     }
 
     public function destroy(Request $request, Backup $backup): RedirectResponse

@@ -20,6 +20,8 @@ class Backup extends Model
 
     public const TYPE_SCHEDULED = 'scheduled';
 
+    public const TYPE_UPLOADED = 'uploaded';
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_PROCESSING = 'processing';
@@ -124,6 +126,7 @@ class Backup extends Model
     {
         DB::table('backups')->where('id', $this->id)->update([
             'status' => self::STATUS_COMPLETED,
+            'filename' => $this->filename,
             'size_bytes' => $sizeBytes,
             'tables_count' => $tablesCount,
             'total_rows' => $totalRows,

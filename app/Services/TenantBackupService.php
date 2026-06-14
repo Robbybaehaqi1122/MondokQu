@@ -6,7 +6,9 @@ use App\Models\Backup;
 use App\Models\Tenant;
 use App\Models\User;
 use Closure;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class TenantBackupService
@@ -113,13 +115,28 @@ class TenantBackupService
 
     public function storeBackup(Backup $backup, Closure $onProgress = null): Backup
     {
-        $backup->markProcessing();
+        ini_set('memory_limit', '-1');
 
-        $tenant = $backup->tenant;
+        DB::table('backups')->where('id', $backup->id)->update([
+            'status' => Backup::STATUS_PROCESSING,
+            'progress' => 0,
+        ]);
+
+        $tenant = Tenant::find($backup->tenant_id);
+        if (! $tenant) {
+            DB::table('backups')->where('id', $backup->id)->update([
+                'status' => Backup::STATUS_FAILED,
+                'error_message' => 'Tenant tidak ditemukan.',
+            ]);
+            throw new \RuntimeException('Tenant tidak ditemukan: ' . $backup->tenant_id);
+        }
 
         try {
             $result = $this->generateBackupSql($tenant, function (int $progress, ?string $table) use ($backup, $onProgress) {
-                $backup->markProgress($progress, $table);
+                DB::table('backups')->where('id', $backup->id)->update([
+                    'progress' => min(max($progress, 0), 100),
+                    'current_table' => $table,
+                ]);
 
                 if ($onProgress) {
                     $onProgress($progress, $table);
@@ -129,31 +146,88 @@ class TenantBackupService
             $tablesCount = $result['tables_count'];
             $totalRows = $result['total_rows'];
 
-            $compressed = gzencode($content, 9);
-
             $date = now()->format('Y-m-d_H-i-s');
             $filename = "backup_{$tenant->id}_{$date}.sql.gz";
 
             $directory = "backups/tenant_{$tenant->id}";
-
             Storage::disk(config('backups.disk', 'local'))->makeDirectory($directory);
-            Storage::disk(config('backups.disk', 'local'))->put(
+
+            error_log('[Backup] SQL content size: ' . strlen($content) . ' bytes, tables: ' . $tablesCount . ', rows: ' . $totalRows);
+
+            $compressed = gzencode($content, 9);
+            unset($content);
+
+            if ($compressed === false) {
+                throw new \RuntimeException('Gagal mengompres file backup (gzencode gagal)');
+            }
+
+            $saved = Storage::disk(config('backups.disk', 'local'))->put(
                 "{$directory}/{$filename}",
                 $compressed
             );
 
-            $backup->filename = $filename;
-            $backup->markCompleted(strlen($compressed), $tablesCount, $totalRows);
+            if (! $saved) {
+                throw new \RuntimeException('Gagal menyimpan file backup ke storage');
+            }
+
+            $size = strlen($compressed);
+            unset($compressed);
+
+            DB::table('backups')->where('id', $backup->id)->update([
+                'status' => Backup::STATUS_COMPLETED,
+                'filename' => $filename,
+                'size_bytes' => $size,
+                'tables_count' => $tablesCount,
+                'total_rows' => $totalRows,
+                'progress' => 100,
+                'completed_at' => now(),
+                'error_message' => null,
+            ]);
 
             return $backup->fresh();
         } catch (\Throwable $e) {
-            $backup->markFailed($e->getMessage());
+            $msg = $e->getMessage();
+            error_log('[Backup] storeBackup failed: ' . $msg);
+
+            DB::table('backups')->where('id', $backup->id)->update([
+                'status' => Backup::STATUS_FAILED,
+                'error_message' => $msg,
+            ]);
 
             throw $e;
         }
     }
 
-    public function restoreBackup(Backup $backup): array
+    public function storeUploadedBackup(UploadedFile $file, Tenant $tenant, User $creator): Backup
+    {
+        $compressed = file_get_contents($file->getRealPath());
+        $ext = $file->getClientOriginalExtension() === 'gz' ? '.sql.gz' : '.sql';
+
+        $date = now()->format('Y-m-d_H-i-s');
+        $filename = "upload_{$tenant->id}_{$date}{$ext}";
+        $directory = "backups/tenant_{$tenant->id}";
+
+        Storage::disk(config('backups.disk', 'local'))->makeDirectory($directory);
+        Storage::disk(config('backups.disk', 'local'))->put(
+            "{$directory}/{$filename}",
+            $compressed
+        );
+
+        $backup = Backup::query()->create([
+            'tenant_id' => $tenant->id,
+            'created_by' => $creator->id,
+            'filename' => $filename,
+            'disk' => config('backups.disk', 'local'),
+            'size_bytes' => strlen($compressed),
+            'type' => Backup::TYPE_UPLOADED,
+        ]);
+
+        $backup->markCompleted(strlen($compressed), 0, 0);
+
+        return $backup->fresh();
+    }
+
+    public function restoreBackup(Backup $backup, Closure $onProgress = null): array
     {
         if (! $backup->fileExists()) {
             throw new \RuntimeException("File backup tidak ditemukan: {$backup->filename}");
@@ -163,51 +237,90 @@ class TenantBackupService
         $content = gzdecode($compressed);
 
         $statements = $this->parseSqlStatements($content);
-        $restored = 0;
 
-        DB::beginTransaction();
-
-        try {
-            foreach ($statements as $statement) {
-                $statement = trim($statement);
-                if ($statement === '') {
-                    continue;
-                }
-
-                if (str_starts_with($statement, 'INSERT INTO')) {
-                    preg_match("/INSERT INTO `(\w+)`/", $statement, $matches);
-                    if (isset($matches[1])) {
-                        $table = $matches[1];
-
-                        if ($table !== 'tenants') {
-                            $tenantColumn = in_array('tenant_id', $this->getTableColumns($table))
-                                ? 'tenant_id'
-                                : null;
-
-                            if ($tenantColumn) {
-                                DB::table($table)
-                                    ->where('tenant_id', $backup->tenant_id)
-                                    ->delete();
-                            }
-                        }
-
-                        DB::unprepared($statement);
-                        $restored++;
-                    }
-                }
+        $insertStatements = [];
+        $setupStatements = [];
+        foreach ($statements as $statement) {
+            $statement = trim($statement);
+            if ($statement === '') {
+                continue;
             }
 
-            DB::commit();
-
-            return [
-                'success' => true,
-                'statements_executed' => $restored,
-            ];
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            throw $e;
+            if (str_starts_with($statement, 'INSERT INTO')) {
+                $insertStatements[] = $statement;
+            } elseif (
+                str_starts_with($statement, 'SET FOREIGN_KEY_CHECKS') ||
+                str_starts_with($statement, 'SET SQL_MODE')
+            ) {
+                $setupStatements[] = $statement;
+            }
         }
+
+        $total = count($insertStatements);
+        $restored = 0;
+
+        Log::info('Starting restore', [
+            'backup_id' => $backup->id,
+            'statements_total' => count($statements),
+            'insert_statements' => $total,
+            'setup_statements' => count($setupStatements),
+        ]);
+
+        foreach ($setupStatements as $statement) {
+            DB::unprepared($statement);
+        }
+
+        foreach ($insertStatements as $index => $statement) {
+            preg_match("/INSERT INTO `(\w+)`/", $statement, $matches);
+            if (! isset($matches[1])) {
+                continue;
+            }
+
+            $table = $matches[1];
+
+            if ($onProgress) {
+                $progress = $total > 0 ? (int) round(($index + 1) / $total * 100) : 100;
+                $onProgress($progress, $table);
+            }
+
+            try {
+                if ($table !== 'tenants') {
+                    $tenantColumn = in_array('tenant_id', $this->getTableColumns($table))
+                        ? 'tenant_id'
+                        : null;
+
+                    if ($tenantColumn) {
+                        DB::table($table)
+                            ->where('tenant_id', $backup->tenant_id)
+                            ->delete();
+                    }
+                }
+
+                DB::unprepared($statement);
+                $restored++;
+            } catch (\Throwable $e) {
+                Log::error('Restore failed at statement', [
+                    'backup_id' => $backup->id,
+                    'index' => $index,
+                    'table' => $table,
+                    'statement' => substr($statement, 0, 200),
+                    'error' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
+        }
+
+        DB::unprepared('SET FOREIGN_KEY_CHECKS = 1');
+
+        Log::info('Restore completed', [
+            'backup_id' => $backup->id,
+            'statements_executed' => $restored,
+        ]);
+
+        return [
+            'success' => true,
+            'statements_executed' => $restored,
+        ];
     }
 
     private function parseSqlStatements(string $sql): array

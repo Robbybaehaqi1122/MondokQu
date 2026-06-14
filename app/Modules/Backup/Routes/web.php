@@ -7,6 +7,6 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/backups', [BackupController::class, 'index'])->name('backup.index');
     Route::post('/backups', [BackupController::class, 'store'])->name('backup.store');
     Route::get('/backups/{backup}/download', [BackupController::class, 'download'])->name('backup.download');
-    Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->name('backup.restore');
+    Route::post('/backups/{backup}/mark-failed', [BackupController::class, 'markFailed'])->name('backup.mark-failed');
     Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backup.destroy');
 });

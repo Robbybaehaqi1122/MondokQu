@@ -2,16 +2,15 @@
     <x-slot name="header">
         <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-3">
             <div>
-                <h2 class="page-title">Backup & Restore Database</h2>
-                <div class="text-secondary mt-1">Kelola file backup database per tenant pondok.</div>
+                <h2 class="page-title">Backup Database</h2>
+                <div class="text-secondary mt-1">Buat dan unduh file backup database per tenant.</div>
             </div>
             @if ($isSuperAdmin || $tenantOptions->isNotEmpty())
                 <form method="POST" action="{{ route('backup.store') }}" class="d-flex gap-2 align-items-end">
                     @csrf
                     @if ($isSuperAdmin)
                         <div>
-                            <label for="tenant" class="form-label visually-hidden">Pilih Tenant</label>
-                            <select name="tenant" id="tenant" class="form-select" required>
+                            <select name="tenant" class="form-select" required>
                                 <option value="">Pilih Tenant</option>
                                 @foreach ($tenantOptions as $tenant)
                                     <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
@@ -38,20 +37,16 @@
 
     @if (session('success'))
         <div class="alert alert-success alert-dismissible">
-            <div class="d-flex align-items-center">
-                <i class="ti ti-check-circle me-2"></i>
-                <span>{{ session('success') }}</span>
-            </div>
+            <i class="ti ti-check-circle me-2"></i>
+            <span>{{ session('success') }}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible">
-            <div class="d-flex align-items-center">
-                <i class="ti ti-alert-circle me-2"></i>
-                <span>{{ session('error') }}</span>
-            </div>
+            <i class="ti ti-alert-circle me-2"></i>
+            <span>{{ session('error') }}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
@@ -91,64 +86,74 @@
                             <td>{{ $backup->total_rows ? number_format($backup->total_rows) : '-' }}</td>
                             <td>
                                 @php
-                                    $statusBadge = match ($backup->status) {
-                                        'completed' => 'bg-success-lt text-success',
-                                        'processing' => 'bg-info-lt text-info',
-                                        'pending' => 'bg-secondary-lt text-secondary',
-                                        'failed' => 'bg-danger-lt text-danger',
-                                        default => 'bg-secondary-lt text-secondary',
-                                    };
+                                    $isStuck = $backup->isProcessing() && $backup->created_at?->diffInMinutes(now()) > 5;
                                 @endphp
                                 @if ($backup->isProcessing() || $backup->isPending())
                                     <div class="d-flex align-items-center gap-2 mb-1">
-                                        <div class="spinner-border spinner-border-sm text-info"></div>
-                                        <span>{{ $backup->progress }}%</span>
+                                        @if ($isStuck)
+                                            <i class="ti ti-alert-triangle text-warning"></i>
+                                        @else
+                                            <div class="spinner-border spinner-border-sm text-info"></div>
+                                        @endif
+                                        <span>
+                                            @if ($isStuck)
+                                                <span class="text-warning fw-semibold">Stuck</span>
+                                            @else
+                                                {{ $backup->progress }}%
+                                            @endif
+                                        </span>
                                     </div>
                                     <div class="progress progress-sm" style="min-width: 120px">
-                                        <div class="progress-bar bg-info progress-bar-striped progress-bar-animated"
+                                        <div class="progress-bar {{ $isStuck ? 'bg-warning' : 'bg-info progress-bar-striped progress-bar-animated' }}"
                                             style="width: {{ $backup->progress }}%">
                                         </div>
                                     </div>
-                                    @if ($backup->current_table)
-                                        <small class="text-secondary mt-1 d-block">
-                                            {{ $backup->current_table }}
-                                        </small>
+                                    <small class="text-secondary mt-1 d-block">
+                                        {{ $backup->current_table ?? 'Menunggu...' }}
+                                    </small>
+                                    @if ($isStuck && $backup->error_message)
+                                        <small class="text-danger d-block mt-1">{{ $backup->error_message }}</small>
+                                    @endif
+                                @elseif ($backup->isCompleted())
+                                    <span class="badge bg-success-lt text-success">Completed</span>
+                                @elseif ($backup->isFailed())
+                                    <span class="badge bg-danger-lt text-danger">Failed</span>
+                                    @if ($backup->error_message)
+                                        <div class="mt-1 p-2 bg-danger-lt border border-danger rounded" style="max-width: 300px; word-break: break-word;">
+                                            <small class="text-danger">{{ $backup->error_message }}</small>
+                                        </div>
                                     @endif
                                 @else
-                                    <span class="badge {{ $statusBadge }}">
-                                        {{ ucfirst($backup->status) }}
-                                    </span>
-                                @endif
-                                @if ($backup->isFailed() && $backup->error_message)
-                                    <br>
-                                    <small class="text-danger">{{ $backup->error_message }}</small>
+                                    <span class="badge bg-secondary-lt text-secondary">{{ ucfirst($backup->status) }}</span>
                                 @endif
                             </td>
                             <td>{{ $backup->created_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>
                             <td>
                                 <div class="dropdown">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
                                         Aksi
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end">
                                         @if ($backup->isCompleted())
                                             <a href="{{ route('backup.download', $backup) }}" class="dropdown-item">
-                                                <i class="ti ti-download me-2"></i>
-                                                Download
+                                                <i class="ti ti-download me-2"></i>Download
                                             </a>
-                                            <a href="{{ route('backup.restore', $backup) }}" class="dropdown-item text-warning"
-                                                onclick="return confirm('Yakin ingin merestore database dari backup ini? Data tenant saat ini akan diganti dengan data backup.')">
-                                                <i class="ti ti-refresh me-2"></i>
-                                                Restore
-                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                        @endif
+                                        @if ($isStuck)
+                                            <form method="POST" action="{{ route('backup.mark-failed', $backup) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="ti ti-x me-2"></i>Tandai Gagal
+                                                </button>
+                                            </form>
                                             <div class="dropdown-divider"></div>
                                         @endif
                                         <form method="POST" action="{{ route('backup.destroy', $backup) }}" onsubmit="return confirm('Yakin ingin menghapus file backup ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="dropdown-item text-danger">
-                                                <i class="ti ti-trash me-2"></i>
-                                                Hapus
+                                                <i class="ti ti-trash me-2"></i>Hapus
                                             </button>
                                         </form>
                                     </div>
@@ -159,7 +164,7 @@
                         <tr>
                             <td colspan="{{ $isSuperAdmin ? 8 : 7 }}" class="text-secondary text-center py-4">
                                 <i class="ti ti-cloud-off fs-2 mb-2 d-block"></i>
-                                Belum ada file backup. Klik "Backup Sekarang" untuk membuat backup pertama.
+                                Belum ada file backup.
                             </td>
                         </tr>
                     @endforelse
@@ -172,23 +177,6 @@
             </div>
         @endif
     </div>
-
-    @php
-        $hasActiveBackups = $backups->contains(fn ($b) => $b->isPending() || $b->isProcessing());
-    @endphp
-
-    @if ($hasActiveBackups)
-        <div class="alert alert-info">
-            <div class="d-flex align-items-center gap-2">
-                <div class="spinner-border spinner-border-sm"></div>
-                <span>Backup sedang diproses. Halaman akan diperbarui secara otomatis...</span>
-            </div>
-        </div>
-
-        <script>
-            setTimeout(() => location.reload(), 3000);
-        </script>
-    @endif
 
     <div class="card mt-3">
         <div class="card-header">
