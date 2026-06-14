@@ -1,8 +1,20 @@
 <?php
 
-use App\Models\Tenant;
-use App\Models\User;
+use App\Models\ActivityLog;
+use App\Models\AttendanceActivity;
+use App\Models\DataExport;
+use App\Models\LeaveRequest;
 use App\Models\Role;
+use App\Models\Room;
+use App\Models\RoomTransfer;
+use App\Models\Santri;
+use App\Models\SantriGuardian;
+use App\Models\SantriInvoice;
+use App\Models\Tenant;
+use App\Models\TenantBillingNote;
+use App\Models\TenantSubscriptionHistory;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -45,26 +57,26 @@ it('has many users', function () {
 });
 
 it('has many santris', function () {
-    \App\Models\Santri::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
+    Santri::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
 
     expect($this->tenant->santris)->toHaveCount(2);
 });
 
 it('has many rooms', function () {
-    \App\Models\Room::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
+    Room::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
 
     expect($this->tenant->rooms)->toHaveCount(2);
 });
 
 it('has many attendance activities', function () {
-    \App\Models\AttendanceActivity::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
+    AttendanceActivity::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
 
     expect($this->tenant->attendanceActivities)->toHaveCount(2);
 });
 
 it('has many leave requests', function () {
-    $santri = \App\Models\Santri::factory()->create(['tenant_id' => $this->tenant->id]);
-    \App\Models\LeaveRequest::create([
+    $santri = Santri::factory()->create(['tenant_id' => $this->tenant->id]);
+    LeaveRequest::create([
         'tenant_id' => $this->tenant->id,
         'santri_id' => $santri->id,
         'start_date' => now()->format('Y-m-d'),
@@ -72,7 +84,7 @@ it('has many leave requests', function () {
         'reason' => 'Test',
         'status' => 'pending',
     ]);
-    \App\Models\LeaveRequest::create([
+    LeaveRequest::create([
         'tenant_id' => $this->tenant->id,
         'santri_id' => $santri->id,
         'start_date' => now()->format('Y-m-d'),
@@ -85,8 +97,8 @@ it('has many leave requests', function () {
 });
 
 it('has many santri invoices', function () {
-    $santri = \App\Models\Santri::factory()->create(['tenant_id' => $this->tenant->id]);
-    \App\Models\SantriInvoice::factory()->count(2)->create([
+    $santri = Santri::factory()->create(['tenant_id' => $this->tenant->id]);
+    SantriInvoice::factory()->count(2)->create([
         'tenant_id' => $this->tenant->id,
         'santri_id' => $santri->id,
     ]);
@@ -96,7 +108,7 @@ it('has many santri invoices', function () {
 
 it('has many data exports', function () {
     $user = User::factory()->create(['tenant_id' => $this->tenant->id]);
-    \App\Models\DataExport::create([
+    DataExport::create([
         'tenant_id' => $this->tenant->id,
         'user_id' => $user->id,
         'type' => 'santri',
@@ -105,7 +117,7 @@ it('has many data exports', function () {
         'filename' => 'test.csv',
         'format' => 'csv',
     ]);
-    \App\Models\DataExport::create([
+    DataExport::create([
         'tenant_id' => $this->tenant->id,
         'user_id' => $user->id,
         'type' => 'santri_invoices',
@@ -119,7 +131,7 @@ it('has many data exports', function () {
 });
 
 it('has cast attributes', function () {
-    expect($this->tenant->trial_ends_at)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($this->tenant->trial_ends_at)->toBeInstanceOf(Carbon::class);
     $this->tenant->update(['settings' => ['theme' => 'light']]);
     $this->tenant->refresh();
     expect($this->tenant->settings)->toBeArray();
@@ -168,9 +180,9 @@ it('returns subscription statuses', function () {
 });
 
 it('has room transfers relationship', function () {
-    $room = \App\Models\Room::factory()->create(['tenant_id' => $this->tenant->id]);
-    $santri = \App\Models\Santri::factory()->create(['tenant_id' => $this->tenant->id]);
-    \App\Models\RoomTransfer::create([
+    $room = Room::factory()->create(['tenant_id' => $this->tenant->id]);
+    $santri = Santri::factory()->create(['tenant_id' => $this->tenant->id]);
+    RoomTransfer::create([
         'tenant_id' => $this->tenant->id,
         'santri_id' => $santri->id,
         'from_room_id' => $room->id,
@@ -183,8 +195,8 @@ it('has room transfers relationship', function () {
 });
 
 it('has santri guardians relationship', function () {
-    $santri = \App\Models\Santri::factory()->create(['tenant_id' => $this->tenant->id]);
-    \App\Models\SantriGuardian::factory()->create([
+    $santri = Santri::factory()->create(['tenant_id' => $this->tenant->id]);
+    SantriGuardian::factory()->create([
         'tenant_id' => $this->tenant->id,
         'santri_id' => $santri->id,
         'user_id' => User::factory()->create(['tenant_id' => $this->tenant->id])->id,
@@ -205,7 +217,7 @@ it('handles settings via trait', function () {
 
 it('has activity logs relationship', function () {
     $user = User::factory()->create(['tenant_id' => $this->tenant->id]);
-    \App\Models\ActivityLog::factory()->count(2)->create([
+    ActivityLog::factory()->count(2)->create([
         'tenant_id' => $this->tenant->id,
         'actor_id' => $user->id,
         'actor_name' => $user->name,
@@ -216,7 +228,7 @@ it('has activity logs relationship', function () {
 });
 
 it('has subscription histories relationship', function () {
-    \App\Models\TenantSubscriptionHistory::create([
+    TenantSubscriptionHistory::create([
         'tenant_id' => $this->tenant->id,
         'action' => 'created',
         'changed_by' => null,
@@ -226,7 +238,7 @@ it('has subscription histories relationship', function () {
 });
 
 it('has billing notes relationship', function () {
-    \App\Models\TenantBillingNote::create([
+    TenantBillingNote::create([
         'tenant_id' => $this->tenant->id,
         'amount' => 100000,
         'payment_method' => 'transfer bank',

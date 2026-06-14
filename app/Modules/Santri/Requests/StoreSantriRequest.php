@@ -2,9 +2,9 @@
 
 namespace App\Modules\Santri\Requests;
 
-use App\Modules\Santri\Requests\Concerns\ValidatesGuardianUsers;
 use App\Models\Room;
 use App\Models\Santri;
+use App\Modules\Santri\Requests\Concerns\ValidatesGuardianUsers;
 use App\Rules\IndonesiaPhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

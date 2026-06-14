@@ -13,9 +13,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\Rule;
 
 class AttendanceReportController extends Controller
@@ -36,7 +36,7 @@ class AttendanceReportController extends Controller
         $viewMode = $validated['view_mode'] ?? 'detail';
 
         $dateTo = $validated['date_to'] ?? ($validated['date_from'] ?? now()->toDateString());
-        $dateFrom = $validated['date_from'] ?? \Carbon\Carbon::parse($dateTo)->startOfMonth()->toDateString();
+        $dateFrom = $validated['date_from'] ?? Carbon::parse($dateTo)->startOfMonth()->toDateString();
         $filters = [
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
@@ -49,26 +49,23 @@ class AttendanceReportController extends Controller
         $cacheTtl = 300;
         $tenantId = $currentUser?->tenant_id;
 
-        $activityOptions = Cache::remember("attendance.filters.$tenantId.activities", $cacheTtl, fn () =>
-            AttendanceActivity::query()
-                ->visibleTo($currentUser)
-                ->orderBy('name')
-                ->get(['id', 'name'])
+        $activityOptions = Cache::remember("attendance.filters.$tenantId.activities", $cacheTtl, fn () => AttendanceActivity::query()
+            ->visibleTo($currentUser)
+            ->orderBy('name')
+            ->get(['id', 'name'])
         );
 
-        $santriOptions = Cache::remember("attendance.filters.$tenantId.santris", $cacheTtl, fn () =>
-            Santri::query()
-                ->visibleTo($currentUser)
-                ->orderBy('full_name')
-                ->limit(500)
-                ->get(['id', 'nis', 'full_name'])
+        $santriOptions = Cache::remember("attendance.filters.$tenantId.santris", $cacheTtl, fn () => Santri::query()
+            ->visibleTo($currentUser)
+            ->orderBy('full_name')
+            ->limit(500)
+            ->get(['id', 'nis', 'full_name'])
         );
 
-        $roomOptions = Cache::remember("attendance.filters.$tenantId.rooms", $cacheTtl, fn () =>
-            Room::query()
-                ->visibleTo($currentUser)
-                ->orderBy('name')
-                ->get(['id', 'name'])
+        $roomOptions = Cache::remember("attendance.filters.$tenantId.rooms", $cacheTtl, fn () => Room::query()
+            ->visibleTo($currentUser)
+            ->orderBy('name')
+            ->get(['id', 'name'])
         );
 
         if ($viewMode === 'rekap') {
@@ -178,7 +175,7 @@ class AttendanceReportController extends Controller
     }
 
     /**
-     * @return array{rekap: \Illuminate\Support\Collection, stats: array{total_santri: int, avg_percentage: float}}
+     * @return array{rekap: Collection, stats: array{total_santri: int, avg_percentage: float}}
      */
     protected function getRekapData($currentUser, array $filters): array
     {

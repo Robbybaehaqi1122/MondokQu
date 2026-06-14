@@ -2,16 +2,17 @@
 
 namespace App\Modules\Admin\Controllers;
 
+use App\Http\Controllers\Controller;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Modules\Admin\Requests\StorePermissionRequest;
 use App\Modules\Admin\Requests\UpdatePermissionRequest;
 use App\Modules\Admin\Requests\UpdatePermissionRolesRequest;
-use App\Models\Permission;
-use App\Models\Role;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-class PermissionManagementController extends \App\Http\Controllers\Controller
+class PermissionManagementController extends Controller
 {
     public function __construct(
         protected ActivityLogger $activityLogger

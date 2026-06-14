@@ -98,7 +98,7 @@ class BackupController extends Controller
 
             return redirect()
                 ->route('backup.index')
-                ->with('success', "Backup untuk {$tenant->name} berhasil dibuat (" . number_format($backup->total_rows ?? 0) . " baris).");
+                ->with('success', "Backup untuk {$tenant->name} berhasil dibuat (".number_format($backup->total_rows ?? 0).' baris).');
         } catch (\Throwable $e) {
             return redirect()
                 ->route('backup.index')

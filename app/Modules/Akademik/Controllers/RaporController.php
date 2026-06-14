@@ -9,9 +9,9 @@ use App\Models\Santri;
 use App\Models\TahfidzRecord;
 use App\Models\TahfidzSession;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class RaporController extends Controller
@@ -156,7 +156,7 @@ class RaporController extends Controller
         return $pdf->download($filename);
     }
 
-    public function chartData(Request $request): \Illuminate\Http\JsonResponse
+    public function chartData(Request $request): JsonResponse
     {
         $currentUser = $request->user();
 

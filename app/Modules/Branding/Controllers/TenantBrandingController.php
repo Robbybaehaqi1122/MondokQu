@@ -26,7 +26,9 @@ class TenantBrandingController extends Controller
         $currentUser = $request->user();
         $tenant = $currentUser->tenant;
 
-        if (! $tenant) abort(403);
+        if (! $tenant) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'ponpes_name' => ['required', 'string', 'max:255'],
@@ -71,7 +73,9 @@ class TenantBrandingController extends Controller
     {
         $currentUser = $request->user();
         $tenant = $currentUser->tenant;
-        if (! $tenant) abort(403);
+        if (! $tenant) {
+            abort(403);
+        }
 
         $settings = $tenant->settings ?? [];
         if (! empty($settings['logo_path'])) {
@@ -88,7 +92,9 @@ class TenantBrandingController extends Controller
     {
         $currentUser = $request->user();
         $tenant = $currentUser->tenant;
-        if (! $tenant) abort(403);
+        if (! $tenant) {
+            abort(403);
+        }
 
         $settings = $tenant->settings ?? [];
         if (! empty($settings['favicon_path'])) {

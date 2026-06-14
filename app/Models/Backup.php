@@ -109,7 +109,7 @@ class Backup extends Model
         $this->progress = 0;
     }
 
-    public function markProgress(int $progress, string $currentTable = null): void
+    public function markProgress(int $progress, ?string $currentTable = null): void
     {
         $clamped = min(max($progress, 0), 100);
 
@@ -178,7 +178,7 @@ class Backup extends Model
             $unitIndex++;
         }
 
-        return number_format($size, $unitIndex > 0 ? 2 : 0) . ' ' . $units[$unitIndex];
+        return number_format($size, $unitIndex > 0 ? 2 : 0).' '.$units[$unitIndex];
     }
 
     public static function pruneOlderThan(int $days = 30): int

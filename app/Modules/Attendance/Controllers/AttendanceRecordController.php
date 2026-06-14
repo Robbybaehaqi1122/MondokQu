@@ -3,12 +3,12 @@
 namespace App\Modules\Attendance\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Attendance\Requests\UpdateAttendanceRecordsRequest;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\LeaveRequest;
 use App\Models\Santri;
 use App\Models\User;
+use App\Modules\Attendance\Requests\UpdateAttendanceRecordsRequest;
 use App\Notifications\SantriAttendanceAlertNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
@@ -169,7 +169,7 @@ class AttendanceRecordController extends Controller
     /**
      * Notify linked wali users when a santri is newly marked absent.
      *
-     * @param array<int, int> $recordIds
+     * @param  array<int, int>  $recordIds
      */
     protected function notifyAbsentGuardians(array $recordIds): void
     {

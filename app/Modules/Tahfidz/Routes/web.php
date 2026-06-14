@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Tahfidz\Controllers\MemorizationScheduleController;
 use App\Modules\Tahfidz\Controllers\TahfidzDashboardController;
 use App\Modules\Tahfidz\Controllers\TahfidzRaporController;
 use App\Modules\Tahfidz\Controllers\TahfidzSetoranController;
@@ -24,4 +25,12 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/targets/{tahfidzTarget}/edit', [TahfidzTargetController::class, 'edit'])->name('targets.edit');
     Route::put('/targets/{tahfidzTarget}', [TahfidzTargetController::class, 'update'])->name('targets.update');
     Route::delete('/targets/{tahfidzTarget}', [TahfidzTargetController::class, 'destroy'])->name('targets.destroy');
+
+    Route::get('/jadwal', [MemorizationScheduleController::class, 'index'])->name('jadwal.index');
+    Route::get('/jadwal/create', [MemorizationScheduleController::class, 'create'])->name('jadwal.create');
+    Route::post('/jadwal', [MemorizationScheduleController::class, 'store'])->name('jadwal.store');
+    Route::get('/jadwal/{memorizationSchedule}/edit', [MemorizationScheduleController::class, 'edit'])->name('jadwal.edit');
+    Route::put('/jadwal/{memorizationSchedule}', [MemorizationScheduleController::class, 'update'])->name('jadwal.update');
+    Route::put('/jadwal/{memorizationSchedule}/toggle-active', [MemorizationScheduleController::class, 'toggleActive'])->name('jadwal.toggle-active');
+    Route::delete('/jadwal/{memorizationSchedule}', [MemorizationScheduleController::class, 'destroy'])->name('jadwal.destroy');
 });

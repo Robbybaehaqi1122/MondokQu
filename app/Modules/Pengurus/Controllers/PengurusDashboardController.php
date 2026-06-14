@@ -2,13 +2,14 @@
 
 namespace App\Modules\Pengurus\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
 use App\Models\Room;
 use App\Models\Santri;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
-class PengurusDashboardController extends \App\Http\Controllers\Controller
+class PengurusDashboardController extends Controller
 {
     /**
      * Display the pengurus dashboard with comprehensive Santri management overview.

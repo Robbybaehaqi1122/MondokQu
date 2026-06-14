@@ -8,7 +8,6 @@ use App\Models\Santri;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class NilaiSantriController extends Controller
@@ -196,8 +195,8 @@ class NilaiSantriController extends Controller
         return [
             "{$year}/{$nextYear} Ganjil",
             "{$year}/{$nextYear} Genap",
-            (($year - 1) . "/{$year} Ganjil"),
-            (($year - 1) . "/{$year} Genap"),
+            (($year - 1)."/{$year} Ganjil"),
+            (($year - 1)."/{$year} Genap"),
         ];
     }
 }

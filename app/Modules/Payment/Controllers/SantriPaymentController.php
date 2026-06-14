@@ -6,16 +6,17 @@ use App\Actions\Santri\GenerateMonthlySantriInvoices;
 use App\Enums\ExportFormat;
 use App\Exports\SantriInvoiceCsvExport;
 use App\Exports\SantriPaymentReportCsvExport;
-use App\Modules\Payment\Requests\GenerateMonthlySantriInvoicesRequest;
-use App\Modules\Payment\Requests\StoreSantriInvoiceRequest;
-use App\Modules\Payment\Requests\StoreSantriPaymentRequest;
-use App\Modules\Payment\Requests\UpdateSantriInvoiceRequest;
-use App\Modules\Payment\Requests\UpdateSantriPaymentRequest;
+use App\Http\Controllers\Controller;
 use App\Jobs\GenerateMonthlySantriInvoicesJob;
 use App\Models\DataExport;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
+use App\Modules\Payment\Requests\GenerateMonthlySantriInvoicesRequest;
+use App\Modules\Payment\Requests\StoreSantriInvoiceRequest;
+use App\Modules\Payment\Requests\StoreSantriPaymentRequest;
+use App\Modules\Payment\Requests\UpdateSantriInvoiceRequest;
+use App\Modules\Payment\Requests\UpdateSantriPaymentRequest;
 use App\Notifications\Concerns\NotifiesGuardians;
 use App\Notifications\NewInvoiceNotification;
 use App\Services\ActivityLogger;
@@ -24,6 +25,7 @@ use App\Services\FinancialReportingService;
 use App\Services\FormatDispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -31,9 +33,10 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class SantriPaymentController extends \App\Http\Controllers\Controller
+class SantriPaymentController extends Controller
 {
     use NotifiesGuardians;
+
     protected DataExportManager $dataExportManager;
 
     protected FinancialReportingService $financialReportingService;
@@ -135,7 +138,7 @@ class SantriPaymentController extends \App\Http\Controllers\Controller
     /**
      * Export filtered invoice list as CSV.
      */
-    public function exportInvoices(Request $request): RedirectResponse|StreamedResponse|\Illuminate\Http\Response
+    public function exportInvoices(Request $request): RedirectResponse|StreamedResponse|Response
     {
         $currentUser = $request->user();
         $search = trim((string) $request->string('q'));
@@ -190,19 +193,19 @@ class SantriPaymentController extends \App\Http\Controllers\Controller
 
         $invoice = DB::transaction(function () use ($santri, $validated, $currentUser): SantriInvoice {
             return SantriInvoice::query()->create([
-            'tenant_id' => $santri->tenant_id,
-            'santri_id' => $santri->id,
-            'invoice_number' => $this->generateInvoiceNumber($santri, $validated['period_month'] ?? null, $validated['period_year'] ?? null),
-            'title' => $validated['title'],
-            'period_month' => $validated['period_month'] ?? null,
-            'period_year' => $validated['period_year'] ?? null,
-            'due_date' => $validated['due_date'],
-            'amount' => $validated['amount'],
-            'paid_amount' => 0,
-            'status' => SantriInvoice::STATUS_PENDING,
-            'notes' => $validated['notes'] ?? null,
-            'created_by' => $currentUser?->id,
-        ]);
+                'tenant_id' => $santri->tenant_id,
+                'santri_id' => $santri->id,
+                'invoice_number' => $this->generateInvoiceNumber($santri, $validated['period_month'] ?? null, $validated['period_year'] ?? null),
+                'title' => $validated['title'],
+                'period_month' => $validated['period_month'] ?? null,
+                'period_year' => $validated['period_year'] ?? null,
+                'due_date' => $validated['due_date'],
+                'amount' => $validated['amount'],
+                'paid_amount' => 0,
+                'status' => SantriInvoice::STATUS_PENDING,
+                'notes' => $validated['notes'] ?? null,
+                'created_by' => $currentUser?->id,
+            ]);
         });
 
         $this->activityLogger->log(
@@ -636,7 +639,7 @@ class SantriPaymentController extends \App\Http\Controllers\Controller
     /**
      * Export filtered payment report as CSV.
      */
-    public function exportReports(Request $request): StreamedResponse|\Illuminate\Http\Response
+    public function exportReports(Request $request): StreamedResponse|Response
     {
         [$dateFrom, $dateTo] = $this->reportDateRange($request);
         $currentUser = $request->user();

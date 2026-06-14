@@ -121,7 +121,7 @@ class TahfidzSurahSeeder extends Seeder
             ['number' => 109, 'name' => 'Al-Kafirun', 'name_arabic' => 'الكافرون', 'verses_count' => 6, 'juz' => '30'],
             ['number' => 110, 'name' => 'An-Nasr', 'name_arabic' => 'النصر', 'verses_count' => 3, 'juz' => '30'],
             ['number' => 111, 'name' => 'Al-Lahab', 'name_arabic' => 'المسد', 'verses_count' => 5, 'juz' => '30'],
-            ['number' => 112, 'name' => "Al-Ikhlas", 'name_arabic' => 'الإخلاص', 'verses_count' => 4, 'juz' => '30'],
+            ['number' => 112, 'name' => 'Al-Ikhlas', 'name_arabic' => 'الإخلاص', 'verses_count' => 4, 'juz' => '30'],
             ['number' => 113, 'name' => 'Al-Falaq', 'name_arabic' => 'الفلق', 'verses_count' => 5, 'juz' => '30'],
             ['number' => 114, 'name' => 'An-Nas', 'name_arabic' => 'الناس', 'verses_count' => 6, 'juz' => '30'],
         ];

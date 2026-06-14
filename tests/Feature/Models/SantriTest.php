@@ -1,15 +1,15 @@
 <?php
 
+use App\Models\LeaveRequest;
+use App\Models\Role;
 use App\Models\Room;
 use App\Models\RoomTransfer;
 use App\Models\Santri;
 use App\Models\SantriGuardian;
 use App\Models\SantriInvoice;
-use App\Models\SantriPayment;
-use App\Models\SantriPaymentConfirmation;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Models\Role;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -87,8 +87,8 @@ it('has many guardian links', function () {
 });
 
 it('has correct casts', function () {
-    expect($this->santri->birth_date)->toBeInstanceOf(\Carbon\Carbon::class);
-    expect($this->santri->entry_date)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($this->santri->birth_date)->toBeInstanceOf(Carbon::class);
+    expect($this->santri->entry_date)->toBeInstanceOf(Carbon::class);
     expect($this->santri->entry_year)->toBeInt();
 });
 
@@ -163,7 +163,7 @@ it('has room transfers relationship', function () {
 });
 
 it('has leave requests relationship', function () {
-    \App\Models\LeaveRequest::create([
+    LeaveRequest::create([
         'tenant_id' => $this->tenant->id,
         'santri_id' => $this->santri->id,
         'start_date' => now()->format('Y-m-d'),

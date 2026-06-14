@@ -2,13 +2,15 @@
 
 namespace App\Modules\Bendahara\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Services\FinancialReportingService;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
-class BendaharaDashboardController extends \App\Http\Controllers\Controller
+class BendaharaDashboardController extends Controller
 {
     public function __invoke(Request $request): View
     {
@@ -39,7 +41,7 @@ class BendaharaDashboardController extends \App\Http\Controllers\Controller
             ->orderBy('mo')
             ->get();
 
-        $trendLabels = $monthlyTrend->map(fn ($item) => \Carbon\Carbon::createFromDate($item->yr, $item->mo, 1)->translatedFormat('M Y'));
+        $trendLabels = $monthlyTrend->map(fn ($item) => Carbon::createFromDate($item->yr, $item->mo, 1)->translatedFormat('M Y'));
         $trendData = $monthlyTrend->pluck('total');
 
         $overdueInvoices = (clone $invoiceQuery)

@@ -7,30 +7,35 @@ use App\Exports\SantriCsvExport;
 use App\Exports\SantriExcelExport;
 use App\Exports\SantriPdfExport;
 use App\Exports\SantriTemplateExport;
+use App\Http\Controllers\Controller;
 use App\Imports\SantriImport;
 use App\Jobs\ProcessSantriImportJob;
+use App\Models\ActivityLog;
 use App\Models\DataExport;
 use App\Models\DataImport;
-use App\Models\ActivityLog;
 use App\Models\Room;
 use App\Models\Santri;
 use App\Models\SantriDocument;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Santri\Requests\ImportSantriRequest;
 use App\Modules\Santri\Requests\StoreSantriRequest;
 use App\Modules\Santri\Requests\UpdateSantriRequest;
+use App\Services\ActivityLogger;
 use App\Services\DataExportManager;
 use App\Services\FormatDispatcher;
 use App\Services\SantriService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class SantriManagementController extends \App\Http\Controllers\Controller
+class SantriManagementController extends Controller
 {
     public function __construct(
         protected SantriService $santriService,
@@ -85,7 +90,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function export(Request $request): RedirectResponse|StreamedResponse|\Illuminate\Http\Response
+    public function export(Request $request): RedirectResponse|StreamedResponse|Response
     {
         $this->authorize('viewAny', Santri::class);
 
@@ -217,13 +222,13 @@ class SantriManagementController extends \App\Http\Controllers\Controller
         $this->authorize('update', $santri);
 
         $validated = $request->validate([
-            'type' => ['required', 'string', 'in:' . implode(',', array_keys(SantriDocument::types()))],
+            'type' => ['required', 'string', 'in:'.implode(',', array_keys(SantriDocument::types()))],
             'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('santri-documents/' . $santri->id, 'public');
+        $path = $file->store('santri-documents/'.$santri->id, 'public');
 
         SantriDocument::query()->create([
             'santri_id' => $santri->id,
@@ -236,7 +241,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
             'uploaded_by' => $request->user()->id,
         ]);
 
-        app(\App\Services\ActivityLogger::class)->log(
+        app(ActivityLogger::class)->log(
             action: 'santri_document_uploaded',
             actor: $request->user(),
             target: $santri,
@@ -254,7 +259,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
             ->with('success', 'Dokumen berhasil diupload.');
     }
 
-    public function downloadDocument(Santri $santri, SantriDocument $document): \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\RedirectResponse
+    public function downloadDocument(Santri $santri, SantriDocument $document): StreamedResponse|RedirectResponse
     {
         $this->authorize('view', $santri);
 
@@ -282,7 +287,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
         Storage::disk('public')->delete($document->file_path);
         $document->delete();
 
-        app(\App\Services\ActivityLogger::class)->log(
+        app(ActivityLogger::class)->log(
             action: 'santri_document_deleted',
             actor: $request->user(),
             target: $santri,
@@ -315,11 +320,11 @@ class SantriManagementController extends \App\Http\Controllers\Controller
 
         return view('santri.import.index', [
             'dataImports' => $dataImports,
-            'tenants' => $currentUser->isSuperAdmin() ? \App\Models\Tenant::query()->orderBy('name')->get() : collect(),
+            'tenants' => $currentUser->isSuperAdmin() ? Tenant::query()->orderBy('name')->get() : collect(),
         ]);
     }
 
-    public function downloadTemplate(Request $request): StreamedResponse|\Illuminate\Http\Response|\Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function downloadTemplate(Request $request): StreamedResponse|Response|BinaryFileResponse
     {
         $this->authorize('create', Santri::class);
 
@@ -431,7 +436,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
 
         $result = $importer->preview($rows);
 
-        $previewKey = 'santri_import_preview_' . $currentUser->id;
+        $previewKey = 'santri_import_preview_'.$currentUser->id;
         Storage::disk('local')->put(
             "temp/{$previewKey}.json",
             json_encode([
@@ -514,7 +519,7 @@ class SantriManagementController extends \App\Http\Controllers\Controller
 
     protected function logImportActivity(User $actor, array $result, Request $request): void
     {
-        app(\App\Services\ActivityLogger::class)->log(
+        app(ActivityLogger::class)->log(
             action: 'santri_imported',
             actor: $actor,
             target: null,

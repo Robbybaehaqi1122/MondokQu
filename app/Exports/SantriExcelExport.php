@@ -10,10 +10,9 @@ use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class SantriExcelExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithColumnFormatting
+class SantriExcelExport implements FromQuery, WithColumnFormatting, WithHeadings, WithMapping, WithStyles
 {
     public function __construct(
         protected ?User $currentUser,

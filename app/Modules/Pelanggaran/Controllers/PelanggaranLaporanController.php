@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Pelanggaran;
 use App\Models\PelanggaranKategori;
 use App\Models\Santri;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 

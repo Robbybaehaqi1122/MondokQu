@@ -4,9 +4,7 @@ namespace App\Modules\KesehatanQu\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\KesehatanObat;
-use App\Models\KesehatanPemakaianObat;
 use App\Models\KesehatanPemeriksaan;
-use App\Models\KesehatanRujukan;
 use App\Models\Santri;
 use App\Modules\KesehatanQu\Requests\StorePemeriksaanRequest;
 use App\Services\ActivityLogger;

@@ -17,6 +17,7 @@ class SantriPhotoUploader
         }
 
         $directory = config('santri.photo.directory', 'santri-photos');
+
         return $photo->store($directory, 'public');
     }
 

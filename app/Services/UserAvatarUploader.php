@@ -17,6 +17,7 @@ class UserAvatarUploader
         }
 
         $directory = config('user.avatar.directory', 'avatars');
+
         return $avatar->store($directory, 'public');
     }
 

@@ -11,7 +11,7 @@ class StoreTahfidzTargetRequest extends FormRequest
     {
         return [
             'santri_id' => ['required', 'exists:santris,id'],
-            'target_type' => ['required', 'string', 'in:' . implode(',', [
+            'target_type' => ['required', 'string', 'in:'.implode(',', [
                 TahfidzTarget::TYPE_JUZ,
                 TahfidzTarget::TYPE_SURAH,
                 TahfidzTarget::TYPE_AYAT,

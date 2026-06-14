@@ -2,6 +2,7 @@
 
 namespace App\Modules\Pengurus\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
 use App\Models\Room;
 use App\Models\Santri;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
-class OperationalReportController extends \App\Http\Controllers\Controller
+class OperationalReportController extends Controller
 {
     /**
      * Display simple room occupancy and leave request reports.

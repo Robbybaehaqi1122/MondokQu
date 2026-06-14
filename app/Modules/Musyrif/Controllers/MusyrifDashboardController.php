@@ -2,10 +2,11 @@
 
 namespace App\Modules\Musyrif\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\AttendanceActivity;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
-use App\Models\LeaveRequest;
+use App\Models\MemorizationSchedule;
 use App\Models\Pelanggaran;
 use App\Models\Santri;
 use App\Models\TahfidzSession;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class MusyrifDashboardController extends \App\Http\Controllers\Controller
+class MusyrifDashboardController extends Controller
 {
     public function __invoke(Request $request): View
     {
@@ -75,6 +76,24 @@ class MusyrifDashboardController extends \App\Http\Controllers\Controller
         $todayName = strtolower($today->format('l'));
         $todayActivities = $activeActivities->filter(fn (AttendanceActivity $a) => in_array($todayName, $a->active_days ?? []));
 
+        $todaySchedules = MemorizationSchedule::query()
+            ->visibleTo($currentUser)
+            ->active()
+            ->where('musyrif_id', $currentUser->id)
+            ->where('day_of_week', $todayName)
+            ->with('room')
+            ->orderBy('start_time')
+            ->get();
+
+        $allSchedules = MemorizationSchedule::query()
+            ->visibleTo($currentUser)
+            ->active()
+            ->where('musyrif_id', $currentUser->id)
+            ->with('room')
+            ->orderByRaw("FIELD(day_of_week, 'monday','tuesday','wednesday','thursday','friday','saturday','sunday')")
+            ->orderBy('start_time')
+            ->get();
+
         return view('musyrif.dashboard', [
             'stats' => [
                 'active_santri' => $activeSantriCount,
@@ -95,6 +114,8 @@ class MusyrifDashboardController extends \App\Http\Controllers\Controller
             'recentPelanggaran' => $recentPelanggaran,
             'todayActivities' => $todayActivities,
             'activeActivities' => $activeActivities,
+            'todaySchedules' => $todaySchedules,
+            'allSchedules' => $allSchedules,
             'today' => $today,
         ]);
     }

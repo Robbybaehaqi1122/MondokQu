@@ -8,12 +8,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Throwable;
 
-class SantriImport implements WithHeadingRow, SkipsEmptyRows
+class SantriImport implements SkipsEmptyRows, WithHeadingRow
 {
     use Importable;
 

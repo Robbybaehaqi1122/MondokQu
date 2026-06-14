@@ -5,12 +5,13 @@ use App\Models\KesehatanPemeriksaan;
 use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\User;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::findOrCreate('Superadmin', 'web');
     Role::findOrCreate('Admin', 'web');
-    \Spatie\Permission\Models\Permission::findOrCreate('manage kesehatan', 'web');
+    Permission::findOrCreate('manage kesehatan', 'web');
     $this->user = User::factory()->create();
     $this->user->assignRole('Admin');
     $this->user->givePermissionTo('manage kesehatan');

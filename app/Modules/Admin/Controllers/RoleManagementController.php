@@ -2,18 +2,19 @@
 
 namespace App\Modules\Admin\Controllers;
 
-use App\Modules\Admin\Requests\StoreRoleRequest;
-use App\Modules\Admin\Requests\UpdateRolePermissionsRequest;
+use App\Actions\Saas\CreateTenantRoles;
+use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
-use App\Actions\Saas\CreateTenantRoles;
 use App\Models\Tenant;
+use App\Modules\Admin\Requests\StoreRoleRequest;
+use App\Modules\Admin\Requests\UpdateRolePermissionsRequest;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class RoleManagementController extends \App\Http\Controllers\Controller
+class RoleManagementController extends Controller
 {
     public function __construct(
         protected ActivityLogger $activityLogger
@@ -45,7 +46,7 @@ class RoleManagementController extends \App\Http\Controllers\Controller
                 ->withCount('users')
                 ->orderBy('name')
                 ->get()
-                ->groupBy(fn (Role $role) => $role->tenant?->name ?? 'Tenant #' . $role->tenant_id);
+                ->groupBy(fn (Role $role) => $role->tenant?->name ?? 'Tenant #'.$role->tenant_id);
 
             $tenants = Tenant::query()
                 ->orderBy('name')
@@ -163,7 +164,7 @@ class RoleManagementController extends \App\Http\Controllers\Controller
 
         return redirect()
             ->route('admin.roles')
-            ->with('success', 'Role untuk tenant ' . $tenant->name . ' berhasil disinkronisasi dari template global.');
+            ->with('success', 'Role untuk tenant '.$tenant->name.' berhasil disinkronisasi dari template global.');
     }
 
     public function syncAllTenants(Request $request): RedirectResponse
@@ -180,7 +181,7 @@ class RoleManagementController extends \App\Http\Controllers\Controller
 
         return redirect()
             ->route('admin.roles')
-            ->with('success', 'Semua role untuk ' . $tenants->count() . ' tenant berhasil disinkronisasi dari template global.');
+            ->with('success', 'Semua role untuk '.$tenants->count().' tenant berhasil disinkronisasi dari template global.');
     }
 
     public function syncFromTemplate(Request $request, Role $role): RedirectResponse
@@ -202,7 +203,7 @@ class RoleManagementController extends \App\Http\Controllers\Controller
         if (! $template) {
             return redirect()
                 ->route('admin.roles')
-                ->with('error', 'Template global untuk role ' . $role->name . ' tidak ditemukan.');
+                ->with('error', 'Template global untuk role '.$role->name.' tidak ditemukan.');
         }
 
         $previousPermissions = $role->permissions()->pluck('name')->values()->all();
@@ -227,6 +228,6 @@ class RoleManagementController extends \App\Http\Controllers\Controller
 
         return redirect()
             ->route('admin.roles')
-            ->with('success', 'Permission role ' . $role->name . ' berhasil diselaraskan dengan template global.');
+            ->with('success', 'Permission role '.$role->name.' berhasil diselaraskan dengan template global.');
     }
 }

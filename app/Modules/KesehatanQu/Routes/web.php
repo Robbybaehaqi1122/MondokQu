@@ -1,10 +1,10 @@
 <?php
 
 use App\Modules\KesehatanQu\Controllers\KesehatanQuDashboardController;
-use App\Modules\KesehatanQu\Controllers\KesehatanQuRekamMedisController;
-use App\Modules\KesehatanQu\Controllers\KesehatanQuPemeriksaanController;
-use App\Modules\KesehatanQu\Controllers\KesehatanQuObatController;
 use App\Modules\KesehatanQu\Controllers\KesehatanQuLaporanController;
+use App\Modules\KesehatanQu\Controllers\KesehatanQuObatController;
+use App\Modules\KesehatanQu\Controllers\KesehatanQuPemeriksaanController;
+use App\Modules\KesehatanQu\Controllers\KesehatanQuRekamMedisController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage kesehatan'])

@@ -1,12 +1,13 @@
 <?php
 
-use App\Models\Room;
+use App\Jobs\GenerateDataExportJob;
 use App\Models\DataExport;
+use App\Models\Room;
 use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\DataExportCompletedNotification;
-use App\Jobs\GenerateDataExportJob;
+use App\Services\ActivityLogger;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -341,7 +342,7 @@ test('queued santri export job writes csv file', function () {
         'row_count' => 1,
     ]);
 
-    (new GenerateDataExportJob($export->id))->handle(app(\App\Services\ActivityLogger::class));
+    (new GenerateDataExportJob($export->id))->handle(app(ActivityLogger::class));
 
     $export->refresh();
 
@@ -885,10 +886,10 @@ test('user with permission can delete santri photo when requested during update'
         'mother_name' => 'Ibu Contact',
         'guardian_phone_number' => '089999999998',
         'emergency_contact' => '081277777778',
-            'entry_date' => '2025-01-05',
-            'entry_year' => 2025,
-            'room_id' => $room->id,
-            'notes' => 'Hapus foto lama saja.',
+        'entry_date' => '2025-01-05',
+        'entry_year' => 2025,
+        'room_id' => $room->id,
+        'notes' => 'Hapus foto lama saja.',
         'status' => Santri::STATUS_ACTIVE,
         'delete_photo' => '1',
         'editing_santri_id' => $santri->id,
@@ -941,10 +942,10 @@ test('user with permission can update santri', function () {
         'mother_name' => 'Ibu Kandung Baru',
         'guardian_phone_number' => '089999999999',
         'emergency_contact' => '081277777777',
-            'entry_date' => '2025-01-05',
-            'entry_year' => 2025,
-            'room_id' => $room->id,
-            'notes' => 'Santri pindah kamar setelah semester pertama.',
+        'entry_date' => '2025-01-05',
+        'entry_year' => 2025,
+        'room_id' => $room->id,
+        'notes' => 'Santri pindah kamar setelah semester pertama.',
         'status' => Santri::STATUS_ALUMNI,
     ];
 

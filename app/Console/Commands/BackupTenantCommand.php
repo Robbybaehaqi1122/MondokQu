@@ -2,6 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Backup;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Services\TenantBackupService;
 use Illuminate\Console\Command;
 
 class BackupTenantCommand extends Command
@@ -23,7 +27,7 @@ class BackupTenantCommand extends Command
             return self::FAILURE;
         }
 
-        $user = \App\Models\User::query()
+        $user = User::query()
             ->whereHas('roles', fn ($q) => $q->where('name', 'Superadmin'))
             ->whereNull('tenant_id')
             ->first();
@@ -35,7 +39,7 @@ class BackupTenantCommand extends Command
         }
 
         if ($tenantId) {
-            $tenant = \App\Models\Tenant::find($tenantId);
+            $tenant = Tenant::find($tenantId);
 
             if (! $tenant) {
                 $this->error("Tenant dengan ID {$tenantId} tidak ditemukan.");
@@ -48,7 +52,7 @@ class BackupTenantCommand extends Command
             return self::SUCCESS;
         }
 
-        $tenants = \App\Models\Tenant::query()
+        $tenants = Tenant::query()
             ->whereIn('subscription_status', ['trial', 'active', 'grace'])
             ->get();
 
@@ -67,25 +71,25 @@ class BackupTenantCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function backupTenant(\App\Models\Tenant $tenant, \App\Models\User $user): void
+    protected function backupTenant(Tenant $tenant, User $user): void
     {
         $this->line("Memproses: {$tenant->name}");
 
         $progressBar = $this->output->createProgressBar(100);
-        $progressBar->setFormat("  %current%% [%bar%] %message%");
+        $progressBar->setFormat('  %current%% [%bar%] %message%');
         $progressBar->setMessage('Menyiapkan...');
         $progressBar->start();
 
         try {
-            $service = app(\App\Services\TenantBackupService::class);
+            $service = app(TenantBackupService::class);
 
-            $backup = \App\Models\Backup::query()->create([
+            $backup = Backup::query()->create([
                 'tenant_id' => $tenant->id,
                 'created_by' => $user->id,
                 'filename' => '',
                 'disk' => config('backups.disk', 'local'),
-                'type' => \App\Models\Backup::TYPE_SCHEDULED,
-                'status' => \App\Models\Backup::STATUS_PENDING,
+                'type' => Backup::TYPE_SCHEDULED,
+                'status' => Backup::STATUS_PENDING,
             ]);
 
             $service->storeBackup($backup, function (int $progress, ?string $table) use ($progressBar) {

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class Santri extends Model
 {
@@ -179,7 +181,7 @@ class Santri extends Model
     /**
      * Get the medical record for this santri.
      */
-    public function rekamMedis(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function rekamMedis(): HasOne
     {
         return $this->hasOne(KesehatanRekamMedis::class, 'santri_id');
     }
@@ -271,7 +273,7 @@ class Santri extends Model
             return $this->photo_path;
         }
 
-        if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($this->photo_path)) {
+        if (! Storage::disk('public')->exists($this->photo_path)) {
             return null;
         }
 

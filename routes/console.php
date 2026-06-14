@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Backup;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Inspiring;
@@ -62,5 +63,5 @@ Schedule::command('backup:tenant --all')
     ->appendOutputTo(storage_path('logs/backup-schedule.log'));
 
 Schedule::call(function () {
-    \App\Models\Backup::pruneOlderThan(config('backups.retention_days', 30));
+    Backup::pruneOlderThan(config('backups.retention_days', 30));
 })->name('backups:prune')->dailyAt('03:00')->withoutOverlapping();

@@ -11,7 +11,9 @@ class TahfidzTarget extends Model
     use BelongsToTenant;
 
     public const TYPE_JUZ = 'juz';
+
     public const TYPE_SURAH = 'surah';
+
     public const TYPE_AYAT = 'ayat';
 
     protected $fillable = [

@@ -2,13 +2,14 @@
 
 namespace App\Modules\Bendahara\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Services\FinancialReportingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
-class BendaharaLaporanController extends \App\Http\Controllers\Controller
+class BendaharaLaporanController extends Controller
 {
     public function __invoke(Request $request): View
     {
@@ -17,7 +18,7 @@ class BendaharaLaporanController extends \App\Http\Controllers\Controller
         $validated = $request->validate([
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
-            'payment_method' => ['nullable', 'string', 'in:' . implode(',', SantriPayment::paymentMethods())],
+            'payment_method' => ['nullable', 'string', 'in:'.implode(',', SantriPayment::paymentMethods())],
         ]);
 
         $dateFrom = $validated['date_from'] ?? now()->startOfMonth()->toDateString();

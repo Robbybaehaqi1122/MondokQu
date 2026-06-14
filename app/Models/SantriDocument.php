@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class SantriDocument extends Model
 {
@@ -19,10 +20,15 @@ class SantriDocument extends Model
     ];
 
     public const TYPE_KK = 'kk';
+
     public const TYPE_AKTA = 'akta';
+
     public const TYPE_IjazAH = 'ijazah';
+
     public const TYPE_KTP_AYAH = 'ktp_ayah';
+
     public const TYPE_KTP_IBU = 'ktp_ibu';
+
     public const TYPE_FOTO = 'foto';
 
     public static function types(): array
@@ -75,11 +81,11 @@ class SantriDocument extends Model
             return $this->file_path;
         }
 
-        if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($this->file_path)) {
+        if (! Storage::disk('public')->exists($this->file_path)) {
             return null;
         }
 
-        return asset('storage/' . $this->file_path);
+        return asset('storage/'.$this->file_path);
     }
 
     public function isImage(): bool
@@ -101,10 +107,10 @@ class SantriDocument extends Model
             if ($bytes >= 1024) {
                 $bytes /= 1024;
             } else {
-                return round($bytes, 1) . ' ' . $units[$i];
+                return round($bytes, 1).' '.$units[$i];
             }
         }
 
-        return round($bytes, 1) . ' ' . end($units);
+        return round($bytes, 1).' '.end($units);
     }
 }

@@ -2,15 +2,14 @@
 
 namespace App\Modules\WaliSantri\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\LeaveRequest;
-use App\Models\MataPelajaran;
 use App\Models\NilaiSantri;
 use App\Models\Pelanggaran;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
-use App\Models\SantriPaymentConfirmation;
 use App\Models\TahfidzRecord;
 use App\Models\TahfidzSession;
 use App\Modules\WaliSantri\Requests\StorePaymentConfirmationRequest;
@@ -19,7 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class WaliSantriDashboardController extends \App\Http\Controllers\Controller
+class WaliSantriDashboardController extends Controller
 {
     public function __construct(
         protected WaliSantriService $waliSantriService,

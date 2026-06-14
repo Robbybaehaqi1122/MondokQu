@@ -2,8 +2,6 @@
 
 namespace App\Models\Concerns;
 
-use Illuminate\Database\Eloquent\Model;
-
 trait HasTenantSettings
 {
     public function getSetting(string $key, mixed $default = null): mixed

@@ -3,11 +3,11 @@
 namespace App\Modules\Attendance\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\AttendanceActivity;
+use App\Models\AttendanceRecord;
+use App\Models\AttendanceSession;
 use App\Modules\Attendance\Requests\StoreAttendanceSessionRequest;
 use App\Modules\Attendance\Requests\UpdateAttendanceSessionRequest;
-use App\Models\AttendanceRecord;
-use App\Models\AttendanceActivity;
-use App\Models\AttendanceSession;
 use App\Services\ActivityLogger;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;

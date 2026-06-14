@@ -2,12 +2,13 @@
 
 namespace App\Modules\Room\Controllers;
 
-use App\Modules\Room\Requests\AssignRoomSantriRequest;
-use App\Modules\Room\Requests\StoreRoomRequest;
-use App\Modules\Room\Requests\UpdateRoomRequest;
+use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\RoomTransfer;
 use App\Models\Santri;
+use App\Modules\Room\Requests\AssignRoomSantriRequest;
+use App\Modules\Room\Requests\StoreRoomRequest;
+use App\Modules\Room\Requests\UpdateRoomRequest;
 use App\Services\ActivityLogger;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
-class RoomManagementController extends \App\Http\Controllers\Controller
+class RoomManagementController extends Controller
 {
     public function __construct(
         protected ActivityLogger $activityLogger
@@ -84,6 +85,12 @@ class RoomManagementController extends \App\Http\Controllers\Controller
 
         $validated = $request->validated();
         $currentUser = $request->user();
+
+        if (! $currentUser->tenant_id) {
+            return redirect()
+                ->route('rooms.index')
+                ->with('error', 'Akun superadmin harus terhubung ke tenant pondok untuk membuat kamar.');
+        }
 
         $room = Room::query()->create([
             'tenant_id' => $currentUser->tenant_id,

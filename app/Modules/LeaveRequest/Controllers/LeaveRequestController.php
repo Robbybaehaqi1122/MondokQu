@@ -2,16 +2,17 @@
 
 namespace App\Modules\LeaveRequest\Controllers;
 
-use App\Modules\LeaveRequest\Requests\StoreLeaveRequestRequest;
-use App\Modules\LeaveRequest\Requests\UpdateLeaveRequestRequest;
+use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
 use App\Models\Santri;
+use App\Modules\LeaveRequest\Requests\StoreLeaveRequestRequest;
+use App\Modules\LeaveRequest\Requests\UpdateLeaveRequestRequest;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class LeaveRequestController extends \App\Http\Controllers\Controller
+class LeaveRequestController extends Controller
 {
     public function __construct(
         protected ActivityLogger $activityLogger

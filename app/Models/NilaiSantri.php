@@ -54,9 +54,16 @@ class NilaiSantri extends Model
     public function getPredikatAttribute(): string
     {
         $na = $this->nilai_akhir;
-        if ($na >= 86) return 'A';
-        if ($na >= 70) return 'B';
-        if ($na >= 55) return 'C';
+        if ($na >= 86) {
+            return 'A';
+        }
+        if ($na >= 70) {
+            return 'B';
+        }
+        if ($na >= 55) {
+            return 'C';
+        }
+
         return 'D';
     }
 

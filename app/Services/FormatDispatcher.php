@@ -14,13 +14,14 @@ use App\Exports\SantriPaymentReportPdfExport;
 use App\Exports\SantriPdfExport;
 use App\Models\DataExport;
 use App\Models\User;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FormatDispatcher
 {
-    public function downloadSantri(?User $user, ExportFormat $format, string $search, string $status, string $gender): StreamedResponse|\Illuminate\Http\Response
+    public function downloadSantri(?User $user, ExportFormat $format, string $search, string $status, string $gender): StreamedResponse|Response
     {
         return match ($format) {
             ExportFormat::CSV => app(SantriCsvExport::class)->download($user, $search, $status, $gender),
@@ -32,7 +33,7 @@ class FormatDispatcher
         };
     }
 
-    public function downloadInvoices(?User $user, ExportFormat $format, string $search, string $status, string $santriId): StreamedResponse|\Illuminate\Http\Response
+    public function downloadInvoices(?User $user, ExportFormat $format, string $search, string $status, string $santriId): StreamedResponse|Response
     {
         return match ($format) {
             ExportFormat::CSV => app(SantriInvoiceCsvExport::class)->download($user, $search, $status, $santriId),
@@ -44,7 +45,7 @@ class FormatDispatcher
         };
     }
 
-    public function downloadPaymentReport(?User $user, ExportFormat $format, Carbon $dateFrom, Carbon $dateTo): StreamedResponse|\Illuminate\Http\Response
+    public function downloadPaymentReport(?User $user, ExportFormat $format, Carbon $dateFrom, Carbon $dateTo): StreamedResponse|Response
     {
         return match ($format) {
             ExportFormat::CSV => app(SantriPaymentReportCsvExport::class)->download($user, $dateFrom, $dateTo),

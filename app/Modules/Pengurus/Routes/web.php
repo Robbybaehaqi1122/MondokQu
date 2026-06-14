@@ -1,7 +1,7 @@
 <?php
 
-use App\Modules\Pengurus\Controllers\PengurusDashboardController;
 use App\Modules\Pengurus\Controllers\OperationalReportController;
+use App\Modules\Pengurus\Controllers\PengurusDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Pengurus'])->group(function () {

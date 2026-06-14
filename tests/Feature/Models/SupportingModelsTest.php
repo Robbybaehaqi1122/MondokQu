@@ -1,17 +1,14 @@
 <?php
 
-use App\Models\Role;
-use App\Models\LeaveRequest;
+use App\Models\ActivityLog;
 use App\Models\Communication;
+use App\Models\DataExport;
+use App\Models\LeaveRequest;
+use App\Models\MataPelajaran;
+use App\Models\NilaiSantri;
 use App\Models\Pelanggaran;
 use App\Models\PelanggaranKategori;
-use App\Models\TahfidzSurah;
-use App\Models\TahfidzSession;
-use App\Models\TahfidzRecord;
-use App\Models\NilaiSantri;
-use App\Models\MataPelajaran;
-use App\Models\DataExport;
-use App\Models\ActivityLog;
+use App\Models\Role;
 use App\Models\Room;
 use App\Models\RoomTransfer;
 use App\Models\Santri;
@@ -19,8 +16,12 @@ use App\Models\SantriGuardian;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Models\SantriPaymentConfirmation;
+use App\Models\TahfidzRecord;
+use App\Models\TahfidzSession;
+use App\Models\TahfidzSurah;
 use App\Models\Tenant;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -99,7 +100,7 @@ it('santri invoice has all relationships', function () {
     expect($invoice->creator->id)->toBe($this->user->id);
     expect($invoice->amount)->toBeInt();
     expect($invoice->paid_amount)->toBeInt();
-    expect($invoice->due_date)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($invoice->due_date)->toBeInstanceOf(Carbon::class);
 });
 
 it('santri invoice calculates outstanding amount', function () {
@@ -182,7 +183,7 @@ it('santri payment has all relationships', function () {
     expect($payment->santri)->toBeInstanceOf(Santri::class);
     expect($payment->recorder)->toBeInstanceOf(User::class);
     expect($payment->amount)->toBeInt();
-    expect($payment->paid_at)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($payment->paid_at)->toBeInstanceOf(Carbon::class);
 });
 
 it('santri payment returns payment methods', function () {
@@ -281,7 +282,7 @@ it('room transfer has all relationships', function () {
     expect($transfer->toRoom->id)->toBe($roomB->id);
     expect($transfer->mover)->toBeInstanceOf(User::class);
     expect($transfer->mover->id)->toBe($this->user->id);
-    expect($transfer->moved_at)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($transfer->moved_at)->toBeInstanceOf(Carbon::class);
 });
 
 //
@@ -301,8 +302,8 @@ it('leave request has all relationships and methods', function () {
     expect($leave->santri)->toBeInstanceOf(Santri::class);
     expect($leave->creator)->toBeInstanceOf(User::class);
     expect($leave->creator->id)->toBe($this->user->id);
-    expect($leave->start_date)->toBeInstanceOf(\Carbon\Carbon::class);
-    expect($leave->end_date)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($leave->start_date)->toBeInstanceOf(Carbon::class);
+    expect($leave->end_date)->toBeInstanceOf(Carbon::class);
 });
 
 it('leave request belongs to approver', function () {
@@ -320,7 +321,7 @@ it('leave request belongs to approver', function () {
 
     expect($leave->approver)->toBeInstanceOf(User::class);
     expect($leave->approver->id)->toBe($this->user->id);
-    expect($leave->approved_at)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($leave->approved_at)->toBeInstanceOf(Carbon::class);
 });
 
 it('leave request scope activeOnDate works', function () {
@@ -452,7 +453,7 @@ it('pelanggaran has all relationships', function () {
     expect($pelanggaran->kategori)->toBeInstanceOf(PelanggaranKategori::class);
     expect($pelanggaran->pencatat)->toBeInstanceOf(User::class);
     expect($pelanggaran->poin)->toBeInt();
-    expect($pelanggaran->tanggal)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($pelanggaran->tanggal)->toBeInstanceOf(Carbon::class);
 });
 
 it('pelanggaran kategori has creator and pelanggarans', function () {
@@ -524,7 +525,7 @@ it('tahfidz session has all relationships', function () {
     expect($session->santri)->toBeInstanceOf(Santri::class);
     expect($session->musyrif)->toBeInstanceOf(User::class);
     expect($session->musyrif->id)->toBe($this->user->id);
-    expect($session->session_date)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($session->session_date)->toBeInstanceOf(Carbon::class);
     expect(TahfidzSession::availableStatuses())->toBe(['draft', 'completed']);
 });
 

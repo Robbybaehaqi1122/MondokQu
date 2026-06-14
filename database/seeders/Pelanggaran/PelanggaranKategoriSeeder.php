@@ -3,6 +3,7 @@
 namespace Database\Seeders\Pelanggaran;
 
 use App\Models\PelanggaranKategori;
+use App\Models\Tenant;
 use Illuminate\Database\Seeder;
 
 class PelanggaranKategoriSeeder extends Seeder
@@ -22,7 +23,7 @@ class PelanggaranKategoriSeeder extends Seeder
             ['nama' => 'Keluar Tanpa Izin', 'poin' => 25, 'deskripsi' => 'Keluar dari lingkungan pondok tanpa izin.'],
         ];
 
-        $tenants = \App\Models\Tenant::all();
+        $tenants = Tenant::all();
 
         foreach ($tenants as $tenant) {
             foreach ($defaults as $data) {

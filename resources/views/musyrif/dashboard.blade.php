@@ -279,6 +279,87 @@
         </div>
     </div>
 
+    <div class="row row-cards mb-3">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Jadwal Setoran Hari Ini</h3>
+                        <div class="text-secondary small mt-2">Jadwal setoran tahfidz untuk hari {{ $today->translatedFormat('l') }}.</div>
+                    </div>
+                </div>
+                <div class="list-group list-group-flush">
+                    @forelse ($todaySchedules as $schedule)
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-center justify-content-between gap-3">
+                                <div>
+                                    <div class="fw-semibold">{{ $schedule->timeRangeLabel() }}</div>
+                                    <div class="text-secondary small">
+                                        <i class="ti ti-users me-1"></i>Maks {{ $schedule->max_santri }} santri
+                                        @if ($schedule->room)
+                                            <i class="ti ti-building ms-2 me-1"></i>{{ $schedule->room->name }}
+                                        @endif
+                                    </div>
+                                </div>
+                                <span class="badge bg-primary-lt text-primary">{{ $schedule->max_santri }} slot</span>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="list-group-item text-secondary">Tidak ada jadwal setoran untuk hari ini.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2 w-100">
+                        <div>
+                            <h3 class="card-title">Jadwal Setoran Saya</h3>
+                            <div class="text-secondary small mt-2">Semua jadwal setoran tahfidz Anda.</div>
+                        </div>
+                        <a href="{{ route('tahfidz.jadwal.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="ti ti-list me-1"></i>
+                            Kelola Jadwal
+                        </a>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>Hari</th>
+                                <th>Jam</th>
+                                <th>Maks Santri</th>
+                                <th>Ruangan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($allSchedules as $schedule)
+                                <tr>
+                                    <td class="fw-semibold">{{ $schedule->dayLabel() }}</td>
+                                    <td>{{ $schedule->timeRangeLabel() }}</td>
+                                    <td>{{ $schedule->max_santri }} santri</td>
+                                    <td class="text-secondary">{{ $schedule->room?->name ?? '-' }}</td>
+                                    <td>
+                                        <span class="badge {{ $schedule->is_active ? 'bg-success-lt text-success' : 'bg-secondary-lt text-secondary' }}">
+                                            {{ $schedule->is_active ? 'Aktif' : 'Nonaktif' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-secondary">Belum ada jadwal setoran.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header">
             <div>

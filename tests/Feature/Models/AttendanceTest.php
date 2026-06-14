@@ -1,11 +1,12 @@
 <?php
 
 use App\Models\AttendanceActivity;
-use App\Models\AttendanceSession;
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceSession;
 use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
@@ -126,7 +127,7 @@ it('session belongs to creator', function () {
 });
 
 it('session has session_date cast as date', function () {
-    expect($this->session->session_date)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($this->session->session_date)->toBeInstanceOf(Carbon::class);
 });
 
 it('session returns available statuses', function () {
@@ -159,7 +160,7 @@ it('record belongs to santri', function () {
 
 it('record has recorded_at cast as datetime', function () {
     $record = AttendanceRecord::factory()->forSessionAndSantri($this->session, $this->santri)->create(['status' => 'present']);
-    expect($record->recorded_at)->toBeInstanceOf(\Carbon\Carbon::class);
+    expect($record->recorded_at)->toBeInstanceOf(Carbon::class);
 });
 
 it('record returns available statuses', function () {
@@ -177,7 +178,7 @@ it('record resolves status label', function () {
     $labels = ['present' => 'Hadir', 'permission' => 'Izin', 'sick' => 'Sakit', 'absent' => 'Alpa', 'late' => 'Terlambat'];
     $i = 0;
     foreach ($labels as $status => $label) {
-        $s = Santri::factory()->forTenant($this->tenant)->create(['nis' => 'S' . $i++]);
+        $s = Santri::factory()->forTenant($this->tenant)->create(['nis' => 'S'.$i++]);
         $record = AttendanceRecord::factory()->forSessionAndSantri($this->session, $s)->create(['status' => $status]);
         expect($record->statusLabel())->toBe($label);
     }

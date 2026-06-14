@@ -73,6 +73,81 @@
         </div>
     </div>
 
+    @if ($weekSchedules->isNotEmpty())
+        <div class="row row-cards mb-3">
+            <div class="col-lg-5">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">Jadwal Hari Ini</h3>
+                            <div class="text-secondary small mt-2">Jadwal setoran untuk hari {{ $today->translatedFormat('l') }}.</div>
+                        </div>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @forelse ($todaySchedules as $schedule)
+                            <div class="list-group-item">
+                                <div class="d-flex align-items-center justify-content-between gap-3">
+                                    <div>
+                                        <div class="fw-semibold">{{ $schedule->timeRangeLabel() }}</div>
+                                        <div class="text-secondary small">
+                                            <i class="ti ti-user me-1"></i>{{ $schedule->musyrif?->name ?? '-' }}
+                                            @if ($schedule->room)
+                                                <i class="ti ti-building ms-2 me-1"></i>{{ $schedule->room->name }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-primary-lt text-primary">{{ $schedule->max_santri }} slot</span>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="list-group-item text-secondary">Tidak ada jadwal setoran untuk hari ini.</div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2 w-100">
+                            <div>
+                                <h3 class="card-title">Jadwal Setoran Tahfidz</h3>
+                                <div class="text-secondary small mt-2">Jadwal setoran hafalan per musyrif/ustadz.</div>
+                            </div>
+                            <a href="{{ route('tahfidz.jadwal.index') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="ti ti-list me-1"></i>
+                                Kelola Jadwal
+                            </a>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>Musyrif</th>
+                                    <th>Hari</th>
+                                    <th>Jam</th>
+                                    <th>Maks Santri</th>
+                                    <th>Ruangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($weekSchedules as $schedule)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $schedule->musyrif?->name ?? '-' }}</td>
+                                        <td>{{ $schedule->dayLabel() }}</td>
+                                        <td>{{ $schedule->timeRangeLabel() }}</td>
+                                        <td>{{ $schedule->max_santri }} santri</td>
+                                        <td class="text-secondary">{{ $schedule->room?->name ?? '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2 w-100">

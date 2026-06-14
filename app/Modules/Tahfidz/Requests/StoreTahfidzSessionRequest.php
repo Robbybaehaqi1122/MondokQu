@@ -13,13 +13,13 @@ class StoreTahfidzSessionRequest extends FormRequest
         return [
             'santri_id' => ['required', 'exists:santris,id'],
             'session_date' => ['required', 'date'],
-            'status' => ['sometimes', 'string', 'in:' . implode(',', TahfidzSession::availableStatuses())],
+            'status' => ['sometimes', 'string', 'in:'.implode(',', TahfidzSession::availableStatuses())],
             'notes' => ['nullable', 'string', 'max:1000'],
             'records' => ['required', 'array', 'min:1'],
             'records.*.surah_id' => ['required', 'exists:tahfidz_surahs,id'],
             'records.*.verse_start' => ['required', 'integer', 'min:1'],
             'records.*.verse_end' => ['required', 'integer', 'min:1', 'gte:records.*.verse_start'],
-            'records.*.evaluation' => ['required', 'string', 'in:' . implode(',', TahfidzRecord::availableEvaluations())],
+            'records.*.evaluation' => ['required', 'string', 'in:'.implode(',', TahfidzRecord::availableEvaluations())],
             'records.*.notes' => ['nullable', 'string', 'max:500'],
         ];
     }

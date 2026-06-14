@@ -2,16 +2,17 @@
 
 namespace App\Modules\Admin\Controllers;
 
-use App\Modules\Admin\Requests\StoreUserRequest;
-use App\Modules\Admin\Requests\UpdateGuardianSantriRequest;
-use App\Modules\Admin\Requests\UpdateUserProfileRequest;
-use App\Modules\Admin\Requests\UpdateUserRoleRequest;
-use App\Modules\Admin\Requests\UpdateUserStatusRequest;
+use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Role;
 use App\Models\Santri;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Modules\Admin\Requests\StoreUserRequest;
+use App\Modules\Admin\Requests\UpdateGuardianSantriRequest;
+use App\Modules\Admin\Requests\UpdateUserProfileRequest;
+use App\Modules\Admin\Requests\UpdateUserRoleRequest;
+use App\Modules\Admin\Requests\UpdateUserStatusRequest;
 use App\Services\ActivityLogger;
 use App\Services\UserAvatarUploader;
 use Illuminate\Auth\Events\Verified;
@@ -23,7 +24,7 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Throwable;
 
-class UserManagementController extends \App\Http\Controllers\Controller
+class UserManagementController extends Controller
 {
     public function __construct(
         protected ActivityLogger $activityLogger,

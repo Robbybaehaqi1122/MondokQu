@@ -77,10 +77,10 @@ class KesehatanQuRekamMedisController extends Controller
         );
 
         $this->activityLogger->log(
-            action: 'rekam_medis_' . ($rekamMedis->wasRecentlyCreated ? 'created' : 'updated'),
+            action: 'rekam_medis_'.($rekamMedis->wasRecentlyCreated ? 'created' : 'updated'),
             actor: $currentUser,
             target: $rekamMedis,
-            description: "Rekam medis untuk {$santri->full_name} " . ($rekamMedis->wasRecentlyCreated ? 'dibuat' : 'diperbarui') . ".",
+            description: "Rekam medis untuk {$santri->full_name} ".($rekamMedis->wasRecentlyCreated ? 'dibuat' : 'diperbarui').'.',
             properties: ['santri_id' => $santri->id, 'santri_name' => $santri->full_name],
             ipAddress: $request->ip(),
             userAgent: $request->userAgent()

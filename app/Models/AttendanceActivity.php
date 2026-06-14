@@ -105,7 +105,7 @@ class AttendanceActivity extends Model
     /**
      * Sort and remove invalid duplicate day values.
      *
-     * @param array<int, string> $days
+     * @param  array<int, string>  $days
      * @return array<int, string>
      */
     public static function normalizeDays(array $days): array

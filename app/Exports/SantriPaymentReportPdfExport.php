@@ -6,6 +6,7 @@ use App\Models\SantriPayment;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 
 class SantriPaymentReportPdfExport
@@ -16,7 +17,7 @@ class SantriPaymentReportPdfExport
         protected Carbon $dateTo,
     ) {}
 
-    public function download(): \Illuminate\Http\Response
+    public function download(): Response
     {
         $payments = $this->getData();
         $dateFrom = $this->dateFrom;

@@ -32,15 +32,15 @@ class TenantBackupService
         return DB::connection()->getSchemaBuilder()->getColumnListing($table);
     }
 
-    public function generateBackupSql(Tenant $tenant, Closure $onProgress = null): array
+    public function generateBackupSql(Tenant $tenant, ?Closure $onProgress = null): array
     {
         $allTables = $this->getTenantTables();
         $totalTables = count($allTables);
 
         $sql = "-- Mondok Qu Database Backup\n";
         $sql .= "-- Tenant: {$tenant->name} (ID: {$tenant->id})\n";
-        $sql .= "-- Generated: " . now()->toDateTimeString() . "\n";
-        $sql .= "-- Database: " . DB::connection()->getDatabaseName() . "\n\n";
+        $sql .= '-- Generated: '.now()->toDateTimeString()."\n";
+        $sql .= '-- Database: '.DB::connection()->getDatabaseName()."\n\n";
         $sql .= "SET FOREIGN_KEY_CHECKS = 0;\n";
         $sql .= "SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';\n\n";
         $sql .= "START TRANSACTION;\n\n";
@@ -69,7 +69,7 @@ class TenantBackupService
 
             $totalRows += $rows->count();
 
-            $columnList = '`' . implode('`, `', $columns) . '`';
+            $columnList = '`'.implode('`, `', $columns).'`';
 
             $chunks = $rows->chunk(100);
 
@@ -91,11 +91,11 @@ class TenantBackupService
                         }
                     }
 
-                    $values[] = '(' . implode(', ', $escapedValues) . ')';
+                    $values[] = '('.implode(', ', $escapedValues).')';
                 }
 
                 $sql .= "INSERT INTO `{$table}` ({$columnList}) VALUES\n";
-                $sql .= implode(",\n", $values) . ";\n\n";
+                $sql .= implode(",\n", $values).";\n\n";
             }
         }
 
@@ -113,7 +113,7 @@ class TenantBackupService
         ];
     }
 
-    public function storeBackup(Backup $backup, Closure $onProgress = null): Backup
+    public function storeBackup(Backup $backup, ?Closure $onProgress = null): Backup
     {
         ini_set('memory_limit', '-1');
 
@@ -128,7 +128,7 @@ class TenantBackupService
                 'status' => Backup::STATUS_FAILED,
                 'error_message' => 'Tenant tidak ditemukan.',
             ]);
-            throw new \RuntimeException('Tenant tidak ditemukan: ' . $backup->tenant_id);
+            throw new \RuntimeException('Tenant tidak ditemukan: '.$backup->tenant_id);
         }
 
         try {
@@ -152,7 +152,7 @@ class TenantBackupService
             $directory = "backups/tenant_{$tenant->id}";
             Storage::disk(config('backups.disk', 'local'))->makeDirectory($directory);
 
-            error_log('[Backup] SQL content size: ' . strlen($content) . ' bytes, tables: ' . $tablesCount . ', rows: ' . $totalRows);
+            error_log('[Backup] SQL content size: '.strlen($content).' bytes, tables: '.$tablesCount.', rows: '.$totalRows);
 
             $compressed = gzencode($content, 9);
             unset($content);
@@ -187,7 +187,7 @@ class TenantBackupService
             return $backup->fresh();
         } catch (\Throwable $e) {
             $msg = $e->getMessage();
-            error_log('[Backup] storeBackup failed: ' . $msg);
+            error_log('[Backup] storeBackup failed: '.$msg);
 
             DB::table('backups')->where('id', $backup->id)->update([
                 'status' => Backup::STATUS_FAILED,
@@ -227,7 +227,7 @@ class TenantBackupService
         return $backup->fresh();
     }
 
-    public function restoreBackup(Backup $backup, Closure $onProgress = null): array
+    public function restoreBackup(Backup $backup, ?Closure $onProgress = null): array
     {
         if (! $backup->fileExists()) {
             throw new \RuntimeException("File backup tidak ditemukan: {$backup->filename}");
@@ -340,6 +340,7 @@ class TenantBackupService
                 if ($char === '\\' && $i + 1 < $length) {
                     $i++;
                     $current .= $sql[$i];
+
                     continue;
                 }
 
@@ -354,6 +355,7 @@ class TenantBackupService
                 $inString = true;
                 $stringChar = $char;
                 $current .= $char;
+
                 continue;
             }
 
@@ -363,6 +365,7 @@ class TenantBackupService
                     $statements[] = $current;
                 }
                 $current = '';
+
                 continue;
             }
 
@@ -370,6 +373,7 @@ class TenantBackupService
                 while ($i < $length && $sql[$i] !== "\n") {
                     $i++;
                 }
+
                 continue;
             }
 

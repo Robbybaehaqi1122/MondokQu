@@ -3,6 +3,7 @@
 namespace App\Modules\Tahfidz\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\MemorizationSchedule;
 use App\Models\Santri;
 use App\Models\TahfidzSession;
 use Illuminate\Http\Request;
@@ -31,6 +32,18 @@ class TahfidzDashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $todayName = strtolower(now()->format('l'));
+
+        $weekSchedules = MemorizationSchedule::query()
+            ->visibleTo($currentUser)
+            ->active()
+            ->with(['musyrif', 'room'])
+            ->orderByRaw("FIELD(day_of_week, 'monday','tuesday','wednesday','thursday','friday','saturday','sunday')")
+            ->orderBy('start_time')
+            ->get();
+
+        $todaySchedules = $weekSchedules->filter(fn ($s) => $s->day_of_week === $todayName);
+
         return view('modules.tahfidz.dashboard', [
             'activeSantriCount' => $activeSantriCount,
             'stats' => [
@@ -40,6 +53,8 @@ class TahfidzDashboardController extends Controller
                 'total_santri_active' => $activeSantriCount,
             ],
             'recentSessions' => $recentSessions,
+            'weekSchedules' => $weekSchedules,
+            'todaySchedules' => $todaySchedules,
             'today' => now(),
         ]);
     }

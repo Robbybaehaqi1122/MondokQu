@@ -275,7 +275,7 @@ class SantriService
 
         if (! $actor->can('manage kamar')) {
             throw ValidationException::withMessages([
-                'room_name' => 'Kamar "' . $roomName . '" tidak ditemukan. Hubungi admin untuk membuat kamar baru.',
+                'room_name' => 'Kamar "'.$roomName.'" tidak ditemukan. Hubungi admin untuk membuat kamar baru.',
             ]);
         }
 

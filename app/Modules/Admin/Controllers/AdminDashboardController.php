@@ -2,13 +2,14 @@
 
 namespace App\Modules\Admin\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\DashboardService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
-class AdminDashboardController extends \App\Http\Controllers\Controller
+class AdminDashboardController extends Controller
 {
     public function __construct(
         protected DashboardService $dashboardService,

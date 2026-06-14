@@ -6,6 +6,7 @@ use App\Models\Santri;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Response;
 
 class SantriPdfExport
 {
@@ -16,7 +17,7 @@ class SantriPdfExport
         protected string $gender = '',
     ) {}
 
-    public function download(): \Illuminate\Http\Response
+    public function download(): Response
     {
         $santris = $this->getData();
 

@@ -7,6 +7,7 @@ use App\Models\Santri;
 use App\Models\User;
 use App\Notifications\BatchInvoiceNotification;
 use App\Services\ActivityLogger;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Notification;
@@ -63,7 +64,7 @@ class GenerateMonthlySantriInvoicesJob implements ShouldQueue
         );
 
         if ($result['created'] > 0) {
-            $periodLabel = \Carbon\Carbon::createFromDate($this->periodYear, $this->periodMonth, 1)->translatedFormat('F Y');
+            $periodLabel = Carbon::createFromDate($this->periodYear, $this->periodMonth, 1)->translatedFormat('F Y');
 
             $guardianUserIds = Santri::query()
                 ->withoutTenantScope()

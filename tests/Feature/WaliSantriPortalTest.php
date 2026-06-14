@@ -4,11 +4,16 @@ use App\Models\AttendanceActivity;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\LeaveRequest;
+use App\Models\Pelanggaran;
+use App\Models\PelanggaranKategori;
 use App\Models\Room;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
 use App\Models\SantriPaymentConfirmation;
+use App\Models\TahfidzRecord;
+use App\Models\TahfidzSession;
+use App\Models\TahfidzSurah;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\WaliPaymentProofSubmittedNotification;
@@ -734,14 +739,14 @@ test('wali santri can view pelanggaran history for linked santri', function () {
         'relationship' => 'Ayah',
     ]);
 
-    $kategori = \App\Models\PelanggaranKategori::query()->create([
+    $kategori = PelanggaranKategori::query()->create([
         'tenant_id' => $wali->tenant_id,
         'nama' => 'Terlambat Shalat',
         'poin' => 10,
         'created_by' => $wali->id,
     ]);
 
-    \App\Models\Pelanggaran::query()->create([
+    Pelanggaran::query()->create([
         'tenant_id' => $wali->tenant_id,
         'santri_id' => $linkedSantri->id,
         'kategori_id' => $kategori->id,
@@ -751,7 +756,7 @@ test('wali santri can view pelanggaran history for linked santri', function () {
         'tanggal' => now()->toDateString(),
     ]);
 
-    \App\Models\Pelanggaran::query()->create([
+    Pelanggaran::query()->create([
         'tenant_id' => $wali->tenant_id,
         'santri_id' => $linkedSantri->id,
         'kategori_id' => $kategori->id,
@@ -802,7 +807,7 @@ test('wali santri can view tahfidz history for linked santri', function () {
         'relationship' => 'Ayah',
     ]);
 
-    $surah = \App\Models\TahfidzSurah::query()->create([
+    $surah = TahfidzSurah::query()->create([
         'number' => 1,
         'name' => 'Al-Fatihah',
         'name_arabic' => 'الفاتحة',
@@ -810,22 +815,22 @@ test('wali santri can view tahfidz history for linked santri', function () {
         'juz' => 1,
     ]);
 
-    $session = \App\Models\TahfidzSession::query()->create([
+    $session = TahfidzSession::query()->create([
         'tenant_id' => $wali->tenant_id,
         'santri_id' => $linkedSantri->id,
         'musyrif_id' => $wali->id,
         'session_date' => now()->toDateString(),
-        'status' => \App\Models\TahfidzSession::STATUS_COMPLETED,
+        'status' => TahfidzSession::STATUS_COMPLETED,
         'notes' => 'Setoran perdana.',
     ]);
 
-    \App\Models\TahfidzRecord::query()->create([
+    TahfidzRecord::query()->create([
         'tenant_id' => $wali->tenant_id,
         'tahfidz_session_id' => $session->id,
         'surah_id' => $surah->id,
         'verse_start' => 1,
         'verse_end' => 7,
-        'evaluation' => \App\Models\TahfidzRecord::EVALUATION_LANCAR,
+        'evaluation' => TahfidzRecord::EVALUATION_LANCAR,
         'notes' => 'Lancar semua.',
     ]);
 
@@ -853,7 +858,7 @@ test('wali santri can view tahfidz summary stats', function () {
         'relationship' => 'Ayah',
     ]);
 
-    $surah = \App\Models\TahfidzSurah::query()->create([
+    $surah = TahfidzSurah::query()->create([
         'number' => 112,
         'name' => 'Al-Ikhlas',
         'name_arabic' => 'الإخلاص',
@@ -861,21 +866,21 @@ test('wali santri can view tahfidz summary stats', function () {
         'juz' => 30,
     ]);
 
-    $session = \App\Models\TahfidzSession::query()->create([
+    $session = TahfidzSession::query()->create([
         'tenant_id' => $wali->tenant_id,
         'santri_id' => $linkedSantri->id,
         'musyrif_id' => $wali->id,
         'session_date' => now()->toDateString(),
-        'status' => \App\Models\TahfidzSession::STATUS_COMPLETED,
+        'status' => TahfidzSession::STATUS_COMPLETED,
     ]);
 
-    \App\Models\TahfidzRecord::query()->create([
+    TahfidzRecord::query()->create([
         'tenant_id' => $wali->tenant_id,
         'tahfidz_session_id' => $session->id,
         'surah_id' => $surah->id,
         'verse_start' => 1,
         'verse_end' => 4,
-        'evaluation' => \App\Models\TahfidzRecord::EVALUATION_LANCAR,
+        'evaluation' => TahfidzRecord::EVALUATION_LANCAR,
     ]);
 
     $response = $this

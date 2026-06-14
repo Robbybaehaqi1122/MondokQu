@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmailContract
@@ -318,7 +319,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
             return $this->avatar_path;
         }
 
-        if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($this->avatar_path)) {
+        if (! Storage::disk('public')->exists($this->avatar_path)) {
             return null;
         }
 

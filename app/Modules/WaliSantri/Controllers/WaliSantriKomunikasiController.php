@@ -2,6 +2,7 @@
 
 namespace App\Modules\WaliSantri\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Communication;
 use App\Models\Santri;
 use App\Models\User;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
-class WaliSantriKomunikasiController extends \App\Http\Controllers\Controller
+class WaliSantriKomunikasiController extends Controller
 {
     public function index(Request $request): View
     {

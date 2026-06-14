@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Modules\Akademik\Controllers\AkademikDashboardController;
 use App\Modules\Akademik\Controllers\MataPelajaranController;
 use App\Modules\Akademik\Controllers\NilaiSantriController;
 use App\Modules\Akademik\Controllers\RaporController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage akademik'])
     ->prefix('akademik')

@@ -208,6 +208,12 @@
                                 </span>
                                 <span>Setoran Hafalan</span>
                             </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('tahfidz.jadwal.*') ? 'active' : '' }}" href="{{ route('tahfidz.jadwal.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-calendar-time"></i>
+                                </span>
+                                <span>Jadwal Setoran</span>
+                            </a>
                             <a class="sidebar-sublink {{ request()->routeIs('tahfidz.rapor.*') ? 'active' : '' }}" href="{{ route('tahfidz.rapor.index') }}">
                                 <span class="sidebar-link-icon">
                                     <i class="ti ti-report-analytics"></i>
