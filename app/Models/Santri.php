@@ -170,6 +170,16 @@ class Santri extends Model
         return $this->hasMany(SantriPaymentConfirmation::class);
     }
 
+    public function nilaiSantris(): HasMany
+    {
+        return $this->hasMany(NilaiSantri::class);
+    }
+
+    public function nilaiSikaps(): HasMany
+    {
+        return $this->hasMany(NilaiSikap::class);
+    }
+
     /**
      * Get leave requests for this santri.
      */

@@ -291,6 +291,22 @@ class User extends Authenticatable implements MustVerifyEmailContract
     }
 
     /**
+     * Resolve a usable tenant ID, falling back to the first tenant for superadmins.
+     */
+    public function effectiveTenantId(): ?int
+    {
+        if ($this->tenant_id) {
+            return $this->tenant_id;
+        }
+
+        if ($this->isSuperAdmin()) {
+            return Tenant::query()->value('id');
+        }
+
+        return null;
+    }
+
+    /**
      * Determine whether the user belongs to the selected tenant.
      */
     public function belongsToTenant(?Tenant $tenant): bool

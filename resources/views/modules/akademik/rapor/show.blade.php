@@ -48,7 +48,7 @@
     {{-- Nilai Akademik --}}
     <div class="card mb-3">
         <div class="card-header">
-            <h3 class="card-title">Nilai Akademik</h3>
+            <h3 class="card-title">A. Nilai Akademik</h3>
         </div>
         <div class="table-responsive">
             <table class="table table-vcenter card-table">
@@ -100,12 +100,61 @@
         </div>
     </div>
 
+    {{-- Nilai Sikap --}}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title">B. Nilai Sikap</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>Aspek</th>
+                        <th>Predikat</th>
+                        <th>Deskripsi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Sikap Spiritual</strong></td>
+                        <td>
+                            @if ($nilaiSikap?->sikap_spiritual)
+                                @php
+                                    $sc = ['SB' => 'bg-success-lt text-success', 'B' => 'bg-primary-lt text-primary', 'C' => 'bg-warning-lt text-warning', 'K' => 'bg-danger-lt text-danger'];
+                                @endphp
+                                <span class="badge {{ $sc[$nilaiSikap->sikap_spiritual] ?? '' }}">
+                                    {{ $nilaiSikap->sikap_spiritual }} - {{ $nilaiSikap->sikapSpiritualLabel() }}
+                                </span>
+                            @else
+                                <span class="text-secondary">-</span>
+                            @endif
+                        </td>
+                        <td>{{ $nilaiSikap?->deskripsi_spiritual ?? '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sikap Sosial</strong></td>
+                        <td>
+                            @if ($nilaiSikap?->sikap_sosial)
+                                <span class="badge {{ $sc[$nilaiSikap->sikap_sosial] ?? '' }}">
+                                    {{ $nilaiSikap->sikap_sosial }} - {{ $nilaiSikap->sikapSosialLabel() }}
+                                </span>
+                            @else
+                                <span class="text-secondary">-</span>
+                            @endif
+                        </td>
+                        <td>{{ $nilaiSikap?->deskripsi_sosial ?? '-' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="row">
         {{-- Tahfidz --}}
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="card mb-3">
                 <div class="card-header">
-                    <h3 class="card-title">Ringkasan Tahfidz</h3>
+                    <h3 class="card-title">C. Ringkasan Tahfidz</h3>
                 </div>
                 <div class="card-body text-center">
                     <div class="row">
@@ -123,10 +172,10 @@
         </div>
 
         {{-- Pelanggaran --}}
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="card mb-3">
                 <div class="card-header">
-                    <h3 class="card-title">Ringkasan Pelanggaran</h3>
+                    <h3 class="card-title">D. Ringkasan Pelanggaran</h3>
                 </div>
                 <div class="card-body text-center">
                     <div class="text-secondary small">Total Poin Pelanggaran</div>
@@ -134,6 +183,70 @@
                         $poinClass = $totalPoinPelanggaran > 50 ? 'text-danger' : ($totalPoinPelanggaran > 20 ? 'text-warning' : 'text-success');
                     @endphp
                     <div class="fs-2 fw-bold mt-1 {{ $poinClass }}">{{ number_format($totalPoinPelanggaran) }}</div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Peringkat Kelas --}}
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">E. Peringkat Kelas</h3>
+                </div>
+                <div class="card-body text-center">
+                    @if ($peringkatKelas['peringkat'])
+                        <div class="text-secondary small">Peringkat dari {{ $peringkatKelas['total'] }} Santri</div>
+                        <div class="fs-2 fw-bold mt-1 text-primary">{{ $peringkatKelas['peringkat'] }}</div>
+                        <div class="text-secondary small mt-2">Rata-rata Nilai: <strong>{{ $peringkatKelas['rata_rata'] }}</strong></div>
+                    @else
+                        <div class="text-secondary">Belum tersedia</div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Catatan Wali Kelas --}}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title">F. Catatan Wali Kelas</h3>
+        </div>
+        <div class="card-body">
+            @if ($nilaiSikap?->catatan_wali)
+                <p class="mb-0 fst-italic">{{ $nilaiSikap->catatan_wali }}</p>
+            @else
+                <p class="text-secondary mb-0">Belum ada catatan wali kelas.</p>
+            @endif
+        </div>
+    </div>
+
+    {{-- Tanda Tangan --}}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title">Tanda Tangan</h3>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-4">
+                    <div class="mb-4" style="height: 60px;"></div>
+                    <div class="fw-bold">{{ config('app.ponpes_city', 'Kota Santri') }}, {{ now()->translatedFormat('d F Y') }}</div>
+                    <div class="text-secondary small">Kepala Madrasah / Pondok</div>
+                    <div class="mb-4" style="height: 60px;"></div>
+                    <div class="fw-bold">{{ config('app.kepala_ponpes', '(____________________)') }}</div>
+                </div>
+                <div class="col-4">
+                    <div class="mb-4" style="height: 60px;"></div>
+                    <div class="fw-bold">&nbsp;</div>
+                    <div class="text-secondary small">Wali Kelas</div>
+                    <div class="mb-4" style="height: 60px;"></div>
+                    <div class="fw-bold">{{ config('app.wali_kelas', '(____________________)') }}</div>
+                </div>
+                <div class="col-4">
+                    <div class="mb-4" style="height: 60px;"></div>
+                    <div class="fw-bold">&nbsp;</div>
+                    <div class="text-secondary small">Orang Tua / Wali Santri</div>
+                    <div class="mb-4" style="height: 60px;"></div>
+                    <div class="fw-bold">{{ $santri->displayGuardianName() ?: '(____________________)' }}</div>
                 </div>
             </div>
         </div>

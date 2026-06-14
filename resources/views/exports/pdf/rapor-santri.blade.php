@@ -17,16 +17,28 @@
         .info-table td { padding: 4px 8px; }
         .info-table .label { font-weight: bold; width: 120px; }
 
-        table.nilai { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        table.nilai { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
         table.nilai th, table.nilai td { border: 1px solid #ccc; padding: 6px 8px; text-align: center; font-size: 9pt; }
         table.nilai th { background: #f0f4ff; font-weight: bold; }
         table.nilai .tuntas { color: #155724; }
         table.nilai .tidak-tuntas { color: #721c24; }
 
+        .section-title { font-size: 11pt; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-top: 20px; margin-bottom: 10px; }
+
         .ringkasan { margin-top: 20px; }
         .ringkasan h3 { font-size: 11pt; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
 
+        .catatan-wali { margin: 20px 0; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-style: italic; }
+
+        .signature-table { width: 100%; margin-top: 40px; }
+        .signature-table td { text-align: center; padding: 0 15px; vertical-align: top; }
+        .signature-table .space { height: 60px; }
+        .signature-table .label { font-size: 9pt; margin-top: 5px; }
+        .signature-table .name { font-weight: bold; margin-top: 5px; }
+
         .footer { text-align: center; margin-top: 40px; font-size: 9pt; color: #888; border-top: 1px solid #ddd; padding-top: 10px; }
+
+        .peringkat-box { text-align: center; margin: 15px 0; font-size: 11pt; }
     </style>
 </head>
 <body>
@@ -46,7 +58,7 @@
         <tr><td class="label">Wali Santri</td><td>: {{ $santri->displayGuardianName() ?: '-' }}</td></tr>
     </table>
 
-    <h3 style="font-size: 11pt; border-bottom: 1px solid #ddd; padding-bottom: 4px;">A. Nilai Akademik</h3>
+    <div class="section-title">A. Nilai Akademik</div>
 
     <table class="nilai">
         <thead>
@@ -88,8 +100,39 @@
         </tbody>
     </table>
 
+    @if ($peringkatKelas['peringkat'])
+        <div class="peringkat-box">
+            Peringkat Kelas: <strong>{{ $peringkatKelas['peringkat'] }}</strong> dari {{ $peringkatKelas['total'] }} santri
+            &middot; Rata-rata Nilai: <strong>{{ $peringkatKelas['rata_rata'] }}</strong>
+        </div>
+    @endif
+
+    <div class="section-title">B. Nilai Sikap</div>
+
+    <table class="nilai">
+        <thead>
+            <tr>
+                <th style="text-align:left">Aspek</th>
+                <th>Predikat</th>
+                <th style="text-align:left">Deskripsi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align:left"><strong>Sikap Spiritual</strong></td>
+                <td>{{ $nilaiSikap ? ($nilaiSikap->sikap_spiritual.' - '.$nilaiSikap->sikapSpiritualLabel()) : '-' }}</td>
+                <td style="text-align:left">{{ $nilaiSikap?->deskripsi_spiritual ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td style="text-align:left"><strong>Sikap Sosial</strong></td>
+                <td>{{ $nilaiSikap ? ($nilaiSikap->sikap_sosial.' - '.$nilaiSikap->sikapSosialLabel()) : '-' }}</td>
+                <td style="text-align:left">{{ $nilaiSikap?->deskripsi_sosial ?? '-' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
     <div class="ringkasan">
-        <h3>B. Ringkasan Tahfidz</h3>
+        <div class="section-title">C. Ringkasan Tahfidz</div>
         <table class="nilai">
             <tr>
                 <td style="text-align:left"><strong>Total Ayat</strong></td>
@@ -103,7 +146,7 @@
     </div>
 
     <div class="ringkasan">
-        <h3>C. Ringkasan Pelanggaran</h3>
+        <div class="section-title">D. Ringkasan Pelanggaran</div>
         <table class="nilai">
             <tr>
                 <td style="text-align:left"><strong>Total Poin Pelanggaran</strong></td>
@@ -111,6 +154,38 @@
             </tr>
         </table>
     </div>
+
+    @if ($nilaiSikap?->catatan_wali)
+        <div class="section-title">E. Catatan Wali Kelas</div>
+        <div class="catatan-wali">
+            {{ $nilaiSikap->catatan_wali }}
+        </div>
+    @endif
+
+    <div class="section-title">Tanda Tangan</div>
+
+    <table class="signature-table">
+        <tr>
+            <td>
+                <div>{{ config('app.ponpes_city', 'Kota Santri') }}, {{ now()->translatedFormat('d F Y') }}</div>
+                <div class="space">&nbsp;</div>
+                <div class="label">Kepala Madrasah / Pondok</div>
+                <div class="name">{{ config('app.kepala_ponpes', '(____________________)') }}</div>
+            </td>
+            <td>
+                <div>&nbsp;</div>
+                <div class="space">&nbsp;</div>
+                <div class="label">Wali Kelas</div>
+                <div class="name">{{ config('app.wali_kelas', '(____________________)') }}</div>
+            </td>
+            <td>
+                <div>&nbsp;</div>
+                <div class="space">&nbsp;</div>
+                <div class="label">Orang Tua / Wali Santri</div>
+                <div class="name">{{ $santri->displayGuardianName() ?: '(____________________)' }}</div>
+            </td>
+        </tr>
+    </table>
 
     <div class="footer">
         Dicetak pada {{ now()->translatedFormat('d F Y H:i') }} &middot; {{ config('app.ponpes_name', 'Mondok Qu') }}

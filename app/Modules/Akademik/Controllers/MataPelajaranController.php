@@ -3,6 +3,7 @@
 namespace App\Modules\Akademik\Controllers;
 
 use App\Models\MataPelajaran;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -10,6 +11,8 @@ use Illuminate\View\View;
 
 class MataPelajaranController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request): View
     {
         $currentUser = $request->user();
@@ -37,6 +40,12 @@ class MataPelajaranController extends Controller
             'kkm' => ['required', 'integer', 'min:0', 'max:100'],
         ]);
 
+        $tenantId = $currentUser->effectiveTenantId();
+
+        if (! $tenantId) {
+            return back()->withErrors(['nama' => 'Tidak ada tenant yang tersedia. Hubungi administrator.'])->withInput();
+        }
+
         $exists = MataPelajaran::query()
             ->visibleTo($currentUser)
             ->where('nama', $validated['nama'])
@@ -47,7 +56,7 @@ class MataPelajaranController extends Controller
         }
 
         MataPelajaran::query()->create([
-            'tenant_id' => $currentUser->tenant_id,
+            'tenant_id' => $tenantId,
             'nama' => $validated['nama'],
             'deskripsi' => $validated['deskripsi'],
             'kkm' => $validated['kkm'],

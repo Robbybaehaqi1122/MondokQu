@@ -5,6 +5,7 @@ namespace App\Modules\Akademik\Controllers;
 use App\Models\MataPelajaran;
 use App\Models\NilaiSantri;
 use App\Models\Santri;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class NilaiSantriController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request): View
     {
         $currentUser = $request->user();
@@ -101,6 +104,12 @@ class NilaiSantriController extends Controller
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        $tenantId = $currentUser->effectiveTenantId();
+
+        if (! $tenantId) {
+            return back()->withErrors(['santri_id' => 'Tidak ada tenant yang tersedia. Hubungi administrator.'])->withInput();
+        }
+
         $exists = NilaiSantri::query()
             ->visibleTo($currentUser)
             ->where('santri_id', $validated['santri_id'])
@@ -113,7 +122,7 @@ class NilaiSantriController extends Controller
         }
 
         NilaiSantri::query()->create([
-            'tenant_id' => $currentUser->tenant_id,
+            'tenant_id' => $tenantId,
             'santri_id' => $validated['santri_id'],
             'mata_pelajaran_id' => $validated['mata_pelajaran_id'],
             'semester' => $validated['semester'],

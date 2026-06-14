@@ -4,6 +4,7 @@ namespace App\Modules\Akademik\Controllers;
 
 use App\Models\MataPelajaran;
 use App\Models\NilaiSantri;
+use App\Models\NilaiSikap;
 use App\Models\Pelanggaran;
 use App\Models\Santri;
 use App\Models\TahfidzRecord;
@@ -59,6 +60,12 @@ class RaporController extends Controller
             ->with(['mataPelajaran', 'inputBy'])
             ->get();
 
+        $nilaiSikap = NilaiSikap::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->where('semester', $validated['semester'])
+            ->first();
+
         $tahfidzStats = TahfidzRecord::query()
             ->visibleTo($currentUser)
             ->whereIn('tahfidz_session_id', TahfidzSession::query()
@@ -82,6 +89,8 @@ class RaporController extends Controller
             ->groupBy('mata_pelajaran_id')
             ->pluck('avg', 'mata_pelajaran_id');
 
+        $peringkatKelas = $this->hitungPeringkatKelas($validated['semester'], $santri->id, $currentUser);
+
         $semesters = NilaiSantri::query()
             ->visibleTo($currentUser)
             ->distinct()
@@ -93,9 +102,11 @@ class RaporController extends Controller
             'semester' => $validated['semester'],
             'semesters' => $semesters,
             'nilais' => $nilais,
+            'nilaiSikap' => $nilaiSikap,
             'tahfidzStats' => $tahfidzStats,
             'totalPoinPelanggaran' => $totalPoinPelanggaran,
             'rataRataKelas' => $rataRataKelas,
+            'peringkatKelas' => $peringkatKelas,
         ]);
     }
 
@@ -120,6 +131,12 @@ class RaporController extends Controller
             ->with(['mataPelajaran', 'inputBy'])
             ->get();
 
+        $nilaiSikap = NilaiSikap::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->where('semester', $validated['semester'])
+            ->first();
+
         $tahfidzStats = TahfidzRecord::query()
             ->visibleTo($currentUser)
             ->whereIn('tahfidz_session_id', TahfidzSession::query()
@@ -142,16 +159,20 @@ class RaporController extends Controller
             ->groupBy('mata_pelajaran_id')
             ->pluck('avg', 'mata_pelajaran_id');
 
+        $peringkatKelas = $this->hitungPeringkatKelas($validated['semester'], $santri->id, $currentUser);
+
         $pdf = Pdf::loadView('exports.pdf.rapor-santri', [
             'santri' => $santri,
             'semester' => $validated['semester'],
             'nilais' => $nilais,
+            'nilaiSikap' => $nilaiSikap,
             'tahfidzStats' => $tahfidzStats,
             'totalPoinPelanggaran' => $totalPoinPelanggaran,
             'rataRataKelas' => $rataRataKelas,
+            'peringkatKelas' => $peringkatKelas,
         ]);
 
-        $filename = 'rapor-'.$santri->full_name.'-'.$validated['semester'].'.pdf';
+        $filename = 'rapor-'.$santri->full_name.'-'.str_replace(['/', '\\'], '-', $validated['semester']).'.pdf';
 
         return $pdf->download($filename);
     }
@@ -200,5 +221,35 @@ class RaporController extends Controller
             'semesters' => $semesters,
             'series' => $series,
         ]);
+    }
+
+    private function hitungPeringkatKelas(string $semester, int $santriId, $user): array
+    {
+        $rataRataSantris = NilaiSantri::query()
+            ->visibleTo($user)
+            ->where('semester', $semester)
+            ->selectRaw('santri_id, COALESCE(ROUND(AVG((nilai_pengetahuan + nilai_keterampilan) / 2)), 0) as rata_rata')
+            ->groupBy('santri_id')
+            ->orderByDesc('rata_rata')
+            ->get()
+            ->values();
+
+        $totalSantri = $rataRataSantris->count();
+        $peringkat = null;
+        $rataSaya = null;
+
+        foreach ($rataRataSantris as $i => $item) {
+            if ((int) $item->santri_id === $santriId) {
+                $peringkat = $i + 1;
+                $rataSaya = (int) $item->rata_rata;
+                break;
+            }
+        }
+
+        return [
+            'peringkat' => $peringkat,
+            'total' => $totalSantri,
+            'rata_rata' => $rataSaya,
+        ];
     }
 }
