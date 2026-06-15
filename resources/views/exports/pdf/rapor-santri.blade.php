@@ -118,16 +118,41 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td style="text-align:left"><strong>Sikap Spiritual</strong></td>
-                <td>{{ $nilaiSikap ? ($nilaiSikap->sikap_spiritual.' - '.$nilaiSikap->sikapSpiritualLabel()) : '-' }}</td>
-                <td style="text-align:left">{{ $nilaiSikap?->deskripsi_spiritual ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td style="text-align:left"><strong>Sikap Sosial</strong></td>
-                <td>{{ $nilaiSikap ? ($nilaiSikap->sikap_sosial.' - '.$nilaiSikap->sikapSosialLabel()) : '-' }}</td>
-                <td style="text-align:left">{{ $nilaiSikap?->deskripsi_sosial ?? '-' }}</td>
-            </tr>
+            <tr><td colspan="3" style="text-align:left; font-weight:bold;">Sikap Spiritual (Akhlak kepada Allah)</td></tr>
+            @forelse (($attitudeGrades['spiritual'] ?? collect()) as $ag)
+                <tr>
+                    <td style="text-align:left; padding-left:20px;">{{ $ag->aspect_name }}</td>
+                    <td>{{ $ag->predicate }} - {{ $ag->predicateLabel() }}</td>
+                    <td style="text-align:left">{{ $ag->description ?? '-' }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="3" style="text-align:left; padding-left:20px; color:#888;">Belum ada nilai sikap spiritual per aspek.</td></tr>
+            @endforelse
+            @if ($nilaiSikap?->sikap_spiritual)
+                <tr style="background:#f0f4ff;">
+                    <td style="text-align:left; font-weight:bold;">Ringkasan Spiritual</td>
+                    <td>{{ $nilaiSikap->sikap_spiritual }} - {{ $nilaiSikap->sikapSpiritualLabel() }}</td>
+                    <td style="text-align:left">{{ $nilaiSikap?->deskripsi_spiritual ?? '-' }}</td>
+                </tr>
+            @endif
+
+            <tr><td colspan="3" style="text-align:left; font-weight:bold;">Sikap Sosial (Akhlak kepada Sesama)</td></tr>
+            @forelse (($attitudeGrades['sosial'] ?? collect()) as $ag)
+                <tr>
+                    <td style="text-align:left; padding-left:20px;">{{ $ag->aspect_name }}</td>
+                    <td>{{ $ag->predicate }} - {{ $ag->predicateLabel() }}</td>
+                    <td style="text-align:left">{{ $ag->description ?? '-' }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="3" style="text-align:left; padding-left:20px; color:#888;">Belum ada nilai sikap sosial per aspek.</td></tr>
+            @endforelse
+            @if ($nilaiSikap?->sikap_sosial)
+                <tr style="background:#f0f4ff;">
+                    <td style="text-align:left; font-weight:bold;">Ringkasan Sosial</td>
+                    <td>{{ $nilaiSikap->sikap_sosial }} - {{ $nilaiSikap->sikapSosialLabel() }}</td>
+                    <td style="text-align:left">{{ $nilaiSikap?->deskripsi_sosial ?? '-' }}</td>
+                </tr>
+            @endif
         </tbody>
     </table>
 

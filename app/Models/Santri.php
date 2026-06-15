@@ -180,6 +180,11 @@ class Santri extends Model
         return $this->hasMany(NilaiSikap::class);
     }
 
+    public function attitudeGrades(): HasMany
+    {
+        return $this->hasMany(AttitudeGrade::class);
+    }
+
     /**
      * Get leave requests for this santri.
      */

@@ -115,35 +115,64 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td><strong>Sikap Spiritual</strong></td>
-                        <td>
-                            @if ($nilaiSikap?->sikap_spiritual)
-                                @php
-                                    $sc = ['SB' => 'bg-success-lt text-success', 'B' => 'bg-primary-lt text-primary', 'C' => 'bg-warning-lt text-warning', 'K' => 'bg-danger-lt text-danger'];
-                                @endphp
+                    @php
+                        $sc = ['SB' => 'bg-success-lt text-success', 'B' => 'bg-primary-lt text-primary', 'C' => 'bg-warning-lt text-warning', 'K' => 'bg-danger-lt text-danger'];
+                    @endphp
+                    <tr><td colspan="3" class="fw-bold text-primary">Sikap Spiritual (Akhlak kepada Allah)</td></tr>
+                    @forelse (($attitudeGrades['spiritual'] ?? collect()) as $ag)
+                        <tr>
+                            <td style="padding-left:2rem">{{ $ag->aspect_name }}</td>
+                            <td>
+                                <span class="badge {{ $sc[$ag->predicate] ?? '' }}">
+                                    {{ $ag->predicate }} - {{ $ag->predicateLabel() }}
+                                </span>
+                            </td>
+                            <td>{{ $ag->description ?? '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td style="padding-left:2rem" colspan="3" class="text-secondary">Belum ada nilai sikap spiritual per aspek.</td>
+                        </tr>
+                    @endforelse
+                    @if ($nilaiSikap?->sikap_spiritual)
+                        <tr class="table-active">
+                            <td class="fw-semibold">Ringkasan Spiritual</td>
+                            <td>
                                 <span class="badge {{ $sc[$nilaiSikap->sikap_spiritual] ?? '' }}">
                                     {{ $nilaiSikap->sikap_spiritual }} - {{ $nilaiSikap->sikapSpiritualLabel() }}
                                 </span>
-                            @else
-                                <span class="text-secondary">-</span>
-                            @endif
-                        </td>
-                        <td>{{ $nilaiSikap?->deskripsi_spiritual ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Sikap Sosial</strong></td>
-                        <td>
-                            @if ($nilaiSikap?->sikap_sosial)
+                            </td>
+                            <td>{{ $nilaiSikap?->deskripsi_spiritual ?? '-' }}</td>
+                        </tr>
+                    @endif
+
+                    <tr><td colspan="3" class="fw-bold text-success">Sikap Sosial (Akhlak kepada Sesama)</td></tr>
+                    @forelse (($attitudeGrades['sosial'] ?? collect()) as $ag)
+                        <tr>
+                            <td style="padding-left:2rem">{{ $ag->aspect_name }}</td>
+                            <td>
+                                <span class="badge {{ $sc[$ag->predicate] ?? '' }}">
+                                    {{ $ag->predicate }} - {{ $ag->predicateLabel() }}
+                                </span>
+                            </td>
+                            <td>{{ $ag->description ?? '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td style="padding-left:2rem" colspan="3" class="text-secondary">Belum ada nilai sikap sosial per aspek.</td>
+                        </tr>
+                    @endforelse
+                    @if ($nilaiSikap?->sikap_sosial)
+                        <tr class="table-active">
+                            <td class="fw-semibold">Ringkasan Sosial</td>
+                            <td>
                                 <span class="badge {{ $sc[$nilaiSikap->sikap_sosial] ?? '' }}">
                                     {{ $nilaiSikap->sikap_sosial }} - {{ $nilaiSikap->sikapSosialLabel() }}
                                 </span>
-                            @else
-                                <span class="text-secondary">-</span>
-                            @endif
-                        </td>
-                        <td>{{ $nilaiSikap?->deskripsi_sosial ?? '-' }}</td>
-                    </tr>
+                            </td>
+                            <td>{{ $nilaiSikap?->deskripsi_sosial ?? '-' }}</td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>

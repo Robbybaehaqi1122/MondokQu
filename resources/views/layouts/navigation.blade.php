@@ -255,6 +255,10 @@
                                 <span class="sidebar-link-icon"><i class="ti ti-edit-circle"></i></span>
                                 <span>Nilai Santri</span>
                             </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('akademik.attitude.*') ? 'active' : '' }}" href="{{ route('akademik.attitude.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-heart-handshake"></i></span>
+                                <span>Nilai Sikap</span>
+                            </a>
                             <a class="sidebar-sublink {{ request()->routeIs('akademik.rapor.*') ? 'active' : '' }}" href="{{ route('akademik.rapor.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
                                 <span>Rapor Digital</span>

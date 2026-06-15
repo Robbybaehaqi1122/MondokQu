@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Akademik\Controllers\AkademikDashboardController;
+use App\Modules\Akademik\Controllers\AttitudeGradeController;
 use App\Modules\Akademik\Controllers\GradeLevelController;
 use App\Modules\Akademik\Controllers\MataPelajaranController;
 use App\Modules\Akademik\Controllers\NilaiSantriController;
@@ -29,6 +30,11 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::get('/nilai/{nilaiSantri}/edit', [NilaiSantriController::class, 'edit'])->name('nilai.edit');
         Route::put('/nilai/{nilaiSantri}', [NilaiSantriController::class, 'update'])->name('nilai.update');
         Route::delete('/nilai/{nilaiSantri}', [NilaiSantriController::class, 'destroy'])->name('nilai.destroy');
+
+        Route::get('/nilai-sikap', [AttitudeGradeController::class, 'index'])->name('attitude.index');
+        Route::get('/nilai-sikap/input', [AttitudeGradeController::class, 'create'])->name('attitude.create');
+        Route::post('/nilai-sikap', [AttitudeGradeController::class, 'store'])->name('attitude.store');
+        Route::get('/nilai-sikap/show', [AttitudeGradeController::class, 'show'])->name('attitude.show');
 
         Route::get('/rapor', [RaporController::class, 'index'])->name('rapor.index');
         Route::get('/rapor/show', [RaporController::class, 'show'])->name('rapor.show');

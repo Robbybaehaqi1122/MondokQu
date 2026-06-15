@@ -2,6 +2,7 @@
 
 namespace App\Modules\Akademik\Controllers;
 
+use App\Models\AttitudeGrade;
 use App\Models\MataPelajaran;
 use App\Models\NilaiSantri;
 use App\Models\NilaiSikap;
@@ -66,6 +67,13 @@ class RaporController extends Controller
             ->where('semester', $validated['semester'])
             ->first();
 
+        $attitudeGrades = AttitudeGrade::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->where('semester', $validated['semester'])
+            ->get()
+            ->groupBy('aspect');
+
         $tahfidzStats = TahfidzRecord::query()
             ->visibleTo($currentUser)
             ->whereIn('tahfidz_session_id', TahfidzSession::query()
@@ -103,6 +111,7 @@ class RaporController extends Controller
             'semesters' => $semesters,
             'nilais' => $nilais,
             'nilaiSikap' => $nilaiSikap,
+            'attitudeGrades' => $attitudeGrades,
             'tahfidzStats' => $tahfidzStats,
             'totalPoinPelanggaran' => $totalPoinPelanggaran,
             'rataRataKelas' => $rataRataKelas,
@@ -137,6 +146,13 @@ class RaporController extends Controller
             ->where('semester', $validated['semester'])
             ->first();
 
+        $attitudeGrades = AttitudeGrade::query()
+            ->visibleTo($currentUser)
+            ->where('santri_id', $santri->id)
+            ->where('semester', $validated['semester'])
+            ->get()
+            ->groupBy('aspect');
+
         $tahfidzStats = TahfidzRecord::query()
             ->visibleTo($currentUser)
             ->whereIn('tahfidz_session_id', TahfidzSession::query()
@@ -166,6 +182,7 @@ class RaporController extends Controller
             'semester' => $validated['semester'],
             'nilais' => $nilais,
             'nilaiSikap' => $nilaiSikap,
+            'attitudeGrades' => $attitudeGrades,
             'tahfidzStats' => $tahfidzStats,
             'totalPoinPelanggaran' => $totalPoinPelanggaran,
             'rataRataKelas' => $rataRataKelas,
