@@ -81,6 +81,45 @@
                 </div>
             </div>
         </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-uppercase text-secondary small">Pelanggaran (Bulan Ini)</div>
+                        <div class="fs-2 fw-bold">{{ number_format($stats['total_pelanggaran_bulan_ini']) }}</div>
+                    </div>
+                    <span class="avatar bg-danger-lt text-danger">
+                        <i class="ti ti-alert-triangle"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-uppercase text-secondary small">Total Poin (Bulan Ini)</div>
+                        <div class="fs-2 fw-bold">{{ number_format($stats['total_poin_bulan_ini']) }}</div>
+                    </div>
+                    <span class="avatar bg-pink-lt text-pink">
+                        <i class="ti ti-gavel"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-body">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="text-uppercase text-secondary small">Santri Tercatat</div>
+                        <div class="fs-2 fw-bold">{{ number_format($stats['santri_tercatat_bulan_ini']) }}</div>
+                    </div>
+                    <span class="avatar bg-yellow-lt text-yellow">
+                        <i class="ti ti-users"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row row-cards mb-3">
@@ -248,8 +287,138 @@
                 <div class="card-header">
                     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2 w-100">
                         <div>
+                            <h3 class="card-title">Pelanggaran Bulan Ini</h3>
+                            <div class="text-secondary small mt-2">Pelanggaran santri binaan periode {{ $today->translatedFormat('F Y') }}.</div>
+                        </div>
+                        <a href="{{ route('pelanggaran.create') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="ti ti-plus me-1"></i>
+                            Catat Pelanggaran
+                        </a>
+                    </div>
+                </div>
+                @if ($grafikKategori->isNotEmpty())
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="kategori-chart"></canvas>
+                        </div>
+                    </div>
+                @else
+                    <div class="card-body">
+                        <div class="text-secondary text-center py-3">Belum ada data pelanggaran bulan ini.</div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Santri Perlu Perhatian</h3>
+                        <div class="text-secondary small mt-2">Poin pelanggaran tertinggi santri binaan.</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>Santri</th>
+                                <th>Total Poin</th>
+                                <th>Pelanggaran</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($santriPelanggaranTertinggi as $item)
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ $item->santri?->full_name ?? '-' }}</div>
+                                        <div class="text-secondary small">NIS {{ $item->santri?->nis ?? '-' }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $item->total_poin >= 50 ? 'bg-danger-lt text-danger' : ($item->total_poin >= 20 ? 'bg-warning-lt text-warning' : 'bg-secondary-lt text-secondary') }}">
+                                            {{ number_format($item->total_poin) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ number_format($item->total_kali) }}x</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="3" class="text-secondary">Belum ada data.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cards mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2 w-100">
+                        <div>
+                            <h3 class="card-title">Santri Binaan &mdash; Akumulasi Poin Pelanggaran</h3>
+                            <div class="text-secondary small mt-2">
+                                {{ number_format($stats['santri_binaan']) }} santri binaan
+                                @if ($santriBinaanWithPoin->isNotEmpty())
+                                    &middot; Total poin: {{ number_format($santriBinaanWithPoin->sum('total_poin')) }}
+                                @endif
+                            </div>
+                        </div>
+                        <a href="{{ route('pelanggaran.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="ti ti-list me-1"></i> Lihat Semua Pelanggaran
+                        </a>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>Santri</th>
+                                <th>NIS</th>
+                                <th>Kamar</th>
+                                <th>Total Setoran</th>
+                                <th>Total Pelanggaran</th>
+                                <th>Total Poin</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($santriBinaanWithPoin as $santri)
+                                @php
+                                    $poin = $santri->total_poin;
+                                    $statusBadge = $poin >= 50 ? 'bg-danger-lt text-danger' : ($poin >= 20 ? 'bg-warning-lt text-warning' : 'bg-success-lt text-success');
+                                    $statusLabel = $poin >= 50 ? 'Kritis' : ($poin >= 20 ? 'Perhatian' : 'Baik');
+                                @endphp
+                                <tr>
+                                    <td class="fw-semibold">{{ $santri->full_name }}</td>
+                                    <td class="text-secondary">{{ $santri->nis }}</td>
+                                    <td>{{ $santri->displayRoomName() }}</td>
+                                    <td>{{ number_format($santri->total_setoran) }}x</td>
+                                    <td>{{ number_format($santri->total_pelanggaran) }}x</td>
+                                    <td>
+                                        <span class="badge {{ $statusBadge }}">{{ number_format($poin) }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $statusBadge }}">{{ $statusLabel }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="7" class="text-secondary">Belum ada santri binaan.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cards mb-3">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-2 w-100">
+                        <div>
                             <h3 class="card-title">Pelanggaran Terbaru</h3>
-                            <div class="text-secondary small mt-2">5 pelanggaran terbaru yang dicatat.</div>
+                            <div class="text-secondary small mt-2">10 pelanggaran terbaru santri binaan.</div>
                         </div>
                         <a href="{{ route('pelanggaran.index') }}" class="btn btn-outline-secondary btn-sm">
                             <i class="ti ti-list me-1"></i>
@@ -266,13 +435,16 @@
                                     <div class="text-secondary small">
                                         <span class="badge bg-danger-lt text-danger">{{ $item->kategori?->nama ?? '-' }}</span>
                                         <span class="ms-2">{{ $item->tanggal?->translatedFormat('d M Y') ?? '-' }}</span>
+                                        @if ($item->keterangan)
+                                            <span class="ms-2" title="{{ $item->keterangan }}">&mdash; {{ Str::limit($item->keterangan, 40) }}</span>
+                                        @endif
                                     </div>
                                 </div>
                                 <span class="badge bg-danger-lt text-danger fs-5">{{ number_format($item->poin) }}</span>
                             </div>
                         </div>
                     @empty
-                        <div class="list-group-item text-secondary">Belum ada pelanggaran yang dicatat.</div>
+                        <div class="list-group-item text-secondary">Belum ada pelanggaran yang dicatat untuk santri binaan.</div>
                     @endforelse
                 </div>
             </div>
@@ -401,3 +573,43 @@
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var canvas = document.getElementById('kategori-chart');
+        if (!canvas) return;
+
+        var labels = @json($grafikKategori->pluck('kategori.nama'));
+        var data = @json($grafikKategori->pluck('total'));
+        var colors = ['#d63939', '#f59f00', '#17a2b8', '#6f42c1', '#e83e8c', '#20c997', '#fd7e14', '#6610f2', '#dc3545', '#198754'];
+
+        new Chart(canvas, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 10,
+                            padding: 12,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+@endpush

@@ -59,11 +59,65 @@ class MusyrifDashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $santriBinaanIds = (clone $tahfidzQuery)
+            ->distinct('santri_id')
+            ->pluck('santri_id');
+
+        $santriBinaanCount = $santriBinaanIds->count();
+
+        $pelanggaranBulanIniQuery = Pelanggaran::query()
+            ->visibleTo($currentUser)
+            ->whereIn('santri_id', $santriBinaanIds)
+            ->whereMonth('tanggal', $today->month)
+            ->whereYear('tanggal', $today->year);
+
+        $totalPelanggaranBulanIni = (clone $pelanggaranBulanIniQuery)->count();
+        $totalPoinBulanIni = (clone $pelanggaranBulanIniQuery)->sum('poin');
+        $santriTercatatBulanIni = (clone $pelanggaranBulanIniQuery)->distinct('santri_id')->count('santri_id');
+
+        $santriPelanggaranTertinggi = Pelanggaran::query()
+            ->visibleTo($currentUser)
+            ->whereIn('santri_id', $santriBinaanIds)
+            ->select('santri_id', DB::raw('SUM(poin) as total_poin'), DB::raw('COUNT(*) as total_kali'))
+            ->groupBy('santri_id')
+            ->with('santri')
+            ->orderByDesc('total_poin')
+            ->limit(10)
+            ->get();
+
+        $grafikKategori = Pelanggaran::query()
+            ->visibleTo($currentUser)
+            ->whereIn('santri_id', $santriBinaanIds)
+            ->select('kategori_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('kategori_id')
+            ->with('kategori')
+            ->get();
+
+        $santriBinaanWithPoin = Santri::query()
+            ->visibleTo($currentUser)
+            ->whereIn('id', $santriBinaanIds)
+            ->withCount(['tahfidzSessions as total_setoran' => fn ($q) => $q->where('musyrif_id', $currentUser->id)])
+            ->orderBy('full_name')
+            ->get()
+            ->each(function ($santri) use ($currentUser) {
+                $santri->total_poin = (int) Pelanggaran::query()
+                    ->visibleTo($currentUser)
+                    ->where('santri_id', $santri->id)
+                    ->sum('poin');
+                $santri->total_pelanggaran = Pelanggaran::query()
+                    ->visibleTo($currentUser)
+                    ->where('santri_id', $santri->id)
+                    ->count();
+            })
+            ->sortByDesc('total_poin')
+            ->values();
+
         $recentPelanggaran = Pelanggaran::query()
             ->visibleTo($currentUser)
+            ->whereIn('santri_id', $santriBinaanIds)
             ->with(['santri', 'kategori'])
             ->orderBy('created_at', 'desc')
-            ->limit(5)
+            ->limit(10)
             ->get();
 
         $activeActivities = AttendanceActivity::query()
@@ -102,7 +156,10 @@ class MusyrifDashboardController extends Controller
                 'tahfidz_sessions' => $totalTahfidzSessions,
                 'tahfidz_today' => $tahfidzSessionsToday,
                 'santri_with_tahfidz' => $santriWithTahfidz,
-                'total_pelanggaran' => Pelanggaran::query()->visibleTo($currentUser)->count(),
+                'santri_binaan' => $santriBinaanCount,
+                'total_pelanggaran_bulan_ini' => $totalPelanggaranBulanIni,
+                'total_poin_bulan_ini' => $totalPoinBulanIni,
+                'santri_tercatat_bulan_ini' => $santriTercatatBulanIni,
             ],
             'statusSummary' => collect(AttendanceRecord::statusOptions())->map(fn (array $opt): array => [
                 'value' => $opt['value'],
@@ -112,6 +169,9 @@ class MusyrifDashboardController extends Controller
             'todaySessions' => $todaySessions,
             'recentTahfidz' => $recentTahfidz,
             'recentPelanggaran' => $recentPelanggaran,
+            'santriPelanggaranTertinggi' => $santriPelanggaranTertinggi,
+            'grafikKategori' => $grafikKategori,
+            'santriBinaanWithPoin' => $santriBinaanWithPoin,
             'todayActivities' => $todayActivities,
             'activeActivities' => $activeActivities,
             'todaySchedules' => $todaySchedules,
