@@ -200,6 +200,8 @@ class RaporController extends Controller
 
         $validated = $request->validate([
             'santri_id' => ['required', 'exists:santris,id'],
+            'mata_pelajaran_id' => ['nullable', 'array'],
+            'mata_pelajaran_id.*' => ['exists:mata_pelajarans,id'],
         ]);
 
         $santri = Santri::query()
@@ -218,19 +220,32 @@ class RaporController extends Controller
         $mapels = MataPelajaran::query()
             ->visibleTo($currentUser)
             ->active()
+            ->when(! empty($validated['mata_pelajaran_id']), fn ($q) => $q->whereIn('id', $validated['mata_pelajaran_id']))
             ->orderBy('nama')
             ->pluck('nama', 'id');
+
+        $classAverages = NilaiSantri::query()
+            ->visibleTo($currentUser)
+            ->whereIn('mata_pelajaran_id', $mapels->keys())
+            ->selectRaw('mata_pelajaran_id, semester, COALESCE(ROUND(AVG((nilai_pengetahuan + nilai_keterampilan) / 2)), 0) as avg')
+            ->groupBy('mata_pelajaran_id', 'semester')
+            ->get()
+            ->groupBy('mata_pelajaran_id');
 
         $series = [];
         foreach ($mapels as $id => $nama) {
             $data = [];
+            $rataKelas = [];
+            $classAvgMap = $classAverages->get($id, collect())->keyBy('semester');
             foreach ($semesters as $semester) {
                 $nilai = $nilais[$semester]->firstWhere('mata_pelajaran_id', $id);
                 $data[] = $nilai?->nilai_akhir ?? null;
+                $rataKelas[] = (int) ($classAvgMap->get($semester)?->avg ?? 0);
             }
             $series[] = [
                 'name' => $nama,
                 'data' => $data,
+                'rata_rata_kelas' => $rataKelas,
             ];
         }
 

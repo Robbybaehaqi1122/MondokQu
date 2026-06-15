@@ -141,7 +141,25 @@
             </div>
         </div>
 
-        <div class="col-lg-6">
+        <div class="col-12">
+            <ul class="nav nav-tabs nav-fill" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-identitas-btn" data-bs-toggle="tab" data-bs-target="#tab-identitas" type="button" role="tab">
+                        <i class="ti ti-user me-2"></i>Identitas &amp; Data
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-nilai-btn" data-bs-toggle="tab" data-bs-target="#tab-nilai" type="button" role="tab">
+                        <i class="ti ti-chart-line me-2"></i>Perkembangan Nilai
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-3">
+                <div class="tab-pane active" id="tab-identitas" role="tabpanel">
+                    <div class="row row-cards">
+
+                        <div class="col-lg-6">
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Identitas Santri</h3>
@@ -473,6 +491,15 @@
                             </div>
                         @endif
                     @endif
+                </div>
+            </div>
+        </div>
+
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="tab-nilai" role="tabpanel">
+                    @include('santri.partials.perkembangan-nilai')
                 </div>
             </div>
         </div>

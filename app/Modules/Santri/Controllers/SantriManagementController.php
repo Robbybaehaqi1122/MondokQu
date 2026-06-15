@@ -13,6 +13,7 @@ use App\Jobs\ProcessSantriImportJob;
 use App\Models\ActivityLog;
 use App\Models\DataExport;
 use App\Models\DataImport;
+use App\Models\MataPelajaran;
 use App\Models\Room;
 use App\Models\Santri;
 use App\Models\SantriDocument;
@@ -154,11 +155,18 @@ class SantriManagementController extends Controller
             ->latest()
             ->paginate(30);
 
+        $mapels = MataPelajaran::query()
+            ->visibleTo($currentUser)
+            ->active()
+            ->orderBy('nama')
+            ->get(['id', 'nama']);
+
         return view('santri.show', [
             'canDeleteSantri' => $currentUser?->can('delete', $santri) ?? false,
             'canUpdateSantri' => $currentUser?->can('update', $santri) ?? false,
             'santri' => $santri,
             'activities' => $activities,
+            'mapels' => $mapels,
         ]);
     }
 
