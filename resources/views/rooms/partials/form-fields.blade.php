@@ -15,6 +15,21 @@
     </div>
 
     <div class="col-md-3">
+        <label for="{{ $formPrefix }}_grade_level_id" class="form-label">Tingkat / Kelas</label>
+        <select id="{{ $formPrefix }}_grade_level_id" name="grade_level_id" class="form-select @if($errorBag->has('grade_level_id')) is-invalid @endif">
+            <option value="">-- Tanpa Tingkat --</option>
+            @foreach ($gradeLevels as $gl)
+                <option value="{{ $gl->id }}" @selected(old('grade_level_id', $room?->grade_level_id) == $gl->id)>
+                    {{ $gl->name }}
+                </option>
+            @endforeach
+        </select>
+        @if ($errorBag->has('grade_level_id'))
+            <div class="invalid-feedback">{{ $errorBag->first('grade_level_id') }}</div>
+        @endif
+    </div>
+
+    <div class="col-md-3">
         <label for="{{ $formPrefix }}_capacity" class="form-label">Kapasitas</label>
         <input
             id="{{ $formPrefix }}_capacity"

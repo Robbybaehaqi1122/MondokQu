@@ -31,8 +31,25 @@ class MataPelajaran extends Model
         return $this->hasMany(NilaiSantri::class, 'mata_pelajaran_id');
     }
 
+    public function gradeLevels()
+    {
+        return $this->belongsToMany(GradeLevel::class, 'subject_grade_level')
+            ->withPivot(['kkm', 'is_active', 'order'])
+            ->withTimestamps();
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeForGradeLevel($query, GradeLevel|int $gradeLevel)
+    {
+        $gradeLevelId = $gradeLevel instanceof GradeLevel ? $gradeLevel->id : $gradeLevel;
+
+        return $query->whereHas('gradeLevels', function ($q) use ($gradeLevelId) {
+            $q->where('grade_level_id', $gradeLevelId)
+                ->where('is_active', true);
+        });
     }
 }

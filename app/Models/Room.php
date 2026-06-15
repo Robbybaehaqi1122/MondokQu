@@ -26,6 +26,7 @@ class Room extends Model
     protected $fillable = [
         'tenant_id',
         'name',
+        'grade_level_id',
         'capacity',
         'status',
         'description',
@@ -63,6 +64,11 @@ class Room extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function gradeLevel(): BelongsTo
+    {
+        return $this->belongsTo(GradeLevel::class);
     }
 
     /**

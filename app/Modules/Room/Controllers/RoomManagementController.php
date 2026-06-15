@@ -3,6 +3,7 @@
 namespace App\Modules\Room\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\GradeLevel;
 use App\Models\Room;
 use App\Models\RoomTransfer;
 use App\Models\Santri;
@@ -73,6 +74,10 @@ class RoomManagementController extends Controller
                 ->orderBy('full_name')
                 ->limit(500)
                 ->get(),
+            'gradeLevels' => GradeLevel::query()
+                ->visibleTo($currentUser)
+                ->ordered()
+                ->get(),
         ]);
     }
 
@@ -86,15 +91,18 @@ class RoomManagementController extends Controller
         $validated = $request->validated();
         $currentUser = $request->user();
 
-        if (! $currentUser->tenant_id) {
+        $tenantId = $currentUser->effectiveTenantId();
+
+        if (! $tenantId) {
             return redirect()
                 ->route('rooms.index')
                 ->with('error', 'Akun superadmin harus terhubung ke tenant pondok untuk membuat kamar.');
         }
 
         $room = Room::query()->create([
-            'tenant_id' => $currentUser->tenant_id,
+            'tenant_id' => $tenantId,
             'name' => $validated['name'],
+            'grade_level_id' => $validated['grade_level_id'] ?? null,
             'capacity' => $validated['capacity'] ?? null,
             'status' => $validated['status'],
             'description' => $validated['description'] ?? null,
@@ -143,10 +151,11 @@ class RoomManagementController extends Controller
                 throw $exception;
             }
 
-            $previousValues = $room->only(['name', 'capacity', 'status', 'description']);
+            $previousValues = $room->only(['name', 'capacity', 'status', 'description', 'grade_level_id']);
 
             $room->update([
                 'name' => $validated['name'],
+                'grade_level_id' => $validated['grade_level_id'] ?? null,
                 'capacity' => $validated['capacity'] ?? null,
                 'status' => $validated['status'],
                 'description' => $validated['description'] ?? null,
@@ -154,7 +163,7 @@ class RoomManagementController extends Controller
 
             $room->refresh();
 
-            return [$room, $previousValues, $room->only(['name', 'capacity', 'status', 'description'])];
+            return [$room, $previousValues, $room->only(['name', 'capacity', 'status', 'description', 'grade_level_id'])];
         });
 
         $this->activityLogger->log(

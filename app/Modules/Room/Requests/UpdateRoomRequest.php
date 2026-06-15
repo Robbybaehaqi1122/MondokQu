@@ -48,6 +48,7 @@ class UpdateRoomRequest extends FormRequest
             'capacity' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'status' => ['required', 'string', Rule::in(Room::availableStatuses())],
             'description' => ['nullable', 'string', 'max:2000'],
+            'grade_level_id' => ['nullable', 'exists:grade_levels,id'],
         ];
     }
 }

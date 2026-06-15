@@ -68,17 +68,19 @@ class NilaiSantriController extends Controller
     {
         $currentUser = $request->user();
 
-        $mapels = MataPelajaran::query()
-            ->visibleTo($currentUser)
-            ->active()
-            ->orderBy('nama')
-            ->get();
-
         $santris = Santri::query()
             ->visibleTo($currentUser)
             ->active()
-            ->select('id', 'full_name', 'nis')
+            ->with('room.gradeLevel')
+            ->select('id', 'full_name', 'nis', 'room_id')
             ->orderBy('full_name')
+            ->get();
+
+        $mapels = MataPelajaran::query()
+            ->visibleTo($currentUser)
+            ->active()
+            ->with('gradeLevels')
+            ->orderBy('nama')
             ->get();
 
         $semesters = $this->availableSemesters();
@@ -144,13 +146,15 @@ class NilaiSantriController extends Controller
         $mapels = MataPelajaran::query()
             ->visibleTo($currentUser)
             ->active()
+            ->with('gradeLevels')
             ->orderBy('nama')
             ->get();
 
         $santris = Santri::query()
             ->visibleTo($currentUser)
             ->active()
-            ->select('id', 'full_name', 'nis')
+            ->with('room.gradeLevel')
+            ->select('id', 'full_name', 'nis', 'room_id')
             ->orderBy('full_name')
             ->get();
 

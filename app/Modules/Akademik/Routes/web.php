@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Akademik\Controllers\AkademikDashboardController;
+use App\Modules\Akademik\Controllers\GradeLevelController;
 use App\Modules\Akademik\Controllers\MataPelajaranController;
 use App\Modules\Akademik\Controllers\NilaiSantriController;
 use App\Modules\Akademik\Controllers\RaporController;
@@ -12,10 +13,15 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     ->group(function () {
         Route::get('/dashboard', AkademikDashboardController::class)->name('dashboard');
 
+        Route::post('/grade-level', [GradeLevelController::class, 'store'])->name('grade-level.store');
+        Route::put('/grade-level/{gradeLevel}/toggle', [GradeLevelController::class, 'toggle'])->name('grade-level.toggle');
+        Route::delete('/grade-level/{gradeLevel}', [GradeLevelController::class, 'destroy'])->name('grade-level.destroy');
+
         Route::get('/mata-pelajaran', [MataPelajaranController::class, 'index'])->name('mata-pelajaran.index');
         Route::post('/mata-pelajaran', [MataPelajaranController::class, 'store'])->name('mata-pelajaran.store');
         Route::put('/mata-pelajaran/{mataPelajaran}', [MataPelajaranController::class, 'update'])->name('mata-pelajaran.update');
         Route::delete('/mata-pelajaran/{mataPelajaran}', [MataPelajaranController::class, 'destroy'])->name('mata-pelajaran.destroy');
+        Route::post('/mata-pelajaran/clone', [MataPelajaranController::class, 'clone'])->name('mata-pelajaran.clone');
 
         Route::get('/nilai', [NilaiSantriController::class, 'index'])->name('nilai.index');
         Route::get('/nilai/create', [NilaiSantriController::class, 'create'])->name('nilai.create');
