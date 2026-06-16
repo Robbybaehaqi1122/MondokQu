@@ -2,6 +2,7 @@
 
 use App\Modules\Admin\Controllers\ActivityLogController;
 use App\Modules\Admin\Controllers\AdminDashboardController;
+use App\Modules\Admin\Controllers\AuditLogController;
 use App\Modules\Admin\Controllers\PermissionManagementController;
 use App\Modules\Admin\Controllers\RoleManagementController;
 use App\Modules\Admin\Controllers\UserManagementController;
@@ -42,6 +43,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|view activity logs', 'throttle:60,1'])->group(function () {
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activity-logs');
     Route::get('/admin/activity-logs/export', [ActivityLogController::class, 'export'])->name('admin.activity-logs.export')->middleware('throttle:5,1');
+    Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin', 'password.confirm', 'throttle:10,1'])->group(function () {
