@@ -6,10 +6,11 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Communication extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, SoftDeletes;
 
     protected $table = 'communications';
 
@@ -23,6 +24,7 @@ class Communication extends Model
         'parent_id',
         'is_replied',
         'forwarded_from_id',
+        'archived_at',
     ];
 
     protected function casts(): array
@@ -30,7 +32,18 @@ class Communication extends Model
         return [
             'is_read' => 'boolean',
             'is_replied' => 'boolean',
+            'archived_at' => 'datetime',
         ];
+    }
+
+    public function scopeInbox($query): void
+    {
+        $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived($query): void
+    {
+        $query->whereNotNull('archived_at');
     }
 
     public function tenant(): BelongsTo

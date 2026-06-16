@@ -18,7 +18,12 @@
         <div class="card-body" style="max-height: 500px; overflow-y: auto;" id="messageThread">
             @forelse ($communications as $comm)
                 @if (!$comm->parent_id)
-                    <div class="mb-3">
+                    @php
+                        $isArchived = !is_null($comm->archived_at);
+                        $isDeleted = !is_null($comm->deleted_at);
+                        $msgOpacity = $isArchived ? 'opacity-50' : ($isDeleted ? 'opacity-40' : '');
+                    @endphp
+                    <div class="mb-3 {{ $msgOpacity }}">
                         <div class="d-flex {{ $comm->direction === 'incoming' ? 'justify-content-start' : 'justify-content-end' }}">
                             <div class="p-3 rounded-2 {{ $comm->direction === 'incoming' ? 'bg-info-lt text-info' : 'bg-primary-lt text-primary' }}" style="max-width: 75%;">
                                 <div class="fw-semibold small mb-1 d-flex align-items-center gap-2">
@@ -26,7 +31,12 @@
                                     @if ($comm->forwardedFrom)
                                         <span class="badge bg-warning-lt text-warning"><i class="ti ti-arrow-forward"></i> Forward</span>
                                     @endif
-                                    <span class="ms-auto small">
+                                    <span class="ms-auto small d-flex align-items-center gap-1">
+                                        @if ($isDeleted)
+                                            <span class="badge bg-danger-lt text-danger" title="Dihapus"><i class="ti ti-trash"></i> Dihapus</span>
+                                        @elseif ($isArchived)
+                                            <span class="badge bg-secondary-lt text-secondary" title="Diarsipkan"><i class="ti ti-archive"></i> Diarsipkan</span>
+                                        @endif
                                         @if ($comm->direction === 'outgoing' && $comm->is_read && $comm->is_replied)
                                             <span class="badge bg-green-lt text-green" title="Sudah dibalas"><i class="ti ti-message-reply"></i> Dibalas</span>
                                         @elseif ($comm->direction === 'outgoing' && $comm->is_read)
@@ -46,7 +56,7 @@
                                 <div class="small opacity-75 text-end d-flex align-items-center justify-content-between">
                                     <span>{{ $comm->created_at->translatedFormat('d M Y H:i') }}</span>
                                     <span class="d-flex gap-1">
-                                        @if ($comm->direction === 'incoming')
+                                        @if ($comm->direction === 'incoming' && !$isDeleted && !$isArchived)
                                             <a href="#" class="text-reset text-decoration-none reply-btn" data-message-id="{{ $comm->id }}" data-message="{{ Str::limit($comm->message, 50) }}">
                                                 <i class="ti ti-reply"></i>
                                             </a>
@@ -68,6 +78,27 @@
                                                     </form>
                                                 </div>
                                             </div>
+                                        @endif
+                                        @if (!$isDeleted)
+                                            <form method="POST" action="{{ route('komunikasi.archive', $comm) }}" class="d-inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit" class="btn btn-sm btn-link text-reset text-decoration-none p-0" title="{{ $isArchived ? 'Pindahkan ke Inbox' : 'Arsipkan' }}">
+                                                    <i class="ti ti-{{ $isArchived ? 'inbox' : 'archive' }}"></i>
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('komunikasi.destroy', $comm) }}" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus pesan ini?')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-link text-reset text-decoration-none p-0" title="Hapus">
+                                                    <i class="ti ti-trash"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form method="POST" action="{{ route('komunikasi.restore', $comm) }}" class="d-inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit" class="btn btn-sm btn-link text-reset text-decoration-none p-0" title="Kembalikan">
+                                                    <i class="ti ti-refresh"></i>
+                                                </button>
+                                            </form>
                                         @endif
                                     </span>
                                 </div>

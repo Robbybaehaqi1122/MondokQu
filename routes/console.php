@@ -65,3 +65,8 @@ Schedule::command('backup:tenant --all')
 Schedule::call(function () {
     Backup::pruneOlderThan(config('backups.retention_days', 30));
 })->name('backups:prune')->dailyAt('03:00')->withoutOverlapping();
+
+Schedule::command('komunikasi:purge-trash')
+    ->dailyAt('04:00')
+    ->withoutOverlapping()
+    ->onOneServer();

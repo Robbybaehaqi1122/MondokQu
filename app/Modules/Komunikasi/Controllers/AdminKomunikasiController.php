@@ -23,6 +23,7 @@ class AdminKomunikasiController extends Controller
     {
         $currentUser = $request->user();
 
+        $tab = trim((string) $request->string('tab', 'inbox'));
         $search = trim((string) $request->string('q'));
         $messageSearch = trim((string) $request->string('pesan'));
         $status = trim((string) $request->string('status'));
@@ -34,6 +35,8 @@ class AdminKomunikasiController extends Controller
 
         $commQuery = Communication::query()
             ->visibleTo($currentUser)
+            ->when($tab === 'inbox', fn ($q) => $q->inbox())
+            ->when($tab === 'archived', fn ($q) => $q->archived())
             ->when($messageSearch !== '', fn ($q) => $q->where('message', 'like', "%{$messageSearch}%"))
             ->when($direction !== '', fn ($q) => $q->where('direction', $direction))
             ->when($dateFrom !== '', fn ($q) => $q->whereDate('created_at', '>=', $dateFrom))
@@ -54,10 +57,10 @@ class AdminKomunikasiController extends Controller
                 });
             })
             ->when($status === 'unread', function ($query) {
-                $query->whereHas('communications', fn ($q) => $q->where('direction', 'outgoing')->where('is_read', false));
+                $query->whereHas('communications', fn ($q) => $q->where('direction', 'outgoing')->where('is_read', false)->inbox());
             })
             ->when($status === 'replied', function ($query) {
-                $query->whereHas('communications', fn ($q) => $q->where('is_replied', true));
+                $query->whereHas('communications', fn ($q) => $q->where('is_replied', true)->inbox());
             })
             ->orderBy(function ($query) {
                 $query->select('created_at')
@@ -74,6 +77,8 @@ class AdminKomunikasiController extends Controller
             $latest = Communication::query()
                 ->visibleTo($currentUser)
                 ->where('santri_id', $santri->id)
+                ->when($tab === 'inbox', fn ($q) => $q->inbox())
+                ->when($tab === 'archived', fn ($q) => $q->archived())
                 ->latest()
                 ->first();
             if ($latest) {
@@ -88,6 +93,7 @@ class AdminKomunikasiController extends Controller
                 ->where('santri_id', $santri->id)
                 ->where('direction', 'outgoing')
                 ->where('is_read', false)
+                ->inbox()
                 ->count();
             if ($count > 0) {
                 $unreadCounts->put($santri->id, $count);
@@ -102,6 +108,7 @@ class AdminKomunikasiController extends Controller
             ->get(['id', 'name']);
 
         return view('modules.komunikasi.index', [
+            'tab' => $tab,
             'santris' => $santris,
             'latestMessages' => $latestMessages,
             'unreadCounts' => $unreadCounts,
@@ -119,6 +126,27 @@ class AdminKomunikasiController extends Controller
         ]);
     }
 
+    public function trash(Request $request): View
+    {
+        $currentUser = $request->user();
+
+        $search = trim((string) $request->string('q'));
+
+        $communications = Communication::query()
+            ->visibleTo($currentUser)
+            ->onlyTrashed()
+            ->with(['santri', 'user'])
+            ->when($search !== '', fn ($q) => $q->where('message', 'like', "%{$search}%"))
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('modules.komunikasi.trash', [
+            'communications' => $communications,
+            'filters' => ['q' => $search],
+        ]);
+    }
+
     public function show(Request $request, Santri $santri): View
     {
         $currentUser = $request->user();
@@ -131,6 +159,7 @@ class AdminKomunikasiController extends Controller
             ->visibleTo($currentUser)
             ->where('santri_id', $santri->id)
             ->with(['user', 'parent', 'replies.user', 'forwardedFrom'])
+            ->withTrashed()
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -145,6 +174,143 @@ class AdminKomunikasiController extends Controller
             'communications' => $communications,
             'santriList' => $santriList,
         ]);
+    }
+
+    public function archive(Request $request, Communication $communication): RedirectResponse
+    {
+        $currentUser = $request->user();
+
+        $communication = Communication::query()
+            ->visibleTo($currentUser)
+            ->findOrFail($communication->id);
+
+        $communication->update(['archived_at' => now()]);
+
+        $this->activityLogger->log(
+            action: 'komunikasi_archived',
+            actor: $currentUser,
+            target: $communication,
+            description: "Mengarsipkan pesan dari {$communication->santri?->full_name}.",
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return redirect()->back()->with('success', 'Pesan berhasil diarsipkan.');
+    }
+
+    public function restore(Request $request, Communication $communication): RedirectResponse
+    {
+        $currentUser = $request->user();
+
+        $communication = Communication::query()
+            ->visibleTo($currentUser)
+            ->withTrashed()
+            ->findOrFail($communication->id);
+
+        $communication->restore();
+
+        $this->activityLogger->log(
+            action: 'komunikasi_restored',
+            actor: $currentUser,
+            target: $communication,
+            description: "Mengembalikan pesan dari {$communication->santri?->full_name}.",
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return redirect()->back()->with('success', 'Pesan berhasil dikembalikan.');
+    }
+
+    public function forceDelete(Request $request, Communication $communication): RedirectResponse
+    {
+        $currentUser = $request->user();
+
+        $communication = Communication::query()
+            ->visibleTo($currentUser)
+            ->withTrashed()
+            ->findOrFail($communication->id);
+
+        $santriName = $communication->santri?->full_name;
+        $communication->forceDelete();
+
+        $this->activityLogger->log(
+            action: 'komunikasi_force_deleted',
+            actor: $currentUser,
+            target: $communication,
+            description: "Menghapus permanen pesan dari {$santriName}.",
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return redirect()->back()->with('success', 'Pesan berhasil dihapus permanen.');
+    }
+
+    public function destroy(Request $request, Communication $communication): RedirectResponse
+    {
+        $currentUser = $request->user();
+
+        $communication = Communication::query()
+            ->visibleTo($currentUser)
+            ->findOrFail($communication->id);
+
+        $communication->delete();
+
+        $this->activityLogger->log(
+            action: 'komunikasi_deleted',
+            actor: $currentUser,
+            target: $communication,
+            description: "Menghapus pesan dari {$communication->santri?->full_name}.",
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return redirect()->back()->with('success', 'Pesan berhasil dipindahkan ke sampah.');
+    }
+
+    public function batch(Request $request): RedirectResponse
+    {
+        $currentUser = $request->user();
+
+        $validated = $request->validate([
+            'action' => ['required', 'string', 'in:archive,restore,delete,mark_read'],
+            'ids' => ['required', 'array'],
+            'ids.*' => ['exists:santris,id'],
+        ]);
+
+        $action = $validated['action'];
+
+        $communicationQuery = Communication::query()
+            ->visibleTo($currentUser)
+            ->whereIn('santri_id', $validated['ids']);
+
+        $affected = match ($action) {
+            'archive' => (clone $communicationQuery)->inbox()->update(['archived_at' => now()]),
+            'delete' => (clone $communicationQuery)->inbox()->delete(),
+            'restore' => (clone $communicationQuery)->onlyTrashed()->restore(),
+            'mark_read' => (clone $communicationQuery)
+                ->where('direction', 'outgoing')
+                ->where('is_read', false)
+                ->update(['is_read' => true]),
+        };
+
+        $this->activityLogger->log(
+            action: 'komunikasi_batch_'.$action,
+            actor: $currentUser,
+            target: null,
+            description: "Batch {$action} untuk {$affected} pesan dari ".count($validated['ids']).' santri.',
+            properties: ['action' => $action, 'affected' => $affected, 'santri_ids' => $validated['ids']],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        $messages = [
+            'archive' => count($validated['ids']).' percakapan berhasil diarsipkan.',
+            'restore' => count($validated['ids']).' percakapan berhasil dikembalikan.',
+            'delete' => count($validated['ids']).' percakapan berhasil dipindahkan ke sampah.',
+            'mark_read' => count($validated['ids']).' percakapan berhasil ditandai terbaca.',
+        ];
+
+        return redirect()->back()->with('success', $messages[$action]);
     }
 
     public function store(Request $request, Santri $santri): RedirectResponse
