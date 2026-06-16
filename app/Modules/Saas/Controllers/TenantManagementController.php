@@ -199,6 +199,7 @@ class TenantManagementController extends Controller
                 'max_storage_mb' => config('saas.limits.max_storage_mb', 1024),
             ],
             'categories' => ['Pesantren', 'Madrasah', 'Tahfidz'],
+            'defaultActiveModules' => ['santri', 'absensi', 'tahfidz', 'akademik', 'pelanggaran', 'komunikasi', 'kesehatan'],
         ]);
     }
 

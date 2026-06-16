@@ -344,7 +344,7 @@
                                         name="active_modules[]"
                                         value="{{ $module['key'] }}"
                                         class="form-check-input"
-                                        @checked(in_array($module['key'], old('active_modules', ['santri', 'absensi', 'tahfidz', 'akademik', 'pelanggaran', 'komunikasi', 'kesehatan'])))
+                                        @checked(in_array($module['key'], old('active_modules', $defaultActiveModules)))
                                         x-model="form.active_modules"
                                     >
                                     <div>
@@ -510,13 +510,13 @@
                     owner_phone_number: '{{ old('owner_phone_number', '') }}',
                     owner_password: '',
                     owner_password_confirmation: '',
-                    active_modules: @json(old('active_modules', ['santri', 'absensi', 'tahfidz', 'akademik', 'pelanggaran', 'komunikasi', 'kesehatan'])),
+                    active_modules: @js(old('active_modules', $defaultActiveModules)),
                 },
                 logoPreview: null,
 
                 init() {
                     @if ($errors->any())
-                        const stepErrors = @json($errors->keys());
+                        const stepErrors = @js($errors->keys());
                         if (stepErrors.some(e => ['name', 'slug', 'category', 'contact_email', 'contact_phone_number', 'address', 'logo', 'max_users', 'max_santri', 'max_storage_mb'].includes(e))) {
                             this.currentStep = 0;
                         } else if (stepErrors.some(e => e.startsWith('owner_'))) {
