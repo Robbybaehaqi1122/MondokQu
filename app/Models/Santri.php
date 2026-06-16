@@ -185,6 +185,16 @@ class Santri extends Model
         return $this->hasMany(AttitudeGrade::class);
     }
 
+    public function pelanggarans(): HasMany
+    {
+        return $this->hasMany(Pelanggaran::class);
+    }
+
+    public function sanctionLogs(): HasMany
+    {
+        return $this->hasMany(SanctionLog::class);
+    }
+
     /**
      * Get leave requests for this santri.
      */
@@ -354,6 +364,37 @@ class Santri extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(SantriDocument::class);
+    }
+
+    public function totalPoin(): int
+    {
+        return (int) $this->pelanggarans()->sum('poin');
+    }
+
+    public function currentSanctionThreshold(): ?SanctionThreshold
+    {
+        $total = $this->totalPoin();
+
+        return SanctionThreshold::query()
+            ->where('tenant_id', $this->tenant_id)
+            ->where('min_points', '<=', $total)
+            ->where(function ($q) use ($total) {
+                $q->where('max_points', '>=', $total)
+                    ->orWhereNull('max_points');
+            })
+            ->orderBy('min_points', 'desc')
+            ->first();
+    }
+
+    public function nextSanctionThreshold(): ?SanctionThreshold
+    {
+        $total = $this->totalPoin();
+
+        return SanctionThreshold::query()
+            ->where('tenant_id', $this->tenant_id)
+            ->where('min_points', '>', $total)
+            ->orderBy('min_points')
+            ->first();
     }
 
     public function isDocumentComplete(): bool

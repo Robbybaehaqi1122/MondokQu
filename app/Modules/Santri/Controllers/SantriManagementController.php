@@ -161,12 +161,19 @@ class SantriManagementController extends Controller
             ->orderBy('nama')
             ->get(['id', 'nama']);
 
+        $totalPoin = $santri->totalPoin();
+        $currentThreshold = $santri->currentSanctionThreshold();
+        $nextThreshold = $santri->nextSanctionThreshold();
+
         return view('santri.show', [
             'canDeleteSantri' => $currentUser?->can('delete', $santri) ?? false,
             'canUpdateSantri' => $currentUser?->can('update', $santri) ?? false,
             'santri' => $santri,
             'activities' => $activities,
             'mapels' => $mapels,
+            'totalPoin' => $totalPoin,
+            'currentThreshold' => $currentThreshold,
+            'nextThreshold' => $nextThreshold,
         ]);
     }
 

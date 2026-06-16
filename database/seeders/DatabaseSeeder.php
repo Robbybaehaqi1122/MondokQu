@@ -70,5 +70,6 @@ class DatabaseSeeder extends Seeder
         ])->save();
 
         $this->call(PelanggaranKategoriSeeder::class);
+        $this->call(SanctionThresholdSeeder::class);
     }
 }

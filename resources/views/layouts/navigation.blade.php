@@ -289,8 +289,12 @@
                                 <span>Catatan Pelanggaran</span>
                             </a>
                             <a class="sidebar-sublink {{ request()->routeIs('pelanggaran.kategori.*') ? 'active' : '' }}" href="{{ route('pelanggaran.kategori.index') }}">
-                                <span class="sidebar-link-icon"><i class="ti ti-tags"></i></span>
+                                <span class="sidebar-link-icon"><i class="ti ti-list-details"></i></span>
                                 <span>Kategori & Poin</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('pelanggaran.sanction-thresholds.*') ? 'active' : '' }}" href="{{ route('pelanggaran.sanction-thresholds.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-gavel"></i></span>
+                                <span>Tingkat Sanksi</span>
                             </a>
                             <a class="sidebar-sublink {{ request()->routeIs('pelanggaran.laporan.*') ? 'active' : '' }}" href="{{ route('pelanggaran.laporan.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>

@@ -125,6 +125,39 @@
                                     </div>
                                 </div>
 
+                                <div class="user-detail-action-block mt-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="text-uppercase small fw-bold text-secondary">Poin Pelanggaran</span>
+                                        <span class="fw-bold {{ $totalPoin >= 50 ? 'text-danger' : ($totalPoin >= 20 ? 'text-warning' : 'text-success') }}">
+                                            {{ number_format($totalPoin) }}
+                                        </span>
+                                    </div>
+                                    @if ($nextThreshold)
+                                        @php
+                                            $prevMin = $currentThreshold?->min_points ?? 0;
+                                            $range = $nextThreshold->min_points - $prevMin;
+                                            $progress = $range > 0 ? min(100, (($totalPoin - $prevMin) / $range) * 100) : 0;
+                                            $barClass = $totalPoin >= 50 ? 'bg-danger' : ($totalPoin >= 20 ? 'bg-warning' : 'bg-success');
+                                        @endphp
+                                        <div class="progress progress-xs mb-1">
+                                            <div class="progress-bar {{ $barClass }}" style="width: {{ $progress }}%"></div>
+                                        </div>
+                                        <div class="text-secondary small">
+                                            @php
+                                                $poinLagi = max(0, $nextThreshold->min_points - $totalPoin);
+                                            @endphp
+                                            {{ number_format($poinLagi) }} poin menuju {{ $nextThreshold->name }}
+                                        </div>
+                                    @elseif ($currentThreshold)
+                                        <div class="text-danger small fw-bold mt-1">
+                                            <i class="ti ti-alert-triangle me-1"></i>
+                                            {{ $currentThreshold->name }} ({{ $currentThreshold->typeLabel() }})
+                                        </div>
+                                    @else
+                                        <div class="text-secondary small mt-1">Belum ada pelanggaran</div>
+                                    @endif
+                                </div>
+
                                 <a href="{{ route('santri.index') }}" class="btn btn-outline-secondary">Kembali ke Daftar Santri</a>
 
                                 @if ($canDeleteSantri)
