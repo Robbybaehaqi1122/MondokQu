@@ -578,6 +578,64 @@
                             </div>
 
                             <div class="col-12">
+                                <div class="card bg-body-tertiary border-0">
+                                    <div class="card-body">
+                                        <div class="text-secondary text-uppercase small fw-bold mb-3">Kapasitas Tenant</div>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label for="max_users" class="form-label">Maks User</label>
+                                                <input
+                                                    id="max_users"
+                                                    name="max_users"
+                                                    type="number"
+                                                    min="1"
+                                                    class="form-control @if($errors->createTenant->has('max_users')) is-invalid @endif"
+                                                    value="{{ old('max_users', config('saas.limits.max_users', 50)) }}"
+                                                >
+                                                @if ($errors->createTenant->has('max_users'))
+                                                    <div class="invalid-feedback">{{ $errors->createTenant->first('max_users') }}</div>
+                                                @else
+                                                    <div class="form-hint mt-2">Jumlah maksimal akun user yang bisa dibuat.</div>
+                                                @endif
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="max_santri" class="form-label">Maks Santri</label>
+                                                <input
+                                                    id="max_santri"
+                                                    name="max_santri"
+                                                    type="number"
+                                                    min="1"
+                                                    class="form-control @if($errors->createTenant->has('max_santri')) is-invalid @endif"
+                                                    value="{{ old('max_santri', config('saas.limits.max_santri', 200)) }}"
+                                                >
+                                                @if ($errors->createTenant->has('max_santri'))
+                                                    <div class="invalid-feedback">{{ $errors->createTenant->first('max_santri') }}</div>
+                                                @else
+                                                    <div class="form-hint mt-2">Jumlah maksimal data santri yang bisa didaftarkan.</div>
+                                                @endif
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="max_storage_mb" class="form-label">Maks Storage (MB)</label>
+                                                <input
+                                                    id="max_storage_mb"
+                                                    name="max_storage_mb"
+                                                    type="number"
+                                                    min="1"
+                                                    class="form-control @if($errors->createTenant->has('max_storage_mb')) is-invalid @endif"
+                                                    value="{{ old('max_storage_mb', config('saas.limits.max_storage_mb', 1024)) }}"
+                                                >
+                                                @if ($errors->createTenant->has('max_storage_mb'))
+                                                    <div class="invalid-feedback">{{ $errors->createTenant->first('max_storage_mb') }}</div>
+                                                @else
+                                                    <div class="form-hint mt-2">Batas upload file (avatar, foto, dokumen).</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
                                 <label class="form-check">
                                     <input
                                         class="form-check-input"

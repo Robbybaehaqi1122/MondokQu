@@ -60,6 +60,29 @@
                             <div class="text-secondary small text-uppercase fw-bold">Subscription Ends At</div>
                             <div class="mt-1">{{ $tenant->subscription_ends_at?->translatedFormat('d M Y H:i') ?? '-' }}</div>
                         </div>
+                        <div class="col-12">
+                            <hr class="my-2">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Kapasitas Tenant</div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editCapacityModal">
+                                    <i class="ti ti-edit me-1"></i>Edit Kapasitas
+                                </button>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <div class="text-secondary small">Maks User</div>
+                                    <div class="fw-semibold">{{ $tenant->getMaxUsers() }}</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-secondary small">Maks Santri</div>
+                                    <div class="fw-semibold">{{ $tenant->getMaxSantri() }}</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-secondary small">Maks Storage</div>
+                                    <div class="fw-semibold">{{ $tenant->getMaxStorageMb() }} MB</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -157,5 +180,66 @@
             </div>
         </div>
 
+    </div>
+
+    <div class="modal modal-blur fade" id="editCapacityModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('saas.tenants.update-capacity', $tenant) }}">
+                    @csrf
+                    @method('PATCH')
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Kapasitas Tenant</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="max_users" class="form-label">Maks User</label>
+                                <input
+                                    id="max_users"
+                                    name="max_users"
+                                    type="number"
+                                    min="1"
+                                    class="form-control"
+                                    value="{{ $tenant->getMaxUsers() }}"
+                                >
+                                <div class="form-hint mt-2">Jumlah maksimal akun user.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="max_santri" class="form-label">Maks Santri</label>
+                                <input
+                                    id="max_santri"
+                                    name="max_santri"
+                                    type="number"
+                                    min="1"
+                                    class="form-control"
+                                    value="{{ $tenant->getMaxSantri() }}"
+                                >
+                                <div class="form-hint mt-2">Jumlah maksimal data santri.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="max_storage_mb" class="form-label">Maks Storage (MB)</label>
+                                <input
+                                    id="max_storage_mb"
+                                    name="max_storage_mb"
+                                    type="number"
+                                    min="1"
+                                    class="form-control"
+                                    value="{{ $tenant->getMaxStorageMb() }}"
+                                >
+                                <div class="form-hint mt-2">Batas upload file.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i>Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </x-app-layout>

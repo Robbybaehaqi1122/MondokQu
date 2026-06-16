@@ -107,6 +107,12 @@ class TenantManagementController extends Controller
                 ])->save();
             }
 
+            $tenant->setSettings([
+                'max_users' => (int) ($validated['max_users'] ?? config('saas.limits.max_users', 50)),
+                'max_santri' => (int) ($validated['max_santri'] ?? config('saas.limits.max_santri', 200)),
+                'max_storage_mb' => (int) ($validated['max_storage_mb'] ?? config('saas.limits.max_storage_mb', 1024)),
+            ])->save();
+
             return $tenant;
         });
 
@@ -241,6 +247,40 @@ class TenantManagementController extends Controller
 
         return back()
             ->with('success', $result['message']);
+    }
+
+    public function updateCapacity(Request $request, Tenant $tenant): RedirectResponse
+    {
+        abort_unless($request->user()?->isSuperAdmin(), 403);
+
+        $validated = $request->validate([
+            'max_users' => ['required', 'integer', 'min:1'],
+            'max_santri' => ['required', 'integer', 'min:1'],
+            'max_storage_mb' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $tenant->setSettings([
+            'max_users' => (int) $validated['max_users'],
+            'max_santri' => (int) $validated['max_santri'],
+            'max_storage_mb' => (int) $validated['max_storage_mb'],
+        ])->save();
+
+        $this->activityLogger->log(
+            action: 'tenant_capacity_updated',
+            actor: $request->user(),
+            target: $tenant,
+            description: 'Kapasitas tenant diperbarui.',
+            properties: [
+                'max_users' => $validated['max_users'],
+                'max_santri' => $validated['max_santri'],
+                'max_storage_mb' => $validated['max_storage_mb'],
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return back()
+            ->with('success', 'Kapasitas tenant berhasil diperbarui.');
     }
 
     /**

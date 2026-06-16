@@ -38,6 +38,9 @@ class StoreTenantRequest extends FormRequest
             'contact_email' => ['nullable', 'email', 'max:255'],
             'contact_phone_number' => ['nullable', 'string', 'max:30'],
             'create_owner_account' => ['nullable', 'boolean'],
+            'max_users' => ['nullable', 'integer', 'min:1'],
+            'max_santri' => ['nullable', 'integer', 'min:1'],
+            'max_storage_mb' => ['nullable', 'integer', 'min:1'],
             'owner_name' => ['nullable', 'string', 'max:255', 'required_if:create_owner_account,1'],
             'owner_username' => [
                 'nullable',

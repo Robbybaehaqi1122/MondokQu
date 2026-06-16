@@ -30,6 +30,8 @@ Route::middleware(['auth', 'password_change_required', 'verified', 'role:Superad
         ->middleware('throttle:10,1');
     Route::patch('/saas/tenants/{tenant}/subscription', [TenantManagementController::class, 'updateSubscription'])
         ->name('saas.tenants.update-subscription');
+    Route::patch('/saas/tenants/{tenant}/capacity', [TenantManagementController::class, 'updateCapacity'])
+        ->name('saas.tenants.update-capacity');
     Route::delete('/saas/tenants/{tenant}', [TenantManagementController::class, 'destroy'])
         ->name('saas.tenants.destroy');
 });
