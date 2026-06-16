@@ -238,6 +238,27 @@
             </div>
         </div>
 
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
+                    <i class="ti ti-user me-1"></i>Profil &amp; Role
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions" type="button" role="tab">
+                    <i class="ti ti-shield me-1"></i>Permission
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button" role="tab">
+                    <i class="ti ti-activity me-1"></i>Aktivitas
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="profile" role="tabpanel">
+
         <div class="col-lg-5">
             <div class="card h-100">
                 <div class="card-header">
@@ -432,7 +453,109 @@
             </div>
         @endif
 
-        <div class="col-12">
+        </div>
+
+        <div class="tab-pane fade" id="permissions" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Manajemen Permission</h3>
+                        <div class="text-secondary small mt-1">Permission yang dimiliki user melalui role (inherited) vs diberikan langsung (direct).</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @php
+                        $inheritedPermissions = $userDetail->getPermissionsViaRoles();
+                        $directPerms = $userDetail->getDirectPermissions();
+                    @endphp
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card card-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="avatar bg-info-lt text-info"><i class="ti ti-shield"></i></span>
+                                        <div>
+                                            <div class="fw-bold">{{ $inheritedPermissions->count() }}</div>
+                                            <div class="text-secondary small">Inherited dari Role</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card card-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="avatar bg-success-lt text-success"><i class="ti ti-user-shield"></i></span>
+                                        <div>
+                                            <div class="fw-bold">{{ $directPerms->count() }}</div>
+                                            <div class="text-secondary small">Direct (Override)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ route('admin.users.update-permissions', $userDetail) }}">
+                        @csrf
+
+                        @if ($inheritedPermissions->isNotEmpty())
+                            <h5 class="mb-2">Inherited via Role</h5>
+                            <div class="d-flex flex-wrap gap-1 mb-4">
+                                @foreach ($inheritedPermissions as $perm)
+                                    <span class="badge bg-info-lt text-info" title="Diwarisi dari role">
+                                        <i class="ti ti-shield me-1"></i>{{ $perm->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <h5 class="mb-2">Direct Permissions</h5>
+                        @if ($canManagePermissions)
+                            <p class="text-secondary small mb-3">Centang permission untuk diberikan langsung ke user, kosongkan untuk mencabut.</p>
+                            <div class="row g-2 mb-3">
+                                @foreach ($allPermissions as $perm)
+                                    <div class="col-lg-4 col-md-6">
+                                        <label class="form-check">
+                                            <input
+                                                type="checkbox"
+                                                name="permission_ids[]"
+                                                value="{{ $perm->id }}"
+                                                class="form-check-input"
+                                                @checked(in_array($perm->id, $directPermissionIds, true))
+                                            >
+                                            <span class="form-check-label">{{ $perm->name }}</span>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-device-floppy me-1"></i>Simpan Permission
+                            </button>
+                        @else
+                            @if ($directPerms->isNotEmpty())
+                                <div class="d-flex flex-wrap gap-1 mb-3">
+                                    @foreach ($directPerms as $perm)
+                                        <span class="badge bg-success-lt text-success">
+                                            <i class="ti ti-user-shield me-1"></i>{{ $perm->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-secondary mb-3">Belum ada permission langsung.</div>
+                            @endif
+                            <div class="alert alert-secondary mb-0">
+                                <i class="ti ti-info-circle me-1"></i>Hanya Superadmin/Admin yang dapat mengelola permission langsung.
+                            </div>
+                        @endif
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="activity" role="tabpanel">
             <div class="card">
                 <div class="card-header">
                     <div>
@@ -478,6 +601,7 @@
                     </table>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </x-app-layout>

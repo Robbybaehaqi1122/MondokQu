@@ -20,6 +20,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::patch('/admin/users/{user}/email/verify', [UserManagementController::class, 'verifyEmail'])->name('admin.users.verify-email');
     Route::patch('/admin/users/{user}/password', [UserManagementController::class, 'updatePassword'])->name('admin.users.update-password');
     Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+    Route::post('/admin/users/{user}/permissions', [UserManagementController::class, 'updatePermissions'])->name('admin.users.update-permissions');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:assign roles', 'throttle:60,1'])->group(function () {

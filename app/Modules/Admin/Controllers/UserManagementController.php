@@ -4,6 +4,7 @@ namespace App\Modules\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Santri;
 use App\Models\Tenant;
@@ -165,12 +166,21 @@ class UserManagementController extends Controller
             return $currentUser?->isSuperAdmin() || ! in_array($role->name, ['Superadmin', 'Admin']);
         })->values();
 
+        $allPermissions = Permission::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $directPermissionIds = $user->getDirectPermissions()->pluck('id')->all();
+
+        $canManagePermissions = $currentUser?->can('assign roles') || $currentUser?->isSuperAdmin();
+
         return view('admin.user-detail', [
             'activityLogs' => $activityLogs,
             'assignableRoles' => $assignableRoles,
             'canManageTargetUser' => $canManageTargetUser,
             'canDeleteUser' => $currentUser?->can('delete', $user) ?? false,
             'canManageRoles' => $currentUser?->can('updateRole', $user) ?? false,
+            'canManagePermissions' => $canManagePermissions,
             'guardianRelationship' => $user->guardianSantris->first()?->pivot?->relationship,
             'guardianSantriOptions' => $guardianSantriOptions,
             'linkedGuardianSantriIds' => $user->guardianSantris->pluck('id')->all(),
@@ -178,6 +188,8 @@ class UserManagementController extends Controller
             'roles' => $roles,
             'statuses' => User::availableStatuses(),
             'userDetail' => $user,
+            'allPermissions' => $allPermissions,
+            'directPermissionIds' => $directPermissionIds,
         ]);
     }
 
@@ -713,5 +725,42 @@ class UserManagementController extends Controller
         $role->syncPermissions($template->permissions);
 
         return $role;
+    }
+
+    public function updatePermissions(Request $request, User $user): RedirectResponse
+    {
+        $this->authorize('update', $user);
+
+        $currentUser = $request->user();
+
+        if (! $currentUser?->can('assign roles') && ! $currentUser?->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'permission_ids' => ['nullable', 'array'],
+            'permission_ids.*' => ['exists:permissions,id'],
+        ]);
+
+        $permissionIds = $validated['permission_ids'] ?? [];
+
+        $user->syncPermissions($permissionIds);
+
+        $this->activityLogger->log(
+            action: 'user_permissions_updated',
+            actor: $currentUser,
+            target: $user,
+            description: "Memperbarui permission langsung untuk {$user->name}.",
+            properties: [
+                'user_id' => $user->id,
+                'permission_ids' => $permissionIds,
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        return redirect()
+            ->route('admin.users.show', $user)
+            ->with('success', 'Permission user berhasil diperbarui.');
     }
 }
