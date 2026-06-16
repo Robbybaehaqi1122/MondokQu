@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Tenant extends Model
 {
@@ -259,5 +260,104 @@ class Tenant extends Model
             self::SUBSCRIPTION_EXPIRED,
             self::SUBSCRIPTION_DELETING,
         ];
+    }
+
+    public function getMaxUsers(): int
+    {
+        return (int) ($this->getSetting('max_users') ?? config('saas.limits.max_users', 50));
+    }
+
+    public function getMaxSantri(): int
+    {
+        return (int) ($this->getSetting('max_santri') ?? config('saas.limits.max_santri', 200));
+    }
+
+    public function getMaxStorageMb(): int
+    {
+        return (int) ($this->getSetting('max_storage_mb') ?? config('saas.limits.max_storage_mb', 1024));
+    }
+
+    public function getCurrentUsersCount(): int
+    {
+        return $this->users()->count();
+    }
+
+    public function getCurrentSantriCount(): int
+    {
+        return $this->santris()->count();
+    }
+
+    public function getCurrentStorageBytes(): int
+    {
+        $tenantId = $this->id;
+
+        $bytes = 0;
+
+        $bytes += (int) SantriDocument::query()
+            ->whereHas('santri', fn ($q) => $q->where('tenant_id', $tenantId))
+            ->sum('file_size');
+
+        $bytes += (int) Backup::query()
+            ->where('tenant_id', $tenantId)
+            ->sum('size_bytes');
+
+        $userAvatarPaths = $this->users()
+            ->whereNotNull('avatar_path')
+            ->pluck('avatar_path');
+
+        foreach ($userAvatarPaths as $path) {
+            if (Storage::disk('public')->exists($path)) {
+                $bytes += Storage::disk('public')->size($path);
+            }
+        }
+
+        $santriPhotoPaths = $this->santris()
+            ->whereNotNull('photo_path')
+            ->pluck('photo_path');
+
+        foreach ($santriPhotoPaths as $path) {
+            if (Storage::disk('public')->exists($path)) {
+                $bytes += Storage::disk('public')->size($path);
+            }
+        }
+
+        $proofPaths = SantriPaymentConfirmation::query()
+            ->where('tenant_id', $tenantId)
+            ->whereNotNull('proof_path')
+            ->pluck('proof_path');
+
+        foreach ($proofPaths as $path) {
+            if (Storage::disk('public')->exists($path)) {
+                $bytes += Storage::disk('public')->size($path);
+            }
+        }
+
+        $branding = $this->settings['logo_path'] ?? null;
+        if ($branding && Storage::disk('public')->exists($branding)) {
+            $bytes += Storage::disk('public')->size($branding);
+        }
+
+        $favicon = $this->settings['favicon_path'] ?? null;
+        if ($favicon && Storage::disk('public')->exists($favicon)) {
+            $bytes += Storage::disk('public')->size($favicon);
+        }
+
+        return $bytes;
+    }
+
+    public function getUsagePercentage(string $resource): int
+    {
+        return match ($resource) {
+            'users' => $this->getMaxUsers() > 0
+                ? (int) round(($this->getCurrentUsersCount() / $this->getMaxUsers()) * 100)
+                : 0,
+            'santri' => $this->getMaxSantri() > 0
+                ? (int) round(($this->getCurrentSantriCount() / $this->getMaxSantri()) * 100)
+                : 0,
+            'storage' => $this->getMaxStorageMb() > 0
+                ? (int) round(($this->getCurrentStorageBytes() / ($this->getMaxStorageMb() * 1024 * 1024)) * 100)
+                : 0,
+            default => 0,
+        };
     }
 }

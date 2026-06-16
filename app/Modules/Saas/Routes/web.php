@@ -3,6 +3,7 @@
 use App\Http\Controllers\TenantImpersonationController;
 use App\Modules\Saas\Controllers\BillingNoteController;
 use App\Modules\Saas\Controllers\SaasDashboardController;
+use App\Modules\Saas\Controllers\SaasResourceReportController;
 use App\Modules\Saas\Controllers\SubscriptionHistoryController;
 use App\Modules\Saas\Controllers\TenantManagementController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,8 @@ Route::middleware(['auth', 'password_change_required', 'verified', 'role:Superad
         ->name('saas.tenants.store');
     Route::get('/saas/tenants/{tenant}', [TenantManagementController::class, 'show'])
         ->name('saas.tenants.show');
+    Route::get('/saas/resource-report', [SaasResourceReportController::class, 'index'])
+        ->name('saas.resource-report');
     Route::post('/saas/tenants/{tenant}/users/{user}/impersonate', [TenantImpersonationController::class, 'store'])
         ->name('saas.tenants.users.impersonate')
         ->middleware('throttle:10,1');

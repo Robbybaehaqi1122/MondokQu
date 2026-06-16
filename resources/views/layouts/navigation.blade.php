@@ -503,8 +503,8 @@
                 @endif
 
                 @if ($user->hasRole('Superadmin'))
-                    <details class="sidebar-dropdown" @if (request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') || request()->routeIs('backup.*')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') || request()->routeIs('backup.*') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') || request()->routeIs('saas.resource-report') || request()->routeIs('backup.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') || request()->routeIs('saas.resource-report') || request()->routeIs('backup.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-building-bank"></i>
                             </span>
@@ -526,6 +526,12 @@
                                     <i class="ti ti-building-community"></i>
                                 </span>
                                 <span>Tenant Management</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('saas.resource-report') ? 'active' : '' }}" href="{{ route('saas.resource-report') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-report-analytics"></i>
+                                </span>
+                                <span>Resource Report</span>
                             </a>
                             <a class="sidebar-sublink {{ request()->routeIs('saas.subscription-histories.*') ? 'active' : '' }}" href="{{ route('saas.subscription-histories.index') }}">
                                 <span class="sidebar-link-icon">
