@@ -17,7 +17,10 @@ use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class TenantManagementController extends Controller
@@ -166,6 +169,197 @@ class TenantManagementController extends Controller
                         ? 'Tenant baru berhasil dibuat, masa trial aktif, dan akun admin tenant sudah disiapkan.'
                         : 'Tenant baru berhasil dibuat dan akun admin tenant sudah disiapkan. Password awal tetap bisa dipakai, tetapi email verifikasi belum berhasil dikirim saat ini.')
                     : 'Tenant baru berhasil dibuat dan masa trial sudah diaktifkan.'
+            );
+    }
+
+    /**
+     * Show the wizard form to create a new tenant.
+     */
+    public function create(Request $request): View
+    {
+        abort_unless($request->user()?->isSuperAdmin(), 403);
+
+        $modules = [
+            ['key' => 'santri', 'label' => 'SantriQu (Manajemen Santri)', 'icon' => 'ti-users'],
+            ['key' => 'absensi', 'label' => 'AbsenQu (Kehadiran)', 'icon' => 'ti-calendar-check'],
+            ['key' => 'tahfidz', 'label' => 'TahfidzQu (Hafalan)', 'icon' => 'ti-book'],
+            ['key' => 'akademik', 'label' => 'AkademikQu (Mapel & Nilai)', 'icon' => 'ti-school'],
+            ['key' => 'pelanggaran', 'label' => 'PelanggaranQu (Tata Tertib)', 'icon' => 'ti-alert-triangle'],
+            ['key' => 'komunikasi', 'label' => 'KomunikasiQu (Pesan)', 'icon' => 'ti-message'],
+            ['key' => 'kesehatan', 'label' => 'KesehatanQu (UKS)', 'icon' => 'ti-heartbeat'],
+            ['key' => 'bendahara', 'label' => 'Bendahara (Keuangan)', 'icon' => 'ti-wallet'],
+            ['key' => 'musyrif', 'label' => 'Musyrif (Pembina)', 'icon' => 'ti-shield'],
+        ];
+
+        return view('modules.saas.tenants.create', [
+            'modules' => $modules,
+            'defaultLimits' => [
+                'max_users' => config('saas.limits.max_users', 50),
+                'max_santri' => config('saas.limits.max_santri', 200),
+                'max_storage_mb' => config('saas.limits.max_storage_mb', 1024),
+            ],
+            'categories' => ['Pesantren', 'Madrasah', 'Tahfidz'],
+        ]);
+    }
+
+    /**
+     * Store a tenant from the wizard submission.
+     */
+    public function wizardStore(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()?->isSuperAdmin(), 403);
+
+        $validated = $request->validate([
+            // Step 1 - Data Pondok
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique(Tenant::class, 'slug')],
+            'contact_email' => ['nullable', 'email', 'max:255'],
+            'contact_phone_number' => ['nullable', 'string', 'max:30'],
+            'category' => ['nullable', 'string', 'in:Pesantren,Madrasah,Tahfidz'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg', 'max:2048'],
+            'max_users' => ['nullable', 'integer', 'min:1'],
+            'max_santri' => ['nullable', 'integer', 'min:1'],
+            'max_storage_mb' => ['nullable', 'integer', 'min:1'],
+            // Step 2 - Admin Tenant
+            'owner_name' => ['nullable', 'string', 'max:255', 'required_with:owner_email'],
+            'owner_username' => ['nullable', 'string', 'max:255', 'required_with:owner_email', Rule::unique(User::class, 'username')],
+            'owner_email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')],
+            'owner_phone_number' => ['nullable', 'string', 'max:30'],
+            'owner_password' => ['nullable', Password::min(8), 'required_with:owner_email', 'confirmed'],
+            // Step 3 - Modul Aktif
+            'active_modules' => ['nullable', 'array'],
+            'active_modules.*' => ['string', 'in:santri,absensi,tahfidz,akademik,pelanggaran,komunikasi,kesehatan,bendahara,musyrif'],
+        ], [
+            'name.required' => 'Nama pondok wajib diisi.',
+            'slug.alpha_dash' => 'Slug hanya boleh berisi huruf, angka, tanda hubung, atau underscore.',
+            'slug.unique' => 'Slug sudah dipakai.',
+            'contact_email.email' => 'Email kontak harus valid.',
+            'category.in' => 'Kategori pondok tidak valid.',
+            'logo.image' => 'Logo harus berupa gambar.',
+            'logo.mimes' => 'Logo harus berformat PNG, JPG, JPEG, atau SVG.',
+            'logo.max' => 'Logo maksimal 2 MB.',
+            'owner_name.required_with' => 'Nama admin wajib diisi jika mengisi email admin.',
+            'owner_username.required_with' => 'Username admin wajib diisi jika mengisi email admin.',
+            'owner_username.unique' => 'Username admin sudah digunakan.',
+            'owner_email.email' => 'Email admin harus valid.',
+            'owner_email.unique' => 'Email admin sudah digunakan.',
+            'owner_password.required_with' => 'Password admin wajib diisi jika mengisi email admin.',
+            'owner_password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'active_modules.*.in' => 'Modul yang dipilih tidak valid.',
+        ]);
+
+        $actor = $request->user();
+        $createOwner = filled($validated['owner_email'] ?? null);
+
+        $tenant = DB::transaction(function () use ($validated, $request, $createOwner): Tenant {
+            $tenant = Tenant::query()->create([
+                'name' => $validated['name'],
+                'slug' => ($validated['slug'] ?? null) ?: Str::slug($validated['name']),
+                'contact_email' => ($validated['contact_email'] ?? null) ?: null,
+                'contact_phone_number' => ($validated['contact_phone_number'] ?? null) ?: null,
+                'subscription_plan' => config('saas.default_plan', 'trial'),
+                'subscription_status' => Tenant::SUBSCRIPTION_TRIAL,
+                'trial_ends_at' => now()->addDays((int) config('saas.trial_days', 14)),
+                'subscription_starts_at' => null,
+                'subscription_ends_at' => null,
+                'grace_ends_at' => null,
+                'owner_id' => null,
+            ]);
+
+            app(CreateTenantRoles::class)->handle($tenant);
+
+            $settings = [
+                'max_users' => (int) ($validated['max_users'] ?? config('saas.limits.max_users', 50)),
+                'max_santri' => (int) ($validated['max_santri'] ?? config('saas.limits.max_santri', 200)),
+                'max_storage_mb' => (int) ($validated['max_storage_mb'] ?? config('saas.limits.max_storage_mb', 1024)),
+                'category' => $validated['category'] ?? '',
+                'address' => $validated['address'] ?? '',
+                'active_modules' => $validated['active_modules'] ?? [],
+            ];
+
+            if ($request->hasFile('logo')) {
+                $settings['logo_path'] = $request->file('logo')->store('tenant-branding/'.$tenant->id, 'public');
+            }
+
+            $tenant->setSettings($settings)->save();
+
+            if ($createOwner) {
+                $owner = User::query()->create([
+                    'tenant_id' => $tenant->id,
+                    'name' => $validated['owner_name'],
+                    'username' => $validated['owner_username'],
+                    'email' => $validated['owner_email'],
+                    'phone_number' => ($validated['owner_phone_number'] ?? null) ?: null,
+                    'status' => User::STATUS_ACTIVE,
+                    'created_by' => $request->user()?->id,
+                    'password_change_required' => true,
+                    'password' => $validated['owner_password'],
+                ]);
+
+                $adminRole = Role::where('tenant_id', $tenant->id)->where('name', 'Admin')->firstOrFail();
+                $owner->syncRoles([$adminRole]);
+
+                $tenant->forceFill([
+                    'owner_id' => $owner->id,
+                ])->save();
+            }
+
+            return $tenant;
+        });
+
+        $this->activityLogger->log(
+            action: 'tenant_created',
+            actor: $actor,
+            target: $tenant,
+            description: 'Tenant baru dibuat melalui wizard 3 langkah.',
+            properties: [
+                'tenant_slug' => $tenant->slug,
+                'subscription_status' => $tenant->subscription_status,
+                'trial_ends_at' => $tenant->trial_ends_at?->toDateTimeString(),
+                'category' => $validated['category'] ?? '',
+                'owner_created' => $createOwner,
+                'active_modules' => $validated['active_modules'] ?? [],
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent()
+        );
+
+        if ($createOwner) {
+            $owner = User::query()
+                ->where('tenant_id', $tenant->id)
+                ->where('email', $validated['owner_email'])
+                ->first();
+
+            if ($owner) {
+                $this->activityLogger->log(
+                    action: 'tenant_owner_created',
+                    actor: $actor,
+                    target: $owner,
+                    description: 'Akun owner/admin tenant dibuat melalui wizard.',
+                    properties: [
+                        'tenant_id' => $tenant->id,
+                        'tenant_name' => $tenant->name,
+                        'tenant_slug' => $tenant->slug,
+                        'password_change_required' => true,
+                    ],
+                    ipAddress: $request->ip(),
+                    userAgent: $request->userAgent()
+                );
+            }
+
+            $verificationSent = $owner ? $this->sendVerificationNotification->handle($owner) : false;
+        }
+
+        return redirect()
+            ->route('saas.tenants.show', $tenant)
+            ->with(
+                'success',
+                $createOwner
+                    ? (($verificationSent ?? false)
+                        ? 'Tenant baru berhasil dibuat melalui wizard. Akun admin tenant sudah disiapkan.'
+                        : 'Tenant baru berhasil dibuat melalui wizard. Akun admin tenant sudah disiapkan, namun email verifikasi belum berhasil dikirim.')
+                    : 'Tenant baru berhasil dibuat melalui wizard.'
             );
     }
 

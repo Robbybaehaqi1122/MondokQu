@@ -13,6 +13,10 @@ Route::middleware(['auth', 'password_change_required', 'verified', 'role:Superad
         ->name('saas.dashboard');
     Route::get('/saas/tenants', [TenantManagementController::class, 'index'])
         ->name('saas.tenants.index');
+    Route::get('/saas/tenants/create', [TenantManagementController::class, 'create'])
+        ->name('saas.tenants.create');
+    Route::post('/saas/tenants/wizard', [TenantManagementController::class, 'wizardStore'])
+        ->name('saas.tenants.wizard-store');
     Route::get('/saas/subscription-histories', [SubscriptionHistoryController::class, 'index'])
         ->name('saas.subscription-histories.index');
     Route::get('/saas/billing-notes', [BillingNoteController::class, 'index'])

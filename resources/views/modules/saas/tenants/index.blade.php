@@ -48,7 +48,7 @@
                             <h3 class="card-title">Daftar Tenant</h3>
                         </div>
 
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center gap-2">
                             <button
                                 type="button"
                                 class="btn btn-primary"
@@ -59,6 +59,10 @@
                                 <i class="ti ti-building-plus me-1"></i>
                                 Tambah Tenant
                             </button>
+                            <a href="{{ route('saas.tenants.create') }}" class="btn btn-outline-primary">
+                                <i class="ti ti-wand me-1"></i>
+                                Wizard
+                            </a>
                         </div>
                     </div>
                 </div>
