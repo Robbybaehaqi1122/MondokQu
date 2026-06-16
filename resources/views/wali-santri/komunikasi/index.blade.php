@@ -11,7 +11,45 @@
     <div class="row row-cards mb-3">
         @foreach ($santris as $s)
             <div class="col-lg-4">
-                <div class="card">
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('wali-santri.komunikasi.index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Cari Pesan</label>
+                    <input type="text" name="q" class="form-control" placeholder="Isi pesan..." value="{{ $filters['q'] }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">Semua</option>
+                        <option value="unread" {{ $filters['status'] === 'unread' ? 'selected' : '' }}>Belum Dibaca</option>
+                        <option value="read" {{ $filters['status'] === 'read' ? 'selected' : '' }}>Sudah Dibaca</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Dari Tanggal</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ $filters['date_from'] }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Sampai Tanggal</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ $filters['date_to'] }}">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Urut</label>
+                    <select name="sort" class="form-select">
+                        <option value="terbaru" {{ $filters['sort'] === 'terbaru' ? 'selected' : '' }}>Baru</option>
+                        <option value="terlama" {{ $filters['sort'] === 'terlama' ? 'selected' : '' }}>Lama</option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end gap-1">
+                    <button type="submit" class="btn btn-primary w-100"><i class="ti ti-filter"></i></button>
+                    <a href="{{ route('wali-santri.komunikasi.index') }}" class="btn btn-secondary w-100"><i class="ti ti-refresh"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
                     <div class="card-body text-center">
                         <span class="avatar avatar-lg mb-2 bg-primary-lt text-primary">
                             {{ strtoupper(substr($s->full_name, 0, 1)) }}

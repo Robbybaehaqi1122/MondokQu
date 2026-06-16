@@ -195,6 +195,11 @@ class Santri extends Model
         return $this->hasMany(SanctionLog::class);
     }
 
+    public function communications(): HasMany
+    {
+        return $this->hasMany(Communication::class);
+    }
+
     /**
      * Get leave requests for this santri.
      */

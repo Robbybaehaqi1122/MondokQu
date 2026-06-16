@@ -20,16 +20,34 @@ class WaliSantriKomunikasiController extends Controller
         $santris = $currentUser->guardianSantris()->orderBy('full_name')->get();
         $santriIds = $santris->pluck('id');
 
+        $search = trim((string) $request->string('q'));
+        $status = trim((string) $request->string('status'));
+        $dateFrom = trim((string) $request->string('date_from'));
+        $dateTo = trim((string) $request->string('date_to'));
+        $sort = trim((string) $request->string('sort', 'terbaru'));
+
         $communications = Communication::query()
             ->whereIn('santri_id', $santriIds)
             ->with('user')
-            ->orderBy('created_at', 'desc')
+            ->when($search !== '', fn ($q) => $q->where('message', 'like', "%{$search}%"))
+            ->when($status === 'unread', fn ($q) => $q->where('direction', 'incoming')->where('is_read', false))
+            ->when($status === 'read', fn ($q) => $q->where('direction', 'incoming')->where('is_read', true))
+            ->when($dateFrom !== '', fn ($q) => $q->whereDate('created_at', '>=', $dateFrom))
+            ->when($dateTo !== '', fn ($q) => $q->whereDate('created_at', '<=', $dateTo))
+            ->orderBy('created_at', $sort === 'terlama' ? 'asc' : 'desc')
             ->paginate(20)
             ->withQueryString();
 
         return view('wali-santri.komunikasi.index', [
             'santris' => $santris,
             'communications' => $communications,
+            'filters' => [
+                'q' => $search,
+                'status' => $status,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'sort' => $sort,
+            ],
         ]);
     }
 

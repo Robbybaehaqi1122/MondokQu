@@ -22,10 +22,25 @@ class AdminKomunikasiController extends Controller
     public function index(Request $request): View
     {
         $currentUser = $request->user();
-        $search = trim((string) $request->string('q'));
 
-        $santriIds = Communication::query()
+        $search = trim((string) $request->string('q'));
+        $messageSearch = trim((string) $request->string('pesan'));
+        $status = trim((string) $request->string('status'));
+        $direction = trim((string) $request->string('direction'));
+        $dateFrom = trim((string) $request->string('date_from'));
+        $dateTo = trim((string) $request->string('date_to'));
+        $userId = trim((string) $request->string('user_id'));
+        $sort = trim((string) $request->string('sort', 'terbaru'));
+
+        $commQuery = Communication::query()
             ->visibleTo($currentUser)
+            ->when($messageSearch !== '', fn ($q) => $q->where('message', 'like', "%{$messageSearch}%"))
+            ->when($direction !== '', fn ($q) => $q->where('direction', $direction))
+            ->when($dateFrom !== '', fn ($q) => $q->whereDate('created_at', '>=', $dateFrom))
+            ->when($dateTo !== '', fn ($q) => $q->whereDate('created_at', '<=', $dateTo))
+            ->when($userId !== '', fn ($q) => $q->where('user_id', $userId));
+
+        $santriIds = (clone $commQuery)
             ->select('santri_id')
             ->distinct()
             ->pluck('santri_id');
@@ -33,11 +48,26 @@ class AdminKomunikasiController extends Controller
         $santris = Santri::query()
             ->whereIn('id', $santriIds)
             ->when($search !== '', function ($query) use ($search) {
-                $query->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('nis', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('nis', 'like', "%{$search}%");
+                });
             })
-            ->orderBy('full_name')
-            ->get();
+            ->when($status === 'unread', function ($query) {
+                $query->whereHas('communications', fn ($q) => $q->where('direction', 'outgoing')->where('is_read', false));
+            })
+            ->when($status === 'replied', function ($query) {
+                $query->whereHas('communications', fn ($q) => $q->where('is_replied', true));
+            })
+            ->orderBy(function ($query) {
+                $query->select('created_at')
+                    ->from('communications')
+                    ->whereColumn('santri_id', 'santris.id')
+                    ->latest()
+                    ->limit(1);
+            }, $sort === 'terlama' ? 'asc' : 'desc')
+            ->paginate(20)
+            ->withQueryString();
 
         $latestMessages = collect();
         foreach ($santris as $santri) {
@@ -64,11 +94,28 @@ class AdminKomunikasiController extends Controller
             }
         }
 
+        $staffUsers = User::query()
+            ->where('tenant_id', $currentUser->tenant_id)
+            ->where('status', User::STATUS_ACTIVE)
+            ->permission('manage komunikasi')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return view('modules.komunikasi.index', [
             'santris' => $santris,
             'latestMessages' => $latestMessages,
             'unreadCounts' => $unreadCounts,
-            'filters' => ['q' => $search],
+            'staffUsers' => $staffUsers,
+            'filters' => [
+                'q' => $search,
+                'pesan' => $messageSearch,
+                'status' => $status,
+                'direction' => $direction,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'user_id' => $userId,
+                'sort' => $sort,
+            ],
         ]);
     }
 
