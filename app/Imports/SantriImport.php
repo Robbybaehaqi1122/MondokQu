@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Room;
 use App\Models\Santri;
+use App\Models\Tenant;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -107,12 +108,20 @@ class SantriImport implements SkipsEmptyRows, WithHeadingRow
         }
 
         if ($save) {
-            $santri = $this->createSantri($mapped);
-            $this->validRows->push([
-                'row' => $rowNumber,
-                'data' => $mapped,
-                'santri_id' => $santri->id,
-            ]);
+            try {
+                $santri = $this->createSantri($mapped);
+                $this->validRows->push([
+                    'row' => $rowNumber,
+                    'data' => $mapped,
+                    'santri_id' => $santri->id,
+                ]);
+            } catch (\RuntimeException $e) {
+                $this->errors->push([
+                    'row' => $rowNumber,
+                    'data' => $mapped,
+                    'errors' => [strip_tags($e->getMessage())],
+                ]);
+            }
         } else {
             $this->validRows->push([
                 'row' => $rowNumber,
@@ -214,6 +223,11 @@ class SantriImport implements SkipsEmptyRows, WithHeadingRow
 
     protected function createSantri(array $data): Santri
     {
+        $tenant = Tenant::find($this->tenantId);
+        if ($tenant && ! $tenant->canCreateSantri()) {
+            throw new \RuntimeException($tenant->capacityErrorHtml('santri'));
+        }
+
         $roomId = null;
         if (filled($data['room_name'] ?? '')) {
             $room = $this->resolveRoom($data['room_name']);

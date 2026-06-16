@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Room;
 use App\Models\Santri;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -27,6 +28,11 @@ class SantriService
         string $ipAddress,
         string $userAgent,
     ): Santri {
+        $tenant = Tenant::find($tenantId);
+        if ($tenant && ! $tenant->canCreateSantri()) {
+            throw new \RuntimeException($tenant->capacityErrorHtml('santri'));
+        }
+
         $photoPath = $this->santriPhotoUploader->store($photo);
 
         try {

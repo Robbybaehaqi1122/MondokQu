@@ -217,6 +217,13 @@ class UserManagementController extends Controller
 
         $avatarPath = $this->userAvatarUploader->store($request->file('avatar'));
 
+        $tenant = Tenant::find($resolvedTenantId);
+        if ($tenant && ! $tenant->canCreateUser()) {
+            return back()
+                ->withInput()
+                ->with('error', $tenant->capacityErrorHtml('users'));
+        }
+
         try {
             $user = DB::transaction(function () use ($request, $validated, $resolvedTenantId, $avatarPath): User {
                 $user = User::query()->create([

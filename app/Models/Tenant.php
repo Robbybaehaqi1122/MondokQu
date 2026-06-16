@@ -360,4 +360,58 @@ class Tenant extends Model
             default => 0,
         };
     }
+
+    public function canCreateUser(): bool
+    {
+        return $this->getCurrentUsersCount() < $this->getMaxUsers();
+    }
+
+    public function canCreateSantri(): bool
+    {
+        return $this->getCurrentSantriCount() < $this->getMaxSantri();
+    }
+
+    public function capacityErrorHtml(string $resource): string
+    {
+        $max = match ($resource) {
+            'users' => $this->getMaxUsers(),
+            'santri' => $this->getMaxSantri(),
+            default => 0,
+        };
+        $current = match ($resource) {
+            'users' => $this->getCurrentUsersCount(),
+            'santri' => $this->getCurrentSantriCount(),
+            default => 0,
+        };
+        $label = match ($resource) {
+            'users' => 'user',
+            'santri' => 'santri',
+            default => $resource,
+        };
+
+        $waUrl = $this->whatsappContactUrl(
+            "Halo, saya ingin upgrade kapasitas {$label} tenant {$this->name}. Saat ini sudah {$current}/{$max} dan perlu ditambah.",
+        );
+
+        return "Kapasitas {$label} sudah penuh ({$current}/{$max}). "
+            . 'Hubungi admin platform untuk upgrade kapasitas. '
+            . '<br><a href="' . e($waUrl) . '" target="_blank" class="btn btn-sm btn-success mt-2">'
+            . '<i class="ti ti-brand-whatsapp me-1"></i>Hubungi via WhatsApp</a>';
+    }
+
+    public function whatsappContactUrl(string $text = ''): string
+    {
+        $phone = config('saas.admin_whatsapp');
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        if (str_starts_with($phone, '0')) {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        $url = "https://wa.me/{$phone}";
+        if ($text !== '') {
+            $url .= '?text=' . rawurlencode($text);
+        }
+
+        return $url;
+    }
 }

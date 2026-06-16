@@ -181,15 +181,21 @@ class SantriManagementController extends Controller
     {
         $this->authorize('create', Santri::class);
 
-        $this->santriService->create(
-            tenantId: (int) $request->user()->tenant_id,
-            validated: $request->validated(),
-            photo: $request->file('photo'),
-            guardianUserIds: $request->guardianUserIds(),
-            actor: $request->user(),
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
-        );
+        try {
+            $this->santriService->create(
+                tenantId: (int) $request->user()->tenant_id,
+                validated: $request->validated(),
+                photo: $request->file('photo'),
+                guardianUserIds: $request->guardianUserIds(),
+                actor: $request->user(),
+                ipAddress: $request->ip(),
+                userAgent: $request->userAgent(),
+            );
+        } catch (\RuntimeException $e) {
+            return back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
 
         return redirect()
             ->route('santri.index')
