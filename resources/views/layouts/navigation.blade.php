@@ -12,8 +12,9 @@
     $canOpenKesehatanModule = $user->can('manage kesehatan');
     $canOpenKeuanganQuModule = $user->can('manage keuangan');
     $canOpenInventarisQuModule = $user->can('manage inventaris');
+    $canOpenKegiatanQuModule = $user->can('manage kegiatan');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -427,6 +428,47 @@
                                 <span>Stok Obat</span>
                             </a>
                             <a class="sidebar-sublink {{ request()->routeIs('kesehatan.laporan.*') ? 'active' : '' }}" href="{{ route('kesehatan.laporan.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
+                                <span>Laporan</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenKegiatanQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('kegiatan.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('kegiatan.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-calendar-event"></i>
+                            </span>
+                            <span class="flex-grow-1">KegiatanQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('kegiatan.dashboard') ? 'active' : '' }}" href="{{ route('kegiatan.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard Kegiatan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kegiatan.kegiatan.*') ? 'active' : '' }}" href="{{ route('kegiatan.kegiatan.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-list-details"></i></span>
+                                <span>Master Kegiatan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kegiatan.pendaftaran.*') ? 'active' : '' }}" href="{{ route('kegiatan.pendaftaran.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-user-plus"></i></span>
+                                <span>Pendaftaran</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kegiatan.pertemuan.*') ? 'active' : '' }}" href="{{ route('kegiatan.pertemuan.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-calendar-check"></i></span>
+                                <span>Pertemuan & Presensi</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kegiatan.nilai.*') ? 'active' : '' }}" href="{{ route('kegiatan.nilai.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-star"></i></span>
+                                <span>Nilai Kegiatan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kegiatan.laporan.*') ? 'active' : '' }}" href="{{ route('kegiatan.laporan.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
                                 <span>Laporan</span>
                             </a>

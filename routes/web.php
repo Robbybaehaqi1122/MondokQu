@@ -56,3 +56,4 @@ require base_path('app/Modules/KesehatanQu/Routes/web.php');
 require base_path('app/Modules/Backup/Routes/web.php');
 require base_path('app/Modules/KeuanganQu/Routes/web.php');
 require base_path('app/Modules/InventarisQu/Routes/web.php');
+require base_path('app/Modules/KegiatanQu/Routes/web.php');
