@@ -10,8 +10,9 @@
     $canOpenKomunikasiModule = $user->can('manage komunikasi');
     $canOpenAkademikModule = $user->can('manage akademik');
     $canOpenKesehatanModule = $user->can('manage kesehatan');
+    $canOpenKeuanganQuModule = $user->can('manage keuangan');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -262,6 +263,47 @@
                             <a class="sidebar-sublink {{ request()->routeIs('akademik.rapor.*') ? 'active' : '' }}" href="{{ route('akademik.rapor.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
                                 <span>Rapor Digital</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenKeuanganQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('keuangan.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('keuangan.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-coin"></i>
+                            </span>
+                            <span class="flex-grow-1">KeuanganQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('keuangan.dashboard') ? 'active' : '' }}" href="{{ route('keuangan.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard KeuanganQu</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('keuangan.coa.*') ? 'active' : '' }}" href="{{ route('keuangan.coa.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-list-details"></i></span>
+                                <span>Kode Akun (COA)</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('keuangan.jurnal.*') ? 'active' : '' }}" href="{{ route('keuangan.jurnal.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-notebook"></i></span>
+                                <span>Jurnal Transaksi</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('keuangan.anggaran.*') ? 'active' : '' }}" href="{{ route('keuangan.anggaran.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-target-arrow"></i></span>
+                                <span>Anggaran</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('keuangan.laporan.*') ? 'active' : '' }}" href="{{ route('keuangan.laporan.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
+                                <span>Laporan Keuangan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('keuangan.kwitansi.*') ? 'active' : '' }}" href="{{ route('keuangan.kwitansi.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-file-text"></i></span>
+                                <span>Kwitansi Digital</span>
                             </a>
                         </div>
                     </details>

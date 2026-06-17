@@ -329,6 +329,16 @@ Penjelasan singkat:
 5. Jika pembayaran harus langsung mengaktifkan akses, centang opsi aktivasi subscription pada billing note.
 6. Login sebagai Admin Pondok untuk mengelola user tenant dan data santri.
 
+## Deployment
+
+Lihat panduan deployment lengkap di [DEPLOYMENT.md](DEPLOYMENT.md), termasuk:
+
+- **Docker Compose** - Full stack container (app, db, queue, scheduler)
+- **Manual (Bare-metal)** - Nginx + PHP-FPM + Supervisor
+- **CI/CD Pipeline** - GitHub Actions auto-deploy
+- **Backup & Restore** - Database, file storage
+- **Monitoring & Logging** - Troubleshooting guide
+
 ## Command Harian
 
 ```bash

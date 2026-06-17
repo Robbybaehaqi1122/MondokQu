@@ -34,6 +34,12 @@ use App\Policies\SantriPaymentPolicy;
 use App\Policies\SantriPolicy;
 use App\Policies\TahfidzSessionPolicy;
 use App\Policies\UserPolicy;
+use App\Policies\CoaAccountPolicy;
+use App\Policies\JournalEntryPolicy;
+use App\Policies\BudgetPolicy;
+use App\Modules\KeuanganQu\Models\CoaAccount;
+use App\Modules\KeuanganQu\Models\JournalEntry;
+use App\Modules\KeuanganQu\Models\Budget;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -79,5 +85,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PelanggaranKategori::class, PelanggaranKategoriPolicy::class);
         Gate::policy(Communication::class, CommunicationPolicy::class);
         Gate::policy(TahfidzSession::class, TahfidzSessionPolicy::class);
+        Gate::policy(CoaAccount::class, CoaAccountPolicy::class);
+        Gate::policy(JournalEntry::class, JournalEntryPolicy::class);
+        Gate::policy(Budget::class, BudgetPolicy::class);
     }
 }

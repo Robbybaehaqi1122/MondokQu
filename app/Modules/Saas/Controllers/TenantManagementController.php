@@ -187,7 +187,7 @@ class TenantManagementController extends Controller
             ['key' => 'pelanggaran', 'label' => 'PelanggaranQu (Tata Tertib)', 'icon' => 'ti-alert-triangle'],
             ['key' => 'komunikasi', 'label' => 'KomunikasiQu (Pesan)', 'icon' => 'ti-message'],
             ['key' => 'kesehatan', 'label' => 'KesehatanQu (UKS)', 'icon' => 'ti-heartbeat'],
-            ['key' => 'bendahara', 'label' => 'Bendahara (Keuangan)', 'icon' => 'ti-wallet'],
+            ['key' => 'bendahara', 'label' => 'Bendahara (KeuanganQu)', 'icon' => 'ti-wallet'],
             ['key' => 'musyrif', 'label' => 'Musyrif (Pembina)', 'icon' => 'ti-shield'],
         ];
 

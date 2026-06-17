@@ -1,0 +1,124 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    image: mondok-qu:latest
+    container_name: mondok-qu-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
+      APP_URL: "${APP_URL}"
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: "${DB_DATABASE}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      MAIL_MAILER: "${MAIL_MAILER:-log}"
+      MAIL_HOST: "${MAIL_HOST}"
+      MAIL_PORT: "${MAIL_PORT}"
+      MAIL_USERNAME: "${MAIL_USERNAME}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD}"
+      MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS}"
+      MAIL_FROM_NAME: "${APP_NAME}"
+      FILESYSTEM_DISK: local
+    volumes:
+      - mondok-qu-storage:/var/www/html/storage
+      - mondok-qu-public:/var/www/html/public/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mondok-qu-network
+
+  db:
+    image: mysql:8.0
+    container_name: mondok-qu-db
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT_EXTERNAL:-3307}:3306"
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+    volumes:
+      - mondok-qu-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mondok-qu-network
+
+  queue:
+    image: mondok-qu:latest
+    container_name: mondok-qu-queue
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=900
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: "${DB_DATABASE}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      MAIL_MAILER: "${MAIL_MAILER:-log}"
+      FILESYSTEM_DISK: local
+    volumes:
+      - mondok-qu-storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mondok-qu-network
+
+  scheduler:
+    image: mondok-qu:latest
+    container_name: mondok-qu-scheduler
+    restart: unless-stopped
+    command: php artisan schedule:work
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: "${DB_DATABASE}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      MAIL_MAILER: "${MAIL_MAILER:-log}"
+      FILESYSTEM_DISK: local
+    volumes:
+      - mondok-qu-storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mondok-qu-network
+
+volumes:
+  mondok-qu-storage:
+  mondok-qu-public:
+  mondok-qu-db:
+
+networks:
+  mondok-qu-network:
+    driver: bridge

@@ -71,5 +71,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(PelanggaranKategoriSeeder::class);
         $this->call(SanctionThresholdSeeder::class);
+        $this->call(CoaAccountSeeder::class);
     }
 }
