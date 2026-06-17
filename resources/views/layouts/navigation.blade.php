@@ -11,8 +11,9 @@
     $canOpenAkademikModule = $user->can('manage akademik');
     $canOpenKesehatanModule = $user->can('manage kesehatan');
     $canOpenKeuanganQuModule = $user->can('manage keuangan');
+    $canOpenInventarisQuModule = $user->can('manage inventaris');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -304,6 +305,47 @@
                             <a class="sidebar-sublink {{ request()->routeIs('keuangan.kwitansi.*') ? 'active' : '' }}" href="{{ route('keuangan.kwitansi.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-file-text"></i></span>
                                 <span>Kwitansi Digital</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenInventarisQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('inventaris.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('inventaris.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-package"></i>
+                            </span>
+                            <span class="flex-grow-1">InventarisQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('inventaris.dashboard') ? 'active' : '' }}" href="{{ route('inventaris.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard Inventaris</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('inventaris.aset.*') ? 'active' : '' }}" href="{{ route('inventaris.aset.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-building-warehouse"></i></span>
+                                <span>Daftar Aset</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('inventaris.kategori.*') ? 'active' : '' }}" href="{{ route('inventaris.kategori.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-tags"></i></span>
+                                <span>Kategori</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('inventaris.lokasi.*') ? 'active' : '' }}" href="{{ route('inventaris.lokasi.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-map-pin"></i></span>
+                                <span>Lokasi</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('inventaris.peminjaman.*') ? 'active' : '' }}" href="{{ route('inventaris.peminjaman.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-hand-rock"></i></span>
+                                <span>Peminjaman</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('inventaris.laporan.*') ? 'active' : '' }}" href="{{ route('inventaris.laporan.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
+                                <span>Laporan</span>
                             </a>
                         </div>
                     </details>
