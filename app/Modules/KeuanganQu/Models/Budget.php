@@ -2,7 +2,7 @@
 
 namespace App\Modules\KeuanganQu\Models;
 
-use App\Traits\BelongsToTenant;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

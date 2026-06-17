@@ -3,7 +3,7 @@
 namespace App\Modules\KeuanganQu\Models;
 
 use App\Models\User;
-use App\Traits\BelongsToTenant;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
