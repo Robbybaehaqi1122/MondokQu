@@ -24,6 +24,9 @@ class KeuanganQuDashboardController extends Controller
                 'totalBeban' => 0,
                 'labaRugi' => 0,
                 'saldoKas' => 0,
+                'totalAkun' => 0,
+                'totalPosted' => 0,
+                'totalDraft' => 0,
                 'jumlahJurnal' => 0,
                 'jurnalTerbaru' => collect(),
                 'chartData' => [],
@@ -46,8 +49,21 @@ class KeuanganQuDashboardController extends Controller
             ->with(['details.coaAccount', 'creator'])
             ->get();
 
-        $totalJurnal = JournalEntry::withoutTenantScope()
+        $totalAkun = CoaAccount::withoutTenantScope()
             ->where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->count();
+
+        $totalPosted = JournalEntry::withoutTenantScope()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'posted')
+            ->where('period_year', $year)
+            ->where('period_month', $month)
+            ->count();
+
+        $totalDraft = JournalEntry::withoutTenantScope()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'draft')
             ->where('period_year', $year)
             ->where('period_month', $month)
             ->count();
@@ -73,8 +89,12 @@ class KeuanganQuDashboardController extends Controller
             'totalBeban' => $data['total_beban'],
             'labaRugi' => $data['laba_rugi'],
             'saldoKas' => $saldoKas,
-            'jumlahJurnal' => $totalJurnal,
+            'totalAkun' => $totalAkun,
+            'totalPosted' => $totalPosted,
+            'totalDraft' => $totalDraft,
+            'jumlahJurnal' => $totalPosted + $totalDraft,
             'jurnalTerbaru' => $latestEntries,
+            'trend' => $trend->values(),
             'chartData' => $trend->values(),
             'pieData' => $pie,
             'year' => $year,
