@@ -38,7 +38,7 @@ class KegiatanController extends Controller
 
         $pembinas = User::withoutTenantScope()
             ->where('tenant_id', $tenantId)
-            ->where('is_active', true)
+            ->where('status', 'active')
             ->orderBy('name')
             ->get();
 
@@ -56,7 +56,7 @@ class KegiatanController extends Controller
 
         $pembinas = User::withoutTenantScope()
             ->where('tenant_id', $tenantId)
-            ->where('is_active', true)
+            ->where('status', 'active')
             ->orderBy('name')
             ->get();
 
@@ -108,7 +108,7 @@ class KegiatanController extends Controller
 
         $pembinas = User::withoutTenantScope()
             ->where('tenant_id', $kegiatan->tenant_id)
-            ->where('is_active', true)
+            ->where('status', 'active')
             ->orderBy('name')
             ->get();
 
