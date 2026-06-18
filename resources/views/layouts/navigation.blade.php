@@ -13,8 +13,9 @@
     $canOpenKeuanganQuModule = $user->can('manage keuangan');
     $canOpenInventarisQuModule = $user->can('manage inventaris');
     $canOpenKegiatanQuModule = $user->can('manage kegiatan');
+    $canOpenPpdbQuModule = $user->can('manage ppdb');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -471,6 +472,43 @@
                             <a class="sidebar-sublink {{ request()->routeIs('kegiatan.laporan.*') ? 'active' : '' }}" href="{{ route('kegiatan.laporan.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
                                 <span>Laporan</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenPpdbQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('ppdb.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('ppdb.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-user-check"></i>
+                            </span>
+                            <span class="flex-grow-1">PpdbQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('ppdb.dashboard') ? 'active' : '' }}" href="{{ route('ppdb.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard PPDB</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('ppdb.gelombang.*') ? 'active' : '' }}" href="{{ route('ppdb.gelombang.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-layers-difference"></i></span>
+                                <span>Gelombang</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('ppdb.pendaftaran.*') ? 'active' : '' }}" href="{{ route('ppdb.pendaftaran.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-clipboard-list"></i></span>
+                                <span>Pendaftaran</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('ppdb.seleksi.*') ? 'active' : '' }}" href="{{ route('ppdb.seleksi.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-checklist"></i></span>
+                                <span>Seleksi</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('ppdb.pengumuman.*') ? 'active' : '' }}" href="{{ route('ppdb.pengumuman.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-bullhorn"></i></span>
+                                <span>Pengumuman</span>
                             </a>
                         </div>
                     </details>
