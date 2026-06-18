@@ -28,7 +28,10 @@ class PengumumanController extends Controller
             ->orderByDesc('tanggal_pengumuman')
             ->paginate(20);
 
-        return view('modules.ppdb-qu.pengumuman.index', compact('pengumumans'));
+        $gelombangs = PpdbGelombang::withoutTenantScope()
+            ->where('tenant_id', $tenantId)->orderBy('nama')->get();
+
+        return view('modules.ppdb-qu.pengumuman.index', compact('pengumumans', 'gelombangs'));
     }
 
     public function create(): View

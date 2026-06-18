@@ -12,6 +12,7 @@
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
         "simplesoftwareio/simple-qrcode": "*",
+        "spatie/laravel-activitylog": "*",
         "spatie/laravel-permission": "^6.25"
     },
     "require-dev": {

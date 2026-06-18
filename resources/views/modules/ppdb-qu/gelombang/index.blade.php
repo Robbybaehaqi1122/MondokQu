@@ -5,9 +5,9 @@
                 <div class="text-secondary text-uppercase small fw-bold">PpdbQu</div>
                 <h2 class="page-title mt-1">Gelombang Pendaftaran</h2>
             </div>
-            <a href="{{ route('ppdb.gelombang.create') }}" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-gelombang">
                 <i class="ti ti-plus"></i> Tambah Gelombang
-            </a>
+            </button>
         </div>
     </x-slot>
 
@@ -49,5 +49,56 @@
         @if ($gelombangs->hasPages())
             <div class="card-footer">{{ $gelombangs->links() }}</div>
         @endif
+    </div>
+
+    <div class="modal fade" id="modal-gelombang" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form action="{{ route('ppdb.gelombang.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Gelombang</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label required">Nama Gelombang</label>
+                            <input type="text" name="nama" class="form-control" placeholder="Misal: Gelombang 1" required>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Tanggal Mulai</label>
+                                <input type="date" name="tanggal_mulai" class="form-control" value="{{ now()->toDateString() }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Tanggal Selesai</label>
+                                <input type="date" name="tanggal_selesai" class="form-control" value="{{ now()->addMonth()->toDateString() }}" required>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Kuota Pendaftar</label>
+                                <input type="number" name="kuota" class="form-control" min="0" placeholder="Kosongkan jika tak terbatas">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Biaya Pendaftaran (Rp)</label>
+                                <input type="number" name="biaya_pendaftaran" class="form-control" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="aktif">Aktif</option>
+                                <option value="selesai">Selesai</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </x-app-layout>
