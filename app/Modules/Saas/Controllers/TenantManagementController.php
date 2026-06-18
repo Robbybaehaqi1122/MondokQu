@@ -191,6 +191,7 @@ class TenantManagementController extends Controller
             ['key' => 'inventaris', 'label' => 'InventarisQu (Aset)', 'icon' => 'ti-package'],
             ['key' => 'kegiatan', 'label' => 'KegiatanQu (Ekstrakurikuler)', 'icon' => 'ti-calendar-event'],
             ['key' => 'ppdb', 'label' => 'PpdbQu (PPDB Online)', 'icon' => 'ti-user-check'],
+            ['key' => 'perpustakaan', 'label' => 'PerpustakaanQu (Manajemen Kitab)', 'icon' => 'ti-books'],
             ['key' => 'musyrif', 'label' => 'Musyrif (Pembina)', 'icon' => 'ti-shield'],
         ];
 
@@ -202,7 +203,7 @@ class TenantManagementController extends Controller
                 'max_storage_mb' => config('saas.limits.max_storage_mb', 1024),
             ],
             'categories' => ['Pesantren', 'Madrasah', 'Tahfidz'],
-            'defaultActiveModules' => ['santri', 'absensi', 'tahfidz', 'akademik', 'pelanggaran', 'komunikasi', 'kesehatan', 'inventaris', 'kegiatan', 'ppdb'],
+            'defaultActiveModules' => ['santri', 'absensi', 'tahfidz', 'akademik', 'pelanggaran', 'komunikasi', 'kesehatan', 'inventaris', 'kegiatan', 'ppdb', 'perpustakaan'],
         ]);
     }
 
@@ -233,7 +234,7 @@ class TenantManagementController extends Controller
             'owner_password' => ['nullable', Password::min(8), 'required_with:owner_email', 'confirmed'],
             // Step 3 - Modul Aktif
             'active_modules' => ['nullable', 'array'],
-            'active_modules.*' => ['string', 'in:santri,absensi,tahfidz,akademik,pelanggaran,komunikasi,kesehatan,bendahara,inventaris,kegiatan,ppdb,musyrif'],
+            'active_modules.*' => ['string', 'in:santri,absensi,tahfidz,akademik,pelanggaran,komunikasi,kesehatan,bendahara,inventaris,kegiatan,ppdb,perpustakaan,musyrif'],
         ], [
             'name.required' => 'Nama pondok wajib diisi.',
             'slug.alpha_dash' => 'Slug hanya boleh berisi huruf, angka, tanda hubung, atau underscore.',

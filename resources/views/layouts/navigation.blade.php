@@ -14,8 +14,9 @@
     $canOpenInventarisQuModule = $user->can('manage inventaris');
     $canOpenKegiatanQuModule = $user->can('manage kegiatan');
     $canOpenPpdbQuModule = $user->can('manage ppdb');
+    $canOpenPerpustakaanQuModule = $user->can('manage perpustakaan');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -509,6 +510,39 @@
                             <a class="sidebar-sublink {{ request()->routeIs('ppdb.pengumuman.*') ? 'active' : '' }}" href="{{ route('ppdb.pengumuman.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-bullhorn"></i></span>
                                 <span>Pengumuman</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenPerpustakaanQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('perpustakaan.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('perpustakaan.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-books"></i>
+                            </span>
+                            <span class="flex-grow-1">PerpustakaanQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('perpustakaan.dashboard') ? 'active' : '' }}" href="{{ route('perpustakaan.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard Perpustakaan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('perpustakaan.kitab.*') ? 'active' : '' }}" href="{{ route('perpustakaan.kitab.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-book"></i></span>
+                                <span>Katalog Kitab</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('perpustakaan.kategori.*') ? 'active' : '' }}" href="{{ route('perpustakaan.kategori.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-tags"></i></span>
+                                <span>Kategori</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('perpustakaan.peminjaman.*') ? 'active' : '' }}" href="{{ route('perpustakaan.peminjaman.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-hand-rock"></i></span>
+                                <span>Peminjaman</span>
                             </a>
                         </div>
                     </details>
