@@ -14,6 +14,53 @@ use Illuminate\View\View;
 
 class PendaftaranController extends Controller
 {
+    public function create(Request $request, ?string $gelombang = null): View
+    {
+        $gelombangs = PpdbGelombang::withoutTenantScope()
+            ->where('status', 'aktif')
+            ->where('tanggal_mulai', '<=', now())
+            ->where('tanggal_selesai', '>=', now())
+            ->orderBy('nama')
+            ->get();
+
+        $selectedGelombang = null;
+        if ($gelombang) {
+            $selectedGelombang = PpdbGelombang::withoutTenantScope()->find($gelombang);
+        }
+
+        return view('modules.ppdb-qu.pendaftaran.create', compact('gelombangs', 'selectedGelombang'));
+    }
+
+    public function store(StorePendaftaranRequest $request): RedirectResponse
+    {
+        $gelombang = PpdbGelombang::withoutTenantScope()->findOrFail($request->gelombang_id);
+
+        if ($gelombang->status !== 'aktif') {
+            return back()->with('error', 'Gelombang pendaftaran sudah tidak aktif.');
+        }
+
+        $tenantId = $gelombang->tenant_id;
+
+        $data = $request->safe()->except('berkas');
+        $data['tenant_id'] = $tenantId;
+        $data['status'] = 'menunggu';
+        $data['nomor_pendaftaran'] = PpdbPendaftaran::generateNomorPendaftaran($tenantId, $gelombang->id);
+
+        $ppdbPendaftaran = PpdbPendaftaran::withoutTenantScope()->create($data);
+
+        if ($request->hasFile('berkas')) {
+            $paths = [];
+            foreach ($request->file('berkas') as $file) {
+                $paths[] = $file->store('ppdb-berkas', 'public');
+            }
+            $ppdbPendaftaran->forceFill(['berkas' => $paths])->save();
+        }
+
+        return redirect()
+            ->route('ppdb.daftar', $gelombang->id)
+            ->with('success', 'Pendaftaran berhasil! Nomor pendaftaran Anda: ' . $ppdbPendaftaran->nomor_pendaftaran);
+    }
+
     public function index(Request $request): View
     {
         $tenantId = auth()->user()->tenant_id;
