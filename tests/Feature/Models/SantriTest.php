@@ -118,7 +118,7 @@ it('resolves gender label', function () {
 it('resolves status label', function () {
     expect($this->santri->statusLabel())->toBe('Aktif');
 
-    foreach (['leave' => 'Cuti', 'exited' => 'Keluar', 'alumni' => 'Alumni'] as $status => $label) {
+    foreach (['leave' => 'Libur', 'exited' => 'Keluar', 'alumni' => 'Alumni'] as $status => $label) {
         $s = Santri::factory()->create(['tenant_id' => $this->tenant->id, 'status' => $status]);
         expect($s->statusLabel())->toBe($label);
     }

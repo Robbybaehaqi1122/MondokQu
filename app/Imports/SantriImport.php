@@ -144,7 +144,7 @@ class SantriImport implements SkipsEmptyRows, WithHeadingRow
         $status = $row['status'] ?? 'active';
         $status = match (strtolower(trim((string) $status))) {
             'aktif', 'active', 'a' => Santri::STATUS_ACTIVE,
-            'cuti', 'leave', 'c' => Santri::STATUS_LEAVE,
+            'cuti', 'libur', 'leave', 'c' => Santri::STATUS_LEAVE,
             'keluar', 'exited', 'k' => Santri::STATUS_EXITED,
             'alumni', 'lulus', 'al' => Santri::STATUS_ALUMNI,
             default => Santri::STATUS_ACTIVE,

@@ -37,7 +37,7 @@
         <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
-                    <h3 class="card-title mb-1">Santri Cuti</h3>
+                    <h3 class="card-title mb-1">Santri Libur</h3>
                     <div class="fs-2 fw-bold">{{ number_format($stats['leave_santri']) }}</div>
                 </div>
             </div>

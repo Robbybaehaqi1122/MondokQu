@@ -563,7 +563,7 @@ class SantriManagementController extends Controller
                 'value' => $status,
                 'label' => match ($status) {
                     Santri::STATUS_ACTIVE => 'Aktif',
-                    Santri::STATUS_LEAVE => 'Cuti',
+                    Santri::STATUS_LEAVE => 'Libur',
                     Santri::STATUS_EXITED => 'Keluar',
                     Santri::STATUS_ALUMNI => 'Alumni',
                     default => ucfirst($status),

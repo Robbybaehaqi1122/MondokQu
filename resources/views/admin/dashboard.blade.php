@@ -179,7 +179,7 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Santri Non-Aktif</div>
                                     <div class="h2 mb-1">{{ $santriStats['leave_santri'] + $santriStats['alumni_santri'] + $santriStats['exited_santri'] }}</div>
-                                    <div class="text-secondary small">Cuti, alumni, dan keluar.</div>
+                                    <div class="text-secondary small">Libur, alumni, dan keluar.</div>
                                 </div>
                             </div>
                         </div>
@@ -235,7 +235,7 @@
                         <span class="badge bg-success-lt text-success">{{ $santriStats['active_santri'] }}</span>
                     </div>
                     <div class="list-group-item d-flex align-items-center justify-content-between">
-                        <span>Cuti</span>
+                        <span>Libur</span>
                         <span class="badge bg-warning-lt text-warning">{{ $santriStats['leave_santri'] }}</span>
                     </div>
                     <div class="list-group-item d-flex align-items-center justify-content-between">

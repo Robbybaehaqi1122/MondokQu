@@ -329,7 +329,7 @@ class Santri extends Model
     {
         return match ($this->status) {
             self::STATUS_ACTIVE => 'Aktif',
-            self::STATUS_LEAVE => 'Cuti',
+            self::STATUS_LEAVE => 'Libur',
             self::STATUS_EXITED => 'Keluar',
             self::STATUS_ALUMNI => 'Alumni',
             default => '-',
