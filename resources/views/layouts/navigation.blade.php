@@ -170,7 +170,7 @@
                                 <span class="sidebar-link-icon">
                                     <i class="ti ti-list-check"></i>
                                 </span>
-                                <span>Master Kegiatan Absensi</span>
+                                <span>Kegiatan & Absensi</span>
                             </a>
                             <a class="sidebar-sublink {{ request()->routeIs('attendance.sessions.*') ? 'active' : '' }}" href="{{ route('attendance.sessions.index') }}">
                                 <span class="sidebar-link-icon">

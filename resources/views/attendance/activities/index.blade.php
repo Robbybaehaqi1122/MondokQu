@@ -8,7 +8,7 @@
 
     <x-slot name="header">
         <div>
-            <h2 class="page-title">Master Kegiatan Absensi</h2>
+            <h2 class="page-title">Kegiatan & Absensi</h2>
             <div class="text-secondary mt-1">Kelola kegiatan dan jadwal dasar untuk AbsenQu.</div>
         </div>
     </x-slot>
