@@ -82,7 +82,9 @@ class AttemptLoginAction
             );
 
             throw ValidationException::withMessages([
-                'login' => trans('auth.failed'),
+                'login' => $user
+                    ? 'Password yang Anda masukkan salah.'
+                    : 'Akun dengan email/username tersebut tidak ditemukan.',
             ]);
         }
 
