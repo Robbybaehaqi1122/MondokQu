@@ -47,7 +47,9 @@ class StoreAttendanceActivityRequest extends FormRequest
             'responsible_user_id' => [
                 'nullable',
                 'integer',
-                Rule::exists(User::class, 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
+                $this->user()?->isSuperAdmin()
+                    ? Rule::exists(User::class, 'id')
+                    : Rule::exists(User::class, 'id')->where(fn ($query) => $query->where('tenant_id', $tenantId)),
             ],
             'status' => ['required', 'string', Rule::in(AttendanceActivity::availableStatuses())],
             'description' => ['nullable', 'string', 'max:2000'],
