@@ -3,7 +3,6 @@
 namespace App\Modules\Santri\Controllers;
 
 use App\Enums\ExportFormat;
-use App\Exports\SantriCsvExport;
 use App\Exports\SantriExcelExport;
 use App\Exports\SantriPdfExport;
 use App\Exports\SantriTemplateExport;
@@ -41,7 +40,6 @@ class SantriManagementController extends Controller
     public function __construct(
         protected SantriService $santriService,
         protected DataExportManager $dataExportManager,
-        protected SantriCsvExport $santriCsvExport,
         protected FormatDispatcher $formatDispatcher,
     ) {}
 
@@ -91,7 +89,7 @@ class SantriManagementController extends Controller
         ]);
     }
 
-    public function export(Request $request): RedirectResponse|StreamedResponse|Response
+    public function export(Request $request): RedirectResponse|BinaryFileResponse|StreamedResponse|Response
     {
         $this->authorize('viewAny', Santri::class);
 
@@ -99,17 +97,12 @@ class SantriManagementController extends Controller
         $query = trim((string) $request->string('q'));
         $selectedStatus = trim((string) $request->string('status'));
         $selectedGender = trim((string) $request->string('gender'));
-        $format = ExportFormat::tryFrom($request->string('format', 'csv')) ?? ExportFormat::CSV;
+        $format = ExportFormat::tryFrom($request->string('format', 'xlsx')) ?? ExportFormat::XLSX;
 
-        if ($format === ExportFormat::CSV) {
-            $rowCount = $this->santriCsvExport->rowCount($currentUser, $query, $selectedStatus, $selectedGender);
-        } else {
-            $rowCount = (new SantriExcelExport($currentUser, $query, $selectedStatus, $selectedGender))->query()->count();
-        }
+        $rowCount = (new SantriExcelExport($currentUser, $query, $selectedStatus, $selectedGender))->query()->count();
 
         if ($this->dataExportManager->shouldQueue($rowCount)) {
             $filename = match ($format) {
-                ExportFormat::CSV => $this->santriCsvExport->filename(),
                 ExportFormat::XLSX => (new SantriExcelExport)->filename(),
                 ExportFormat::PDF => (new SantriPdfExport($currentUser, $query, $selectedStatus, $selectedGender))->filename(),
             };

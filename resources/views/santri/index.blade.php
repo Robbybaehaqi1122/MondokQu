@@ -48,9 +48,6 @@
                                     Export
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-end">
-                                    <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'csv'])) }}" class="dropdown-item">
-                                        <i class="ti ti-file-text me-2"></i> CSV
-                                    </a>
                                     <a href="{{ route('santri.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="dropdown-item">
                                         <i class="ti ti-file-spreadsheet me-2"></i> Excel
                                     </a>

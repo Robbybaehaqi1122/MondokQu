@@ -3,12 +3,9 @@
 namespace App\Services;
 
 use App\Enums\ExportFormat;
-use App\Exports\SantriCsvExport;
 use App\Exports\SantriExcelExport;
-use App\Exports\SantriInvoiceCsvExport;
 use App\Exports\SantriInvoiceExcelExport;
 use App\Exports\SantriInvoicePdfExport;
-use App\Exports\SantriPaymentReportCsvExport;
 use App\Exports\SantriPaymentReportExcelExport;
 use App\Exports\SantriPaymentReportPdfExport;
 use App\Exports\SantriPdfExport;
@@ -17,14 +14,14 @@ use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FormatDispatcher
 {
-    public function downloadSantri(?User $user, ExportFormat $format, string $search, string $status, string $gender): StreamedResponse|Response
+    public function downloadSantri(?User $user, ExportFormat $format, string $search, string $status, string $gender): BinaryFileResponse|StreamedResponse|Response
     {
         return match ($format) {
-            ExportFormat::CSV => app(SantriCsvExport::class)->download($user, $search, $status, $gender),
             ExportFormat::XLSX => Excel::download(
                 new SantriExcelExport($user, $search, $status, $gender),
                 (new SantriExcelExport($user, $search, $status, $gender))->filename()
@@ -33,10 +30,9 @@ class FormatDispatcher
         };
     }
 
-    public function downloadInvoices(?User $user, ExportFormat $format, string $search, string $status, string $santriId): StreamedResponse|Response
+    public function downloadInvoices(?User $user, ExportFormat $format, string $search, string $status, string $santriId): BinaryFileResponse|StreamedResponse|Response
     {
         return match ($format) {
-            ExportFormat::CSV => app(SantriInvoiceCsvExport::class)->download($user, $search, $status, $santriId),
             ExportFormat::XLSX => Excel::download(
                 new SantriInvoiceExcelExport($user, $search, $status, $santriId),
                 (new SantriInvoiceExcelExport($user, $search, $status, $santriId))->filename()
@@ -45,10 +41,9 @@ class FormatDispatcher
         };
     }
 
-    public function downloadPaymentReport(?User $user, ExportFormat $format, Carbon $dateFrom, Carbon $dateTo): StreamedResponse|Response
+    public function downloadPaymentReport(?User $user, ExportFormat $format, Carbon $dateFrom, Carbon $dateTo): BinaryFileResponse|StreamedResponse|Response
     {
         return match ($format) {
-            ExportFormat::CSV => app(SantriPaymentReportCsvExport::class)->download($user, $dateFrom, $dateTo),
             ExportFormat::XLSX => Excel::download(
                 new SantriPaymentReportExcelExport($user, $dateFrom, $dateTo),
                 (new SantriPaymentReportExcelExport($user, $dateFrom, $dateTo))->filename()
@@ -62,10 +57,9 @@ class FormatDispatcher
         $search = (string) ($filters['q'] ?? '');
         $status = (string) ($filters['status'] ?? '');
         $gender = (string) ($filters['gender'] ?? '');
-        $format = ExportFormat::tryFrom($export->format) ?? ExportFormat::CSV;
+        $format = ExportFormat::tryFrom($export->format) ?? ExportFormat::XLSX;
 
         return match ($format) {
-            ExportFormat::CSV => app(SantriCsvExport::class)->store($export, $user, $filters),
             ExportFormat::XLSX => $this->storeExcel($export,
                 new SantriExcelExport($user, $search, $status, $gender)
             ),
@@ -80,10 +74,9 @@ class FormatDispatcher
         $search = (string) ($filters['q'] ?? '');
         $status = (string) ($filters['status'] ?? '');
         $santriId = (string) ($filters['santri'] ?? '');
-        $format = ExportFormat::tryFrom($export->format) ?? ExportFormat::CSV;
+        $format = ExportFormat::tryFrom($export->format) ?? ExportFormat::XLSX;
 
         return match ($format) {
-            ExportFormat::CSV => app(SantriInvoiceCsvExport::class)->store($export, $user, $filters),
             ExportFormat::XLSX => $this->storeExcel($export,
                 new SantriInvoiceExcelExport($user, $search, $status, $santriId)
             ),

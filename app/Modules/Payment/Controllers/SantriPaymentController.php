@@ -4,8 +4,6 @@ namespace App\Modules\Payment\Controllers;
 
 use App\Actions\Santri\GenerateMonthlySantriInvoices;
 use App\Enums\ExportFormat;
-use App\Exports\SantriInvoiceCsvExport;
-use App\Exports\SantriPaymentReportCsvExport;
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerateMonthlySantriInvoicesJob;
 use App\Models\DataExport;
@@ -31,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SantriPaymentController extends Controller
@@ -41,21 +40,13 @@ class SantriPaymentController extends Controller
 
     protected FinancialReportingService $financialReportingService;
 
-    protected SantriInvoiceCsvExport $invoiceCsvExport;
-
-    protected SantriPaymentReportCsvExport $paymentReportCsvExport;
-
     public function __construct(
         protected ActivityLogger $activityLogger,
         ?DataExportManager $dataExportManager = null,
         ?FinancialReportingService $financialReportingService = null,
-        ?SantriInvoiceCsvExport $invoiceCsvExport = null,
-        ?SantriPaymentReportCsvExport $paymentReportCsvExport = null
     ) {
         $this->dataExportManager = $dataExportManager ?? new DataExportManager;
         $this->financialReportingService = $financialReportingService ?? new FinancialReportingService;
-        $this->invoiceCsvExport = $invoiceCsvExport ?? new SantriInvoiceCsvExport;
-        $this->paymentReportCsvExport = $paymentReportCsvExport ?? new SantriPaymentReportCsvExport;
     }
 
     /**
@@ -138,21 +129,18 @@ class SantriPaymentController extends Controller
     /**
      * Export filtered invoice list as CSV.
      */
-    public function exportInvoices(Request $request): RedirectResponse|StreamedResponse|Response
+    public function exportInvoices(Request $request): RedirectResponse|BinaryFileResponse|StreamedResponse|Response
     {
         $currentUser = $request->user();
         $search = trim((string) $request->string('q'));
         $selectedStatus = trim((string) $request->string('status'));
         $selectedSantriId = trim((string) $request->string('santri'));
-        $format = ExportFormat::tryFrom($request->string('format', 'csv')) ?? ExportFormat::CSV;
+        $format = ExportFormat::tryFrom($request->string('format', 'xlsx')) ?? ExportFormat::XLSX;
 
-        $rowCount = $format === ExportFormat::CSV
-            ? $this->invoiceCsvExport->rowCount($currentUser, $search, $selectedStatus, $selectedSantriId)
-            : (new SantriInvoiceCsvExport)->rowCount($currentUser, $search, $selectedStatus, $selectedSantriId);
+        $rowCount = (new SantriInvoiceExcelExport($currentUser, $search, $selectedStatus, $selectedSantriId))->query()->count();
 
         if ($this->dataExportManager->shouldQueue($rowCount)) {
-            $filename = (new SantriInvoiceCsvExport)->filename();
-            $filename = str_replace('.csv', '.'.$format->extension(), $filename);
+            $filename = (new SantriInvoiceExcelExport)->filename();
 
             $this->dataExportManager->queue(
                 $currentUser,
@@ -639,11 +627,11 @@ class SantriPaymentController extends Controller
     /**
      * Export filtered payment report as CSV.
      */
-    public function exportReports(Request $request): StreamedResponse|Response
+    public function exportReports(Request $request): BinaryFileResponse|StreamedResponse|Response
     {
         [$dateFrom, $dateTo] = $this->reportDateRange($request);
         $currentUser = $request->user();
-        $format = ExportFormat::tryFrom($request->string('format', 'csv')) ?? ExportFormat::CSV;
+        $format = ExportFormat::tryFrom($request->string('format', 'xlsx')) ?? ExportFormat::XLSX;
 
         return app(FormatDispatcher::class)->downloadPaymentReport($currentUser, $format, $dateFrom, $dateTo);
     }

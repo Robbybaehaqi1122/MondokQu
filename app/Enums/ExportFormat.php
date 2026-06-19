@@ -4,14 +4,12 @@ namespace App\Enums;
 
 enum ExportFormat: string
 {
-    case CSV = 'csv';
     case XLSX = 'xlsx';
     case PDF = 'pdf';
 
     public function label(): string
     {
         return match ($this) {
-            self::CSV => 'CSV',
             self::XLSX => 'Excel (.xlsx)',
             self::PDF => 'PDF',
         };
@@ -20,7 +18,6 @@ enum ExportFormat: string
     public function mimeType(): string
     {
         return match ($this) {
-            self::CSV => 'text/csv; charset=UTF-8',
             self::XLSX => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             self::PDF => 'application/pdf',
         };
