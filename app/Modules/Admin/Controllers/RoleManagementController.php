@@ -100,7 +100,7 @@ class RoleManagementController extends Controller
 
         return redirect()
             ->route('admin.roles')
-            ->with('success', 'Role baru berhasil dibuat.');
+            ->with('success', 'Hak akses baru berhasil dibuat.');
     }
 
     public function updatePermissions(UpdateRolePermissionsRequest $request, Role $role): RedirectResponse
@@ -151,7 +151,7 @@ class RoleManagementController extends Controller
 
         return redirect()
             ->route('admin.roles')
-            ->with('success', 'Permission untuk role berhasil diperbarui.');
+            ->with('success', 'Izin untuk role berhasil diperbarui.');
     }
 
     public function syncTenantRoles(Request $request, Tenant $tenant): RedirectResponse

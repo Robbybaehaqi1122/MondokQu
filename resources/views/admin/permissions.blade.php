@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h2 class="page-title">Permission Management</h2>
+            <h2 class="page-title">Atur Izin Akun</h2>
             <div class="text-secondary mt-1">Petakan hak akses detail agar role tetap rapi dan kontrol sistem lebih fleksibel.</div>
         </div>
     </x-slot>
@@ -12,8 +12,8 @@
                 <div class="card-header">
                     <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-3 w-100">
                         <div>
-                            <h3 class="card-title">Daftar Permission</h3>
-                            <p class="text-secondary mb-0">Permission adalah detail hak akses yang bisa dipetakan ke satu atau banyak role.</p>
+                            <h3 class="card-title">Daftar Izin Akun</h3>
+                            <p class="text-secondary mb-0">Izin akun adalah detail hak akses yang bisa dipetakan ke satu atau banyak role.</p>
                         </div>
 
                         <button
@@ -24,7 +24,7 @@
                             data-bs-target="#createPermissionModal"
                         >
                             <i class="ti ti-key me-1"></i>
-                            Tambah Permission
+                            Tambah Izin Baru
                         </button>
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                     <table class="table table-vcenter card-table">
                         <thead>
                             <tr>
-                                <th>Permission</th>
+                                <th>Izin Akun</th>
                                 <th>Kategori</th>
                                 <th>Dipakai Oleh</th>
                                 <th class="w-1">Aksi</th>
@@ -81,7 +81,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-secondary">Belum ada permission yang tersimpan.</td>
+                                    <td colspan="4" class="text-secondary">Belum ada izin akun yang tersimpan.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -99,14 +99,14 @@
 
                     <div class="modal-header">
                         <div>
-                            <h5 class="modal-title">Tambah Permission Baru</h5>
+                            <h5 class="modal-title">Tambah Izin Baru</h5>
                             <div class="text-secondary small mt-1">Gunakan nama yang jelas, misalnya <code>approve izin</code> atau <code>edit historical pembayaran</code>.</div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body">
-                        <label for="permission_name" class="form-label">Nama Permission</label>
+                            <label for="permission_name" class="form-label">Nama Izin</label>
                         <input
                             id="permission_name"
                             name="name"
@@ -126,7 +126,7 @@
                             Batal
                         </button>
                         <button type="submit" class="btn btn-primary">
-                            Simpan Permission
+                            Simpan Izin
                         </button>
                     </div>
                 </form>
@@ -144,14 +144,14 @@
 
                         <div class="modal-header">
                             <div>
-                                <h5 class="modal-title">Edit Nama Permission</h5>
-                                <div class="text-secondary small mt-1">Perbarui nama permission agar lebih jelas dan konsisten.</div>
+                                <h5 class="modal-title">Edit Nama Izin</h5>
+                                <div class="text-secondary small mt-1">Perbarui nama izin agar lebih jelas dan konsisten.</div>
                             </div>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
 
                         <div class="modal-body">
-                            <label for="permission_edit_name_{{ $permission->id }}" class="form-label">Nama Permission</label>
+                            <label for="permission_edit_name_{{ $permission->id }}" class="form-label">Nama Izin</label>
                             <input
                                 id="permission_edit_name_{{ $permission->id }}"
                                 name="name"
@@ -184,8 +184,8 @@
 
                         <div class="modal-header">
                             <div>
-                                <h5 class="modal-title">Mapping Role untuk Permission</h5>
-                                <div class="text-secondary small mt-1">{{ $permission->name }} - pilih role yang boleh memiliki permission ini.</div>
+                                <h5 class="modal-title">Mapping Role untuk Izin</h5>
+                                <div class="text-secondary small mt-1">{{ $permission->name }} - pilih role yang boleh memiliki izin ini.</div>
                             </div>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -204,7 +204,7 @@
                                             >
                                             <span class="form-check-label">
                                                 <span class="fw-semibold d-block">{{ $role->name }}</span>
-                                                <span class="text-secondary small">Role yang akan menerima permission ini.</span>
+                                                <span class="text-secondary small">Role yang akan menerima izin ini.</span>
                                             </span>
                                         </label>
                                     </div>

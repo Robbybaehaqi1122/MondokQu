@@ -58,7 +58,7 @@ class PermissionManagementController extends Controller
 
         return redirect()
             ->route('admin.permissions')
-            ->with('success', 'Permission baru berhasil dibuat.');
+            ->with('success', 'Izin baru berhasil dibuat.');
     }
 
     /**
@@ -86,7 +86,7 @@ class PermissionManagementController extends Controller
 
         return redirect()
             ->route('admin.permissions')
-            ->with('success', 'Nama permission berhasil diperbarui.');
+            ->with('success', 'Nama izin berhasil diperbarui.');
     }
 
     /**
@@ -127,6 +127,6 @@ class PermissionManagementController extends Controller
 
         return redirect()
             ->route('admin.permissions')
-            ->with('success', 'Mapping role untuk permission berhasil diperbarui.');
+            ->with('success', 'Pemetaan role untuk izin berhasil diperbarui.');
     }
 }

@@ -310,7 +310,7 @@ class UserManagementController extends Controller
 
         return redirect()
             ->route('admin.users')
-            ->with('success', 'Role user berhasil diperbarui.');
+            ->with('success', 'Hak akses user berhasil diperbarui.');
     }
 
     /**
@@ -768,6 +768,6 @@ class UserManagementController extends Controller
 
         return redirect()
             ->route('admin.users.show', $user)
-            ->with('success', 'Permission user berhasil diperbarui.');
+            ->with('success', 'Izin akun user berhasil diperbarui.');
     }
 }

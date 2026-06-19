@@ -657,7 +657,7 @@
                                     <span class="sidebar-link-icon">
                                         <i class="ti ti-user-shield"></i>
                                     </span>
-                                    <span>Manajemen Role</span>
+                                    <span>Atur Hak Akses</span>
                                 </a>
                             @endcan
 
@@ -666,7 +666,7 @@
                                     <span class="sidebar-link-icon">
                                         <i class="ti ti-key"></i>
                                     </span>
-                                    <span>Permission Management</span>
+                                    <span>Atur Izin Akun</span>
                                 </a>
                             @endcan
 

@@ -1,7 +1,7 @@
 <x-app-layout>
     @php
         $roleDescriptions = [
-            'Superadmin' => 'Akses penuh untuk user, role, permission, dan pengaturan sistem.',
+            'Superadmin' => 'Akses penuh untuk user, hak akses, izin akun, dan pengaturan sistem.',
             'Admin' => 'Mengelola operasional inti aplikasi tanpa akses penuh ke konfigurasi sistem.',
             'Pengurus' => 'Fokus pada data santri, kamar, dan proses izin harian.',
             'Bendahara' => 'Fokus pada pembayaran, transaksi, dan laporan keuangan.',
@@ -12,7 +12,7 @@
 
     <x-slot name="header">
         <div>
-            <h2 class="page-title">Manajemen Role</h2>
+                        <h2 class="page-title">Atur Hak Akses</h2>
             <div class="text-secondary mt-1">Kelola struktur jabatan dan hak akses. Role <strong>Global</strong> menjadi template untuk role <strong>Per-Tenant</strong>.</div>
         </div>
     </x-slot>
@@ -29,7 +29,7 @@
                                     <i class="ti ti-world me-1"></i>
                                     Role Global (Template)
                                 </h3>
-                                <p class="text-secondary mb-0">Role ini bersifat global — perubahan permission akan mempengaruhi <strong>semua user</strong> di <strong>seluruh tenant</strong>. Role ini juga menjadi template saat membuat role per-tenant.</p>
+                                <p class="text-secondary mb-0">Role ini bersifat global — perubahan izin akan mempengaruhi <strong>semua user</strong> di <strong>seluruh tenant</strong>. Role ini juga menjadi template saat membuat role per-tenant.</p>
                             </div>
                         </div>
                     </div>
@@ -39,7 +39,7 @@
                                 <tr>
                                     <th>Role</th>
                                     <th>User Terhubung</th>
-                                    <th>Permission Aktif</th>
+                                    <th>Izin Aktif</th>
                                     <th class="w-1">Aksi</th>
                                 </tr>
                             </thead>
@@ -63,11 +63,11 @@
                                                 @forelse ($role->permissions->take(4) as $permission)
                                                     <span class="badge bg-success-lt text-success">{{ $permission->name }}</span>
                                                 @empty
-                                                    <span class="text-secondary small">Belum ada permission.</span>
+                                                    <span class="text-secondary small">Belum ada izin.</span>
                                                 @endforelse
                                             </div>
                                             @if ($role->permissions_count > 4)
-                                                <div class="text-secondary small mt-2">+{{ $role->permissions_count - 4 }} permission lainnya</div>
+                                                <div class="text-secondary small mt-2">+{{ $role->permissions_count - 4 }} izin lainnya</div>
                                             @endif
                                         </td>
                                         <td>
@@ -77,7 +77,7 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#managePermissionsModal{{ $role->id }}"
                                             >
-                                                Atur Permission
+                                                Atur Izin Akun
                                             </button>
                                         </td>
                                     </tr>
@@ -102,7 +102,7 @@
                                     <i class="ti ti-building-community me-1"></i>
                                     Role Per-Tenant
                                 </h3>
-                                <p class="text-secondary mb-0">Role spesifik untuk masing-masing pondok. Perubahan hanya berdampak di tenant tersebut. Klik <strong>Sync dari Global</strong> untuk menyelaraskan permission dengan template terbaru.</p>
+                                <p class="text-secondary mb-0">Role spesifik untuk masing-masing pondok. Perubahan hanya berdampak di tenant tersebut. Klik <strong>Sync dari Global</strong> untuk menyelaraskan izin dengan template terbaru.</p>
                             </div>
                             <div class="d-flex gap-2 flex-shrink-0">
                                 <button
@@ -117,7 +117,7 @@
                                 </button>
                                 @if (! $tenantRoles->isEmpty())
                                     <form method="POST" action="{{ route('admin.roles.sync-tenant-all') }}" class="d-inline"
-                                        onsubmit="return confirm('Sinkronisasi semua role di semua tenant dengan template global? Permission yang sudah diubah manual akan ditimpa.')">
+                                        onsubmit="return confirm('Sinkronisasi semua role di semua tenant dengan template global? Izin yang sudah diubah manual akan ditimpa.')">
                                         @csrf
                                         <button type="submit" class="btn btn-outline-primary btn-sm">
                                             <i class="ti ti-refresh me-1"></i>Sync Semua Tenant
@@ -142,7 +142,7 @@
                                     <span class="badge bg-purple-lt text-purple ms-1">{{ $roles->count() }} role</span>
                                     <div class="ms-auto">
                                         <form method="POST" action="{{ route('admin.roles.sync-tenant', $tenantId) }}" class="d-inline"
-                                            onsubmit="return confirm('Sinkronisasi semua role tenant ini dengan template global? Permission yang sudah diubah manual akan ditimpa.')">
+                                            onsubmit="return confirm('Sinkronisasi semua role tenant ini dengan template global? Izin yang sudah diubah manual akan ditimpa.')">
                                             @csrf
                                             <button type="submit" class="btn btn-outline-primary btn-sm">
                                                 <i class="ti ti-refresh me-1"></i>Sync Semua Role
@@ -156,7 +156,7 @@
                                             <tr>
                                                 <th>Role</th>
                                                 <th>User Terhubung</th>
-                                                <th>Permission Aktif</th>
+                                                <th>Izin Aktif</th>
                                                 <th class="w-1">Aksi</th>
                                             </tr>
                                         </thead>
@@ -180,11 +180,11 @@
                                                             @forelse ($role->permissions->take(4) as $permission)
                                                                 <span class="badge bg-success-lt text-success">{{ $permission->name }}</span>
                                                             @empty
-                                                                <span class="text-secondary small">Belum ada permission.</span>
+                                                                <span class="text-secondary small">Belum ada izin.</span>
                                                             @endforelse
                                                         </div>
                                                         @if ($role->permissions_count > 4)
-                                                            <div class="text-secondary small mt-2">+{{ $role->permissions_count - 4 }} permission lainnya</div>
+                                                            <div class="text-secondary small mt-2">+{{ $role->permissions_count - 4 }} izin lainnya</div>
                                                         @endif
                                                     </td>
                                                     <td>
@@ -195,14 +195,14 @@
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#managePermissionsModal{{ $role->id }}"
                                                             >
-                                                                Atur Permission
+                                                                Atur Izin Akun
                                                             </button>
                                                             <form method="POST" action="{{ route('admin.roles.sync-from-template', $role) }}" class="d-inline">
                                                                 @csrf
                                                                 <button
                                                                     type="submit"
                                                                     class="btn btn-ghost-warning btn-sm"
-                                                                    onclick="return confirm('Sync permission role {{ $role->name }} dari template global?')"
+                                                                    onclick="return confirm('Sync izin role {{ $role->name }} dari template global?')"
                                                                 >
                                                                     Sync dari Global
                                                                 </button>
@@ -253,7 +253,7 @@
                                 <tr>
                                     <th>Role</th>
                                     <th>User Terhubung</th>
-                                    <th>Permission Aktif</th>
+                                    <th>Izin Aktif</th>
                                     <th class="w-1">Aksi</th>
                                 </tr>
                             </thead>
@@ -277,11 +277,11 @@
                                                 @forelse ($role->permissions->take(4) as $permission)
                                                     <span class="badge bg-success-lt text-success">{{ $permission->name }}</span>
                                                 @empty
-                                                    <span class="text-secondary small">Belum ada permission.</span>
+                                                    <span class="text-secondary small">Belum ada izin.</span>
                                                 @endforelse
                                             </div>
                                             @if ($role->permissions_count > 4)
-                                                <div class="text-secondary small mt-2">+{{ $role->permissions_count - 4 }} permission lainnya</div>
+                                                <div class="text-secondary small mt-2">+{{ $role->permissions_count - 4 }} izin lainnya</div>
                                             @endif
                                         </td>
                                         <td>
@@ -291,7 +291,7 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#managePermissionsModal{{ $role->id }}"
                                             >
-                                                Atur Permission
+                                                Atur Izin Akun
                                             </button>
                                         </td>
                                     </tr>
@@ -384,8 +384,8 @@
 
                         <div class="modal-header">
                             <div>
-                                <h5 class="modal-title">Atur Permission Role</h5>
-                                <div class="text-secondary small mt-1">{{ $role->name }} — pilih permission yang ingin diaktifkan.</div>
+                                <h5 class="modal-title">Atur Izin Akun Role</h5>
+                                <div class="text-secondary small mt-1">{{ $role->name }} — pilih izin yang ingin diaktifkan.</div>
                             </div>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -395,7 +395,7 @@
                                 <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
                                     <i class="ti ti-alert-triangle"></i>
                                     <span>
-                                        <strong>Perhatian:</strong> Role ini spesifik untuk <strong>{{ $role->tenant?->name ?? 'tenant ini' }}</strong> — perubahan permission hanya akan mempengaruhi
+                                        <strong>Perhatian:</strong> Role ini spesifik untuk <strong>{{ $role->tenant?->name ?? 'tenant ini' }}</strong> — perubahan izin hanya akan mempengaruhi
                                         <strong>user</strong> dengan role <strong>{{ $role->name }}</strong> di tenant <strong>ini</strong>.
                                     </span>
                                 </div>
@@ -403,7 +403,7 @@
                                 <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
                                     <i class="ti ti-alert-triangle"></i>
                                     <span>
-                                        <strong>Perhatian:</strong> Role bersifat <strong>global (template)</strong> — perubahan permission akan mempengaruhi
+                                        <strong>Perhatian:</strong> Role bersifat <strong>global (template)</strong> — perubahan izin akan mempengaruhi
                                         <strong>semua user</strong> dengan role <strong>{{ $role->name }}</strong> di <strong>seluruh tenant</strong>.
                                     </span>
                                 </div>
@@ -441,7 +441,7 @@
                                 Batal
                             </button>
                             <button type="submit" class="btn btn-primary">
-                                Simpan Permission
+                                Simpan Izin Akun
                             </button>
                         </div>
                     </form>
