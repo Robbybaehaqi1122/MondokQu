@@ -4,15 +4,13 @@ namespace App\Modules\Akademik\Controllers;
 
 use App\Models\AttitudeGrade;
 use App\Models\Santri;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 use Illuminate\View\View;
 
 class AttitudeGradeController extends Controller
 {
-    use AuthorizesRequests;
 
     public function index(Request $request): View
     {

@@ -3,14 +3,12 @@
 namespace App\Modules\Akademik\Controllers;
 
 use App\Models\GradeLevel;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 
 class GradeLevelController extends Controller
 {
-    use AuthorizesRequests;
 
     public function store(Request $request): RedirectResponse
     {

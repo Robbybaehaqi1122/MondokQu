@@ -5,7 +5,7 @@ namespace App\Modules\Akademik\Controllers;
 use App\Models\MataPelajaran;
 use App\Models\NilaiSantri;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use App\Http\Controllers\Controller;
 use Illuminate\View\View;
 
 class AkademikDashboardController extends Controller

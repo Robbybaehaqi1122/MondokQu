@@ -13,7 +13,7 @@ use App\Models\TahfidzSession;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use App\Http\Controllers\Controller;
 use Illuminate\View\View;
 
 class RaporController extends Controller
