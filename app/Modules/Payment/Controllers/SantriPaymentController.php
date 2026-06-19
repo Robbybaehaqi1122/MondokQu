@@ -7,6 +7,7 @@ use App\Enums\ExportFormat;
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerateMonthlySantriInvoicesJob;
 use App\Models\DataExport;
+use App\Models\PaymentAccount;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\SantriPayment;
@@ -122,6 +123,18 @@ class SantriPaymentController extends Controller
                 ->forType(DataExport::TYPE_SANTRI_INVOICES)
                 ->latest()
                 ->limit(5)
+                ->get(),
+            'transferAccounts' => PaymentAccount::withoutTenantScope()
+                ->where('tenant_id', $currentUser->tenant_id)
+                ->active()
+                ->whereIn('type', ['bank', 'e_wallet'])
+                ->orderBy('sort_order')
+                ->get(),
+            'qrisAccounts' => PaymentAccount::withoutTenantScope()
+                ->where('tenant_id', $currentUser->tenant_id)
+                ->active()
+                ->where('type', 'qris')
+                ->orderBy('sort_order')
                 ->get(),
         ]);
     }
@@ -434,6 +447,7 @@ class SantriPaymentController extends Controller
                 'paid_at' => Carbon::parse($validated['paid_at']),
                 'amount' => $validated['amount'],
                 'payment_method' => $validated['payment_method'],
+                'payment_account_id' => $validated['payment_account_id'] ?? null,
                 'reference_number' => $validated['reference_number'] ?? null,
                 'note' => $validated['note'] ?? null,
                 'recorded_by' => $currentUser?->id,
@@ -509,6 +523,7 @@ class SantriPaymentController extends Controller
                 'paid_at' => Carbon::parse($validated['paid_at']),
                 'amount' => $validated['amount'],
                 'payment_method' => $validated['payment_method'],
+                'payment_account_id' => $validated['payment_account_id'] ?? null,
                 'reference_number' => $validated['reference_number'] ?? null,
                 'note' => $validated['note'] ?? null,
             ])->save();

@@ -36,6 +36,7 @@ class StoreSantriPaymentRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:100', 'max:99999999999'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
             'payment_method' => ['required', 'string', Rule::in(SantriPayment::paymentMethods())],
+            'payment_account_id' => ['nullable', 'integer', 'exists:payment_accounts,id'],
             'reference_number' => ['nullable', 'string', 'max:100'],
             'note' => ['nullable', 'string', 'max:1000'],
         ];

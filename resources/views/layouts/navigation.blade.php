@@ -311,8 +311,14 @@
                                 <span class="sidebar-link-icon"><i class="ti ti-file-text"></i></span>
                                 <span>Kwitansi Digital</span>
                             </a>
+                            @if ($user->can('manage keuangan'))
+                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.accounts.*') ? 'active' : '' }}" href="{{ route('santri.payments.accounts.index') }}">
+                                    <span class="sidebar-link-icon"><i class="ti ti-building-bank"></i></span>
+                                    <span>Akun Pembayaran</span>
+                                </a>
+                            @endif
                             @if ($user->can('view pembayaran'))
-                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.*') ? 'active' : '' }}" href="{{ route('santri.payments.index') }}">
+                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.*') && ! request()->routeIs('santri.payments.accounts.*') ? 'active' : '' }}" href="{{ route('santri.payments.index') }}">
                                     <span class="sidebar-link-icon"><i class="ti ti-wallet"></i></span>
                                     <span>Pembayaran Santri</span>
                                 </a>

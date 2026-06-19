@@ -27,6 +27,7 @@ class SantriPayment extends Model
         'paid_at',
         'amount',
         'payment_method',
+        'payment_account_id',
         'reference_number',
         'note',
         'recorded_by',
@@ -53,12 +54,28 @@ class SantriPayment extends Model
     public static function paymentMethods(): array
     {
         return [
-            'transfer bank',
             'cash',
-            'e-wallet',
+            'transfer',
             'qris',
-            'lainnya',
         ];
+    }
+
+    public static function paymentMethodLabel(string $method): string
+    {
+        return match ($method) {
+            'cash' => 'Cash',
+            'transfer' => 'Transfer',
+            'qris' => 'QRIS',
+            'transfer bank' => 'Transfer Bank',
+            'e-wallet' => 'E-Wallet',
+            'lainnya' => 'Lainnya',
+            default => str($method)->headline(),
+        };
+    }
+
+    public function paymentAccount(): BelongsTo
+    {
+        return $this->belongsTo(PaymentAccount::class, 'payment_account_id');
     }
 
     /**

@@ -45,7 +45,10 @@
                         <h3 class="card-title">Tagihan Terbaru</h3>
                         <div class="text-secondary small mt-1">Tagihan terakhir yang dibuat untuk santri aktif.</div>
                     </div>
-                    <div class="card-actions">
+                    <div class="card-actions d-flex gap-2">
+                        @can('manage keuangan')
+                            <a href="{{ route('santri.payments.accounts.index') }}" class="btn btn-outline-secondary">Akun Pembayaran</a>
+                        @endcan
                         <a href="{{ route('santri.payments.invoices') }}" class="btn btn-primary">Kelola Tagihan</a>
                     </div>
                 </div>
@@ -92,7 +95,7 @@
                             <div class="d-flex justify-content-between gap-3">
                                 <div>
                                     <div class="fw-semibold">{{ $payment->santri?->full_name ?? '-' }}</div>
-                                    <div class="text-secondary small">{{ $payment->invoice?->invoice_number ?? '-' }} - {{ str($payment->payment_method)->headline() }}</div>
+                                    <div class="text-secondary small">{{ $payment->invoice?->invoice_number ?? '-' }} - {{ \App\Models\SantriPayment::paymentMethodLabel($payment->payment_method) }}</div>
                                 </div>
                                 <div class="text-end">
                                     <div class="fw-semibold">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</div>

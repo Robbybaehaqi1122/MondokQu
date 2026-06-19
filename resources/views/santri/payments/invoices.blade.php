@@ -303,19 +303,61 @@
                                                                 <select
                                                                     id="payment_method_{{ $invoice->id }}"
                                                                     name="payment_method"
-                                                                    class="form-select @if(old('paying_invoice_id') == $invoice->id && $errors->recordPayment->has('payment_method')) is-invalid @endif"
+                                                                    class="form-select payment-method-select @if(old('paying_invoice_id') == $invoice->id && $errors->recordPayment->has('payment_method')) is-invalid @endif"
+                                                                    data-invoice-id="{{ $invoice->id }}"
                                                                     required
                                                                 >
                                                                     <option value="">Pilih metode bayar</option>
-                                                                    @foreach ($paymentMethods as $method)
-                                                                        <option value="{{ $method }}" @selected((old('paying_invoice_id') == $invoice->id ? old('payment_method') : '') === $method)>
-                                                                            {{ str($method)->headline() }}
-                                                                        </option>
-                                                                    @endforeach
+                                                                    <option value="cash" @selected((old('paying_invoice_id') == $invoice->id ? old('payment_method') : '') === 'cash')>CASH</option>
+                                                                    <option value="transfer" @selected((old('paying_invoice_id') == $invoice->id ? old('payment_method') : '') === 'transfer')>TRANSFER</option>
+                                                                    <option value="qris" @selected((old('paying_invoice_id') == $invoice->id ? old('payment_method') : '') === 'qris')>QRIS</option>
                                                                 </select>
                                                                 @if (old('paying_invoice_id') == $invoice->id && $errors->recordPayment->has('payment_method'))
                                                                     <div class="invalid-feedback">{{ $errors->recordPayment->first('payment_method') }}</div>
                                                                 @endif
+                                                            </div>
+
+                                                            {{-- TRANSFER Section --}}
+                                                            <div class="col-12 payment-section payment-section-transfer" id="payment_section_transfer_{{ $invoice->id }}" style="display:none">
+                                                                <div class="card bg-muted-lt">
+                                                                    <div class="card-body">
+                                                                        <label class="form-label">Pilih Rekening Tujuan</label>
+                                                                        <select name="payment_account_id" class="form-select mb-2 payment-account-select" data-invoice-id="{{ $invoice->id }}">
+                                                                            <option value="">Pilih rekening</option>
+                                                                            @foreach ($transferAccounts as $acc)
+                                                                                <option value="{{ $acc->id }}"
+                                                                                    data-account-number="{{ $acc->account_number }}"
+                                                                                    data-account-name="{{ $acc->account_name }}"
+                                                                                    data-bank-name="{{ $acc->bank_name }}"
+                                                                                    @selected(old('paying_invoice_id') == $invoice->id && old('payment_account_id') == $acc->id)>
+                                                                                    {{ $acc->displayLabel() }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                        <div id="account_detail_{{ $invoice->id }}" class="small text-secondary"></div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- QRIS Section --}}
+                                                            <div class="col-12 payment-section payment-section-qris" id="payment_section_qris_{{ $invoice->id }}" style="display:none">
+                                                                <div class="card bg-muted-lt">
+                                                                    <div class="card-body text-center">
+                                                                        <label class="form-label mb-2">Pilih QRIS</label>
+                                                                        <select name="payment_account_id" class="form-select mb-3 qris-account-select" data-invoice-id="{{ $invoice->id }}">
+                                                                            <option value="">Pilih QRIS</option>
+                                                                            @foreach ($qrisAccounts as $acc)
+                                                                                <option value="{{ $acc->id }}"
+                                                                                    data-qris-url="{{ $acc->qrisImageUrl() }}"
+                                                                                    data-name="{{ $acc->name }}"
+                                                                                    @selected(old('paying_invoice_id') == $invoice->id && old('payment_account_id') == $acc->id)>
+                                                                                    {{ $acc->name }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                        <div id="qris_preview_{{ $invoice->id }}" class="mt-2"></div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
 
                                                             <div class="col-md-6">
@@ -504,10 +546,10 @@
                                                                             <div class="col-md-3">
                                                                                 <label for="edit_payment_method_{{ $payment->id }}" class="form-label">Metode</label>
                                                                                 <select id="edit_payment_method_{{ $payment->id }}" name="payment_method" class="form-select @if(old('editing_payment_id') == $payment->id && $errors->updatePayment->has('payment_method')) is-invalid @endif" required>
-                                                                                    @foreach ($paymentMethods as $method)
-                                                                                        <option value="{{ $method }}" @selected((old('editing_payment_id') == $payment->id ? old('payment_method') : $payment->payment_method) === $method)>
-                                                                                            {{ str($method)->headline() }}
-                                                                                        </option>
+                                                                                     @foreach ($paymentMethods as $method)
+                                                                                         <option value="{{ $method }}" @selected((old('editing_payment_id') == $payment->id ? old('payment_method') : $payment->payment_method) === $method)>
+                                                                                             {{ \App\Models\SantriPayment::paymentMethodLabel($method) }}
+                                                                                         </option>
                                                                                     @endforeach
                                                                                 </select>
                                                                                 @if (old('editing_payment_id') == $payment->id && $errors->updatePayment->has('payment_method'))
@@ -788,6 +830,64 @@
                     window.bootstrap.Modal.getOrCreateInstance(correctionModalElement).show();
                 }
             @endif
+
+            // Payment method toggle
+            document.addEventListener('change', function (e) {
+                const select = e.target.closest('.payment-method-select');
+                if (!select) return;
+
+                const invoiceId = select.dataset.invoiceId;
+                const method = select.value;
+
+                document.querySelectorAll('#recordPaymentModal' + invoiceId + ' .payment-section').forEach(function (el) {
+                    el.style.display = 'none';
+                });
+
+                if (method === 'transfer') {
+                    document.getElementById('payment_section_transfer_' + invoiceId).style.display = '';
+                } else if (method === 'qris') {
+                    document.getElementById('payment_section_qris_' + invoiceId).style.display = '';
+                }
+            });
+
+            // Account detail display
+            document.addEventListener('change', function (e) {
+                const select = e.target.closest('.payment-account-select');
+                if (!select) return;
+
+                const invoiceId = select.dataset.invoiceId;
+                const option = select.options[select.selectedIndex];
+                const detailEl = document.getElementById('account_detail_' + invoiceId);
+
+                if (option && option.value) {
+                    const bank = option.dataset.bankName || '';
+                    const holder = option.dataset.accountName || '';
+                    const number = option.dataset.accountNumber || '';
+                    const parts = [];
+                    if (bank) parts.push(bank);
+                    if (holder) parts.push('a.n. ' + holder);
+                    if (number) parts.push(number);
+                    detailEl.textContent = parts.join(' - ');
+                } else {
+                    detailEl.textContent = '';
+                }
+            });
+
+            // QRIS preview display
+            document.addEventListener('change', function (e) {
+                const select = e.target.closest('.qris-account-select');
+                if (!select) return;
+
+                const invoiceId = select.dataset.invoiceId;
+                const option = select.options[select.selectedIndex];
+                const previewEl = document.getElementById('qris_preview_' + invoiceId);
+
+                if (option && option.value && option.dataset.qrisUrl) {
+                    previewEl.innerHTML = '<p class="text-secondary small mb-2">' + option.dataset.name + '</p><img src="' + option.dataset.qrisUrl + '" alt="QRIS" class="img-fluid" style="max-height:200px">';
+                } else {
+                    previewEl.innerHTML = '';
+                }
+            });
         });
     </script>
 </x-app-layout>

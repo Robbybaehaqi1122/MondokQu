@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Payment\Controllers\PaymentAccountController;
 use App\Modules\Payment\Controllers\SantriPaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,5 +53,23 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::get('/laporan/export', [SantriPaymentController::class, 'exportReports'])
             ->middleware('permission:view laporan keuangan')
             ->name('reports.export');
+
+        Route::prefix('akun')->name('accounts.')->group(function () {
+            Route::get('/', [PaymentAccountController::class, 'index'])
+                ->middleware('permission:manage keuangan')
+                ->name('index');
+
+            Route::post('/', [PaymentAccountController::class, 'store'])
+                ->middleware('permission:manage keuangan')
+                ->name('store');
+
+            Route::patch('/{paymentAccount}', [PaymentAccountController::class, 'update'])
+                ->middleware('permission:manage keuangan')
+                ->name('update');
+
+            Route::delete('/{paymentAccount}', [PaymentAccountController::class, 'destroy'])
+                ->middleware('permission:manage keuangan')
+                ->name('destroy');
+        });
     });
 });

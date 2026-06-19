@@ -74,7 +74,7 @@
                         <div class="list-group-item">
                             <div class="d-flex justify-content-between gap-3">
                                 <div>
-                                    <div class="fw-semibold">{{ str($methodTotal->payment_method)->headline() }}</div>
+                                    <div class="fw-semibold">{{ \App\Models\SantriPayment::paymentMethodLabel($methodTotal->payment_method) }}</div>
                                     <div class="text-secondary small">{{ number_format($methodTotal->count) }} transaksi</div>
                                 </div>
                                 <div class="fw-semibold text-end">Rp {{ number_format($methodTotal->total / 100, 0, ',', '.') }}</div>
@@ -116,7 +116,7 @@
                                         <div class="text-secondary small">NIS: {{ $payment->santri?->nis ?? '-' }}</div>
                                     </td>
                                     <td>{{ $payment->invoice?->invoice_number ?? '-' }}</td>
-                                    <td>{{ str($payment->payment_method)->headline() }}</td>
+                                    <td>{{ \App\Models\SantriPayment::paymentMethodLabel($payment->payment_method) }}</td>
                                     <td>Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</td>
                                     <td>{{ $payment->recorder?->name ?? 'System' }}</td>
                                 </tr>
