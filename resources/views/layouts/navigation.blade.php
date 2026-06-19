@@ -670,15 +670,6 @@
                                 </a>
                             @endcan
 
-                            @can('manage branding')
-                                <a class="sidebar-sublink {{ request()->routeIs('branding.*') ? 'active' : '' }}" href="{{ route('branding.edit') }}">
-                                    <span class="sidebar-link-icon">
-                                        <i class="ti ti-palette"></i>
-                                    </span>
-                                    <span>Branding Pondok</span>
-                                </a>
-                            @endcan
-
                             @if ($user->hasRole('Superadmin') || $user->can('view activity logs'))
                                 <a class="sidebar-sublink {{ request()->routeIs('admin.activity-logs') ? 'active' : '' }}" href="{{ route('admin.activity-logs') }}">
                                     <span class="sidebar-link-icon">
@@ -699,6 +690,15 @@
                         </div>
                     </details>
                 @endif
+
+                @can('manage branding')
+                    <a class="sidebar-link {{ request()->routeIs('branding.*') ? 'active' : '' }}" href="{{ route('branding.edit') }}">
+                        <span class="sidebar-link-icon">
+                            <i class="ti ti-palette"></i>
+                        </span>
+                        <span class="flex-grow-1">Profile Pondok</span>
+                    </a>
+                @endcan
 
                 @if ($user->hasRole('Superadmin'))
                     <details class="sidebar-dropdown" @if (request()->routeIs('saas.dashboard') || request()->routeIs('saas.tenants.*') || request()->routeIs('saas.subscription-histories.*') || request()->routeIs('saas.billing-notes.*') || request()->routeIs('saas.resource-report') || request()->routeIs('backup.*')) open @endif>
