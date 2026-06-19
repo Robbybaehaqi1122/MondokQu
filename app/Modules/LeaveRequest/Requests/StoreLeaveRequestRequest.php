@@ -32,14 +32,14 @@ class StoreLeaveRequestRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tenantId = $this->user()?->tenant_id;
+        $user = $this->user();
 
         return [
             'santri_id' => [
                 'required',
                 Rule::exists(Santri::class, 'id')
-                    ->where(fn ($query) => $query
-                        ->where('tenant_id', $tenantId)
+                    ->where(fn ($query) use ($user) => $query
+                        ->when(! $user?->isSuperAdmin(), fn ($q) => $q->where('tenant_id', $user->tenant_id))
                         ->where('status', Santri::STATUS_ACTIVE)),
             ],
             'start_date' => ['required', 'date', 'after_or_equal:today'],
