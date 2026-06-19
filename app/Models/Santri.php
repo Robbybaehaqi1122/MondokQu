@@ -354,8 +354,8 @@ class Santri extends Model
      */
     public function displayGuardianName(string $fallback = '-'): string
     {
-        $primaryGuardian = $this->guardians()->wherePivot('is_primary', true)->first()
-            ?? $this->guardians()->first();
+        $primaryGuardian = $this->guardians->firstWhere('pivot.is_primary', true)
+            ?? $this->guardians->first();
 
         return $primaryGuardian?->name ?? ($this->guardian_name ?: $fallback);
     }
@@ -365,8 +365,8 @@ class Santri extends Model
      */
     public function displayGuardianPhone(string $fallback = '-'): string
     {
-        $primaryGuardian = $this->guardians()->wherePivot('is_primary', true)->first()
-            ?? $this->guardians()->first();
+        $primaryGuardian = $this->guardians->firstWhere('pivot.is_primary', true)
+            ?? $this->guardians->first();
 
         return $primaryGuardian?->phone_number ?? ($this->guardian_phone_number ?: $fallback);
     }
