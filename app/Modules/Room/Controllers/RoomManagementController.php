@@ -56,8 +56,6 @@ class RoomManagementController extends Controller
             'rooms' => $rooms,
             'roomStats' => [
                 'total' => (clone $baseQuery)->count(),
-                'active' => (clone $baseQuery)->where('status', Room::STATUS_ACTIVE)->count(),
-                'inactive' => (clone $baseQuery)->where('status', Room::STATUS_INACTIVE)->count(),
                 'capacity' => (clone $baseQuery)->sum('capacity'),
             ],
             'statusOptions' => $this->statusOptions(),

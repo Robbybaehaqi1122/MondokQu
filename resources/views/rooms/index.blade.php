@@ -14,25 +14,13 @@
     </x-slot>
 
     <div class="row row-cards mb-3">
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-6">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Total Kamar</div>
                 <div class="fs-2 fw-bold">{{ number_format($roomStats['total']) }}</div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Aktif</div>
-                <div class="fs-2 fw-bold">{{ number_format($roomStats['active']) }}</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Nonaktif</div>
-                <div class="fs-2 fw-bold">{{ number_format($roomStats['inactive']) }}</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-6">
             <div class="card card-body">
                 <div class="text-uppercase text-secondary small">Total Kapasitas</div>
                 <div class="fs-2 fw-bold">{{ number_format((float) $roomStats['capacity']) }}</div>
@@ -92,7 +80,7 @@
                     <tr>
                         <th>Kamar</th>
                         <th>Kapasitas</th>
-                        <th>Santri Aktif</th>
+                        <th>Santri</th>
                         <th>Status</th>
                         <th>Santri</th>
                         <th class="w-1">Aksi</th>
