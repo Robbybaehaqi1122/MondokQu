@@ -266,7 +266,7 @@
                                     </td>
                                     <td>
                                         <div class="dropdown">
-                                            <button class="btn btn-outline-secondary dropdown-toggle user-action-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <button class="btn btn-outline-secondary dropdown-toggle user-action-trigger" type="button" data-bs-toggle="dropdown" data-bs-boundary="window" aria-expanded="false">
                                                 Action
                                             </button>
 

@@ -86,7 +86,7 @@
                             </td>
                             <td>
                                 <div class="dropdown">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="window" aria-expanded="false">
                                         Aksi
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end">

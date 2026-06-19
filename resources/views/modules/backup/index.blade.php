@@ -130,7 +130,7 @@
                             <td>{{ $backup->created_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>
                             <td>
                                 <div class="dropdown">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="window">
                                         Aksi
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end">

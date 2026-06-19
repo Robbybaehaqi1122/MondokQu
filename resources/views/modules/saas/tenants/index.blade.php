@@ -169,7 +169,7 @@
                                     </td>
                                     <td>
                                         <div class="dropdown">
-                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="window" aria-expanded="false">
                                                 Action
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-end p-3 user-action-menu">

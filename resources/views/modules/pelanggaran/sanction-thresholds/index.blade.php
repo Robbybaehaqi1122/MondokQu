@@ -83,7 +83,7 @@
                             <td class="text-secondary small">{{ $t->description ?? '-' }}</td>
                             <td>
                                 <div class="dropdown">
-                                    <button type="button" class="btn btn-outline-secondary btn-icon dropdown-toggle" data-bs-toggle="dropdown">
+                                    <button type="button" class="btn btn-outline-secondary btn-icon dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="window">
                                         <i class="ti ti-dots-vertical"></i>
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end">
