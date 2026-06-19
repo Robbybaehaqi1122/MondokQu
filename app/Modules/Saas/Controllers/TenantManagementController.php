@@ -193,6 +193,7 @@ class TenantManagementController extends Controller
             ['key' => 'ppdb', 'label' => 'PpdbQu (PPDB Online)', 'icon' => 'ti-user-check'],
             ['key' => 'perpustakaan', 'label' => 'PerpustakaanQu (Manajemen Kitab)', 'icon' => 'ti-books'],
             ['key' => 'kitab', 'label' => 'KitabQu (Hafalan Kitab)', 'icon' => 'ti-book'],
+            ['key' => 'kepengurusan', 'label' => 'KepengurusanQu (SDM & Jadwal)', 'icon' => 'ti-users-group'],
             ['key' => 'musyrif', 'label' => 'Musyrif (Pembina)', 'icon' => 'ti-shield'],
         ];
 
@@ -204,7 +205,7 @@ class TenantManagementController extends Controller
                 'max_storage_mb' => config('saas.limits.max_storage_mb', 1024),
             ],
             'categories' => ['Pesantren', 'Madrasah', 'Tahfidz'],
-            'defaultActiveModules' => ['santri', 'absensi', 'tahfidz', 'akademik', 'pelanggaran', 'komunikasi', 'kesehatan', 'inventaris', 'kegiatan', 'ppdb', 'perpustakaan', 'kitab'],
+            'defaultActiveModules' => ['santri', 'absensi', 'tahfidz', 'akademik', 'pelanggaran', 'komunikasi', 'kesehatan', 'inventaris', 'kegiatan', 'ppdb', 'perpustakaan', 'kitab', 'kepengurusan'],
         ]);
     }
 
@@ -235,7 +236,7 @@ class TenantManagementController extends Controller
             'owner_password' => ['nullable', Password::min(8), 'required_with:owner_email', 'confirmed'],
             // Step 3 - Modul Aktif
             'active_modules' => ['nullable', 'array'],
-            'active_modules.*' => ['string', 'in:santri,absensi,tahfidz,akademik,pelanggaran,komunikasi,kesehatan,bendahara,inventaris,kegiatan,ppdb,perpustakaan,kitab,musyrif'],
+            'active_modules.*' => ['string', 'in:santri,absensi,tahfidz,akademik,pelanggaran,komunikasi,kesehatan,bendahara,inventaris,kegiatan,ppdb,perpustakaan,kitab,kepengurusan,musyrif'],
         ], [
             'name.required' => 'Nama pondok wajib diisi.',
             'slug.alpha_dash' => 'Slug hanya boleh berisi huruf, angka, tanda hubung, atau underscore.',

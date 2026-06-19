@@ -16,8 +16,9 @@
     $canOpenPpdbQuModule = $user->can('manage ppdb');
     $canOpenPerpustakaanQuModule = $user->can('manage perpustakaan');
     $canOpenKitabQuModule = $user->can('manage kitab');
+    $canOpenKepengurusanQuModule = $user->can('manage kepengurusan');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule || $canOpenKitabQuModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule || $canOpenKitabQuModule || $canOpenKepengurusanQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -580,6 +581,38 @@
                             <a class="sidebar-sublink {{ request()->routeIs('kitab.setoran.rapor') ? 'active' : '' }}" href="{{ route('kitab.setoran.rapor') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
                                 <span>Rapor Hafalan</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenKepengurusanQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('kepengurusan.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('kepengurusan.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-users-group"></i>
+                            </span>
+                            <span class="flex-grow-1">KepengurusanQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('kepengurusan.dashboard') ? 'active' : '' }}" href="{{ route('kepengurusan.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard Kepengurusan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kepengurusan.pengajar.*') ? 'active' : '' }}" href="{{ route('kepengurusan.pengajar.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-user-star"></i></span>
+                                <span>Data Pengajar</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kepengurusan.pengurus.*') ? 'active' : '' }}" href="{{ route('kepengurusan.pengurus.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-user-cog"></i></span>
+                                <span>Data Pengurus</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kepengurusan.jadwal.*') ? 'active' : '' }}" href="{{ route('kepengurusan.jadwal.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-calendar-clock"></i></span>
+                                <span>Jadwal Ngaji & Pengajar</span>
                             </a>
                         </div>
                     </details>
