@@ -10,14 +10,14 @@
     $canOpenKomunikasiModule = $user->can('manage komunikasi');
     $canOpenAkademikModule = $user->can('manage akademik');
     $canOpenKesehatanModule = $user->can('manage kesehatan');
-    $canOpenKeuanganQuModule = $user->can('manage keuangan');
+    $canOpenKeuanganQuModule = $user->can('manage keuangan') || $user->can('view pembayaran') || $user->can('view laporan keuangan');
     $canOpenInventarisQuModule = $user->can('manage inventaris');
     $canOpenKegiatanQuModule = $user->can('manage kegiatan');
     $canOpenPpdbQuModule = $user->can('manage ppdb');
     $canOpenPerpustakaanQuModule = $user->can('manage perpustakaan');
     $canOpenKitabQuModule = $user->can('manage kitab');
     $canOpenKepengurusanQuModule = $user->can('manage kepengurusan');
-    $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
+    $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports;
     $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule || $canOpenKitabQuModule || $canOpenKepengurusanQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
@@ -275,8 +275,8 @@
                 @endif
 
                 @if ($canOpenKeuanganQuModule)
-                    <details class="sidebar-dropdown" @if (request()->routeIs('keuangan.*')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('keuangan.*') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('keuangan.*') || request()->routeIs('santri.payments.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('keuangan.*') || request()->routeIs('santri.payments.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-coin"></i>
                             </span>
@@ -311,6 +311,18 @@
                                 <span class="sidebar-link-icon"><i class="ti ti-file-text"></i></span>
                                 <span>Kwitansi Digital</span>
                             </a>
+                            @if ($user->can('view pembayaran'))
+                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.*') ? 'active' : '' }}" href="{{ route('santri.payments.index') }}">
+                                    <span class="sidebar-link-icon"><i class="ti ti-wallet"></i></span>
+                                    <span>Pembayaran Santri</span>
+                                </a>
+                            @endif
+                            @if ($user->can('view laporan keuangan'))
+                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.reports') ? 'active' : '' }}" href="{{ route('santri.payments.reports') }}">
+                                    <span class="sidebar-link-icon"><i class="ti ti-report-money"></i></span>
+                                    <span>Laporan Bendahara</span>
+                                </a>
+                            @endif
                         </div>
                     </details>
                 @endif
@@ -619,8 +631,8 @@
                 @endif
 
                 @if ($canOpenSantriModule)
-                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') || request()->routeIs('santri.import.*')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.payments.*') || request()->routeIs('santri.import.*') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.import.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.import.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-school"></i>
                             </span>
@@ -676,23 +688,7 @@
                                 </a>
                             @endif
 
-                            @if ($user->can('view pembayaran'))
-                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.*') ? 'active' : '' }}" href="{{ route('santri.payments.index') }}">
-                                    <span class="sidebar-link-icon">
-                                        <i class="ti ti-wallet"></i>
-                                    </span>
-                                    <span>Pembayaran Santri</span>
-                                </a>
-                            @endif
 
-                            @if ($user->can('view laporan keuangan'))
-                                <a class="sidebar-sublink {{ request()->routeIs('santri.payments.reports') ? 'active' : '' }}" href="{{ route('santri.payments.reports') }}">
-                                    <span class="sidebar-link-icon">
-                                        <i class="ti ti-report-money"></i>
-                                    </span>
-                                    <span>Laporan Bendahara</span>
-                                </a>
-                            @endif
                         </div>
                     </details>
                 @endif
@@ -823,7 +819,7 @@
                     </details>
                 @endif
 
-                @if ($user->hasRole('Bendahara') && ! $canOpenSantriModule)
+                @if ($user->hasRole('Bendahara') && ! $canOpenSantriModule && ! $canOpenKeuanganQuModule)
                     <div class="sidebar-section-title">Modul Bendahara</div>
                     <a class="sidebar-link {{ request()->routeIs('bendahara.laporan') ? 'active' : '' }}" href="{{ route('bendahara.laporan') }}">
                         <span class="sidebar-link-icon">
