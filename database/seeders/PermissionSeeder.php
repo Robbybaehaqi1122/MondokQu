@@ -60,6 +60,7 @@ class PermissionSeeder extends Seeder
             'manage kegiatan',
             'manage ppdb',
             'manage perpustakaan',
+            'manage kitab',
         ];
 
         foreach ($permissions as $permission) {
@@ -111,6 +112,7 @@ class PermissionSeeder extends Seeder
             'manage kegiatan',
             'manage ppdb',
             'manage perpustakaan',
+            'manage kitab',
         ])->get());
         $pengurus->syncPermissions(Permission::whereIn('name', [
             'manage kamar',

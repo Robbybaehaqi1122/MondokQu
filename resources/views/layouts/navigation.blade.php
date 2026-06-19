@@ -15,8 +15,9 @@
     $canOpenKegiatanQuModule = $user->can('manage kegiatan');
     $canOpenPpdbQuModule = $user->can('manage ppdb');
     $canOpenPerpustakaanQuModule = $user->can('manage perpustakaan');
+    $canOpenKitabQuModule = $user->can('manage kitab');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports || $user->can('view pembayaran') || $user->can('view laporan keuangan');
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule || $canOpenKitabQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -543,6 +544,42 @@
                             <a class="sidebar-sublink {{ request()->routeIs('perpustakaan.peminjaman.*') ? 'active' : '' }}" href="{{ route('perpustakaan.peminjaman.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-hand-rock"></i></span>
                                 <span>Peminjaman</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenKitabQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('kitab.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('kitab.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-book"></i>
+                            </span>
+                            <span class="flex-grow-1">KitabQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('kitab.dashboard') ? 'active' : '' }}" href="{{ route('kitab.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard KitabQu</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kitab.kitab.*') ? 'active' : '' }}" href="{{ route('kitab.kitab.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-books"></i></span>
+                                <span>Katalog Kitab</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kitab.kategori.*') ? 'active' : '' }}" href="{{ route('kitab.kategori.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-tags"></i></span>
+                                <span>Kategori</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kitab.setoran.index') || request()->routeIs('kitab.setoran.create') ? 'active' : '' }}" href="{{ route('kitab.setoran.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-clipboard-list"></i></span>
+                                <span>Setoran Hafalan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kitab.setoran.rapor') ? 'active' : '' }}" href="{{ route('kitab.setoran.rapor') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
+                                <span>Rapor Hafalan</span>
                             </a>
                         </div>
                     </details>
