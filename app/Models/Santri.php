@@ -18,6 +18,11 @@ class Santri extends Model
 
     public const GENDER_MALE = 'male';
 
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
     public const GENDER_FEMALE = 'female';
 
     public const STATUS_ACTIVE = 'active';
