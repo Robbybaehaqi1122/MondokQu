@@ -163,18 +163,23 @@
                                                 </div>
 
                                                 <div class="modal-body">
-                                                    <label for="santri_ids_{{ $room->id }}" class="form-label">Santri Aktif</label>
-                                                    <select id="santri_ids_{{ $room->id }}" name="santri_ids[]" class="form-select @if(old('assigning_room_id') == $room->id && $errors->assignRoomSantri->has('santri_ids')) is-invalid @endif" multiple size="10" required>
-                                                        @foreach ($assignableSantris as $santri)
-                                                            <option value="{{ $santri->id }}" @selected((int) $santri->room_id === (int) $room->id || in_array((string) $santri->id, old('santri_ids', []), true))>
-                                                                {{ $santri->full_name }} - {{ $santri->nis }}{{ $santri->displayRoomName('') ? ' - '.$santri->displayRoomName('') : '' }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    @if (old('assigning_room_id') == $room->id && $errors->assignRoomSantri->has('santri_ids'))
-                                                        <div class="invalid-feedback d-block">{{ $errors->assignRoomSantri->first('santri_ids') }}</div>
+                                                    @if ($assignableSantris->isEmpty())
+                                                        <div class="text-secondary text-center py-3">Tidak ada santri aktif yang belum memiliki kamar.</div>
                                                     @else
-                                                        <div class="form-hint mt-2">Gunakan Ctrl/Cmd untuk memilih lebih dari satu santri.</div>
+                                                        <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                                                            @foreach ($assignableSantris as $santri)
+                                                                <label class="list-group-item d-flex align-items-center gap-3">
+                                                                    <input type="checkbox" name="santri_ids[]" value="{{ $santri->id }}" class="form-check-input m-0" @checked(in_array((string) $santri->id, old('santri_ids', []), true))>
+                                                                    <div>
+                                                                        <div class="fw-semibold">{{ $santri->full_name }}</div>
+                                                                        <div class="text-secondary small">NIS: {{ $santri->nis }}</div>
+                                                                    </div>
+                                                                </label>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                    @if ($errors->assignRoomSantri->has('santri_ids'))
+                                                        <div class="invalid-feedback d-block mt-2">{{ $errors->assignRoomSantri->first('santri_ids') }}</div>
                                                     @endif
                                                 </div>
 

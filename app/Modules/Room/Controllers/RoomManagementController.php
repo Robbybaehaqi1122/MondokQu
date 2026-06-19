@@ -67,7 +67,7 @@ class RoomManagementController extends Controller
                 ->get(),
             'assignableSantris' => Santri::query()
                 ->visibleTo($currentUser)
-                ->with('room')
+                ->whereNull('room_id')
                 ->where('status', Santri::STATUS_ACTIVE)
                 ->orderBy('full_name')
                 ->limit(500)
