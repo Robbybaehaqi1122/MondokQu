@@ -4,12 +4,16 @@ namespace App\Modules\PpdbQu\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Santri;
+use App\Models\User;
 use App\Modules\PpdbQu\Models\PpdbGelombang;
 use App\Modules\PpdbQu\Models\PpdbPendaftaran;
 use App\Modules\PpdbQu\Requests\StorePendaftaranRequest;
 use App\Modules\PpdbQu\Requests\UpdatePendaftaranRequest;
+use App\Notifications\PpdbNewRegistrationNotification;
+use App\Notifications\PpdbStatusChangedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class PendaftaranController extends Controller
@@ -54,6 +58,13 @@ class PendaftaranController extends Controller
                 $paths[] = $file->store('ppdb-berkas', 'public');
             }
             $ppdbPendaftaran->forceFill(['berkas' => $paths])->save();
+        }
+
+        $admins = User::permission('manage ppdb')
+            ->where('tenant_id', $tenantId)
+            ->get();
+        if ($admins->isNotEmpty()) {
+            Notification::send($admins, new PpdbNewRegistrationNotification($ppdbPendaftaran));
         }
 
         return redirect()
@@ -113,6 +124,7 @@ class PendaftaranController extends Controller
         }
 
         $data = $request->validated();
+        $oldStatus = $ppdbPendaftaran->status;
 
         if ($data['status'] === 'diterima') {
             $data['diterima_at'] = now();
@@ -120,6 +132,19 @@ class PendaftaranController extends Controller
         }
 
         $ppdbPendaftaran->update($data);
+
+        if ($oldStatus !== $data['status']) {
+            $admins = User::permission('manage ppdb')
+                ->where('tenant_id', $ppdbPendaftaran->tenant_id)
+                ->get();
+            if ($admins->isNotEmpty()) {
+                Notification::send($admins, new PpdbStatusChangedNotification(
+                    $ppdbPendaftaran->fresh(),
+                    $oldStatus,
+                    $data['status'],
+                ));
+            }
+        }
 
         activity()->log('Mengupdate status PPDB: ' . $ppdbPendaftaran->nomor_pendaftaran . ' -> ' . $data['status']);
 

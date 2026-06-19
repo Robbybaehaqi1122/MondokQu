@@ -499,12 +499,24 @@
                 @endif
 
                 @if ($canOpenPpdbQuModule)
+                    @php
+                        $ppdbUnreadCount = 0;
+                        if ($user) {
+                            $ppdbUnreadCount = $user->unreadNotifications()
+                                ->whereIn('type', ['App\Notifications\PpdbNewRegistrationNotification', 'App\Notifications\PpdbStatusChangedNotification'])
+                                ->count();
+                        }
+                        $ppdbTotalCount = $ppdbUnreadCount;
+                    @endphp
                     <details class="sidebar-dropdown" @if (request()->routeIs('ppdb.*')) open @endif>
                         <summary class="sidebar-link {{ request()->routeIs('ppdb.*') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-user-check"></i>
                             </span>
                             <span class="flex-grow-1">PpdbQu</span>
+                            @if ($ppdbTotalCount > 0)
+                                <span class="badge bg-red text-red-fg badge-notification badge-pill ms-auto ppdb-notification-badge">{{ $ppdbTotalCount > 99 ? '99+' : $ppdbTotalCount }}</span>
+                            @endif
                             <span class="sidebar-dropdown-arrow">
                                 <i class="ti ti-chevron-down"></i>
                             </span>
@@ -519,7 +531,7 @@
                                 <span class="sidebar-link-icon"><i class="ti ti-layers-difference"></i></span>
                                 <span>Gelombang</span>
                             </a>
-                            <a class="sidebar-sublink {{ request()->routeIs('ppdb.pendaftaran.*') ? 'active' : '' }}" href="{{ route('ppdb.pendaftaran.index') }}">
+                            <a class="sidebar-sublink {{ request()->routeIs('ppdb.pendaftaran.*') && ! request()->routeIs('ppdb.notifikasi.*') ? 'active' : '' }}" href="{{ route('ppdb.pendaftaran.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-clipboard-list"></i></span>
                                 <span>Pendaftaran</span>
                             </a>
@@ -530,6 +542,13 @@
                             <a class="sidebar-sublink {{ request()->routeIs('ppdb.pengumuman.*') ? 'active' : '' }}" href="{{ route('ppdb.pengumuman.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-bullhorn"></i></span>
                                 <span>Pengumuman</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('ppdb.notifikasi.*') ? 'active' : '' }}" href="{{ route('ppdb.notifikasi.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-bell"></i></span>
+                                <span>Notifikasi</span>
+                                @if ($ppdbUnreadCount > 0)
+                                    <span class="badge bg-red text-red-fg badge-notification badge-pill ms-auto ppdb-notification-badge">{{ $ppdbUnreadCount > 99 ? '99+' : $ppdbUnreadCount }}</span>
+                                @endif
                             </a>
                         </div>
                     </details>
@@ -965,3 +984,32 @@
         </div>
     </div>
 </header>
+
+@if ($canOpenPpdbQuModule)
+    @push('scripts')
+        <script>
+            (function() {
+                function updatePpdbBadge() {
+                    fetch('{{ route('ppdb.notifikasi.unread-count') }}')
+                        .then(r => r.json())
+                        .then(data => {
+                            const badges = document.querySelectorAll('.ppdb-notification-badge');
+                            const total = data.unread_count + data.pending_count;
+                            badges.forEach(b => {
+                                if (total > 0) {
+                                    b.textContent = total > 99 ? '99+' : total;
+                                    b.classList.remove('d-none');
+                                } else {
+                                    b.classList.add('d-none');
+                                }
+                            });
+                        })
+                        .catch(() => {});
+                }
+
+                updatePpdbBadge();
+                setInterval(updatePpdbBadge, 15000);
+            })();
+        </script>
+    @endpush
+@endif

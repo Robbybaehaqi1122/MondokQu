@@ -68,6 +68,18 @@ class PpdbPendaftaran extends Model
         return $this->belongsTo(User::class, 'diproses_oleh');
     }
 
+    public static function statusLabel(?string $status): string
+    {
+        return match ($status) {
+            self::STATUS_MENUNGGU => 'Menunggu',
+            self::STATUS_DIPROSES => 'Diproses',
+            self::STATUS_DITERIMA => 'Diterima',
+            self::STATUS_DITOLAK => 'Ditolak',
+            self::STATUS_DAFTAR_ULANG => 'Daftar Ulang',
+            default => ucfirst($status ?? ''),
+        };
+    }
+
     public static function generateNomorPendaftaran(int $tenantId, int $gelombangId): string
     {
         $last = static::withoutTenantScope()

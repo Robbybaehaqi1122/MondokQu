@@ -5,6 +5,7 @@ use App\Modules\PpdbQu\Controllers\GelombangController;
 use App\Modules\PpdbQu\Controllers\PendaftaranController;
 use App\Modules\PpdbQu\Controllers\PengumumanController;
 use App\Modules\PpdbQu\Controllers\PpdbQuDashboardController;
+use App\Modules\PpdbQu\Controllers\PpdbQuNotificationController;
 use App\Modules\PpdbQu\Controllers\SeleksiController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,4 +46,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
     Route::get('/cetak/formulir/{ppdbPendaftaran}', [CetakController::class, 'formulir'])->name('cetak.formulir');
     Route::get('/cetak/kartu/{ppdbPendaftaran}', [CetakController::class, 'kartuPeserta'])->name('cetak.kartu');
     Route::get('/cetak/surat-terima/{ppdbPendaftaran}', [CetakController::class, 'suratTerima'])->name('cetak.surat-terima');
+
+    Route::get('/notifikasi', [PpdbQuNotificationController::class, 'index'])->name('notifikasi.index');
+    Route::get('/notifikasi/unread-count', [PpdbQuNotificationController::class, 'unreadCount'])->name('notifikasi.unread-count');
 });
