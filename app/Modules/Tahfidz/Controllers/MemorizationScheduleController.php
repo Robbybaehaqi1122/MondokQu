@@ -42,7 +42,13 @@ class MemorizationScheduleController extends Controller
 
         $musyrifOptions = User::query()
             ->visibleTo($currentUser)
-            ->role('Musyrif/Ustadz')
+            ->whereHas('roles', function ($q) use ($currentUser) {
+                $q->where('name', 'Musyrif/Ustadz')
+                    ->where(function ($tenantQ) use ($currentUser) {
+                        $tenantQ->whereNull('tenant_id')
+                            ->orWhere('tenant_id', $currentUser->tenant_id);
+                    });
+            })
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -62,15 +68,21 @@ class MemorizationScheduleController extends Controller
     {
         $currentUser = $request->user();
 
-        $musyrifOptions = User::query()
-            ->visibleTo($currentUser)
-            ->role('Musyrif/Ustadz')
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
         $roomOptions = Room::query()
             ->visibleTo($currentUser)
             ->where('status', Room::STATUS_ACTIVE)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $musyrifOptions = User::query()
+            ->visibleTo($currentUser)
+            ->whereHas('roles', function ($q) use ($currentUser) {
+                $q->where('name', 'Musyrif/Ustadz')
+                    ->where(function ($tenantQ) use ($currentUser) {
+                        $tenantQ->whereNull('tenant_id')
+                            ->orWhere('tenant_id', $currentUser->tenant_id);
+                    });
+            })
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -126,15 +138,21 @@ class MemorizationScheduleController extends Controller
             ->visibleTo($currentUser)
             ->findOrFail($memorizationSchedule->id);
 
-        $musyrifOptions = User::query()
-            ->visibleTo($currentUser)
-            ->role('Musyrif/Ustadz')
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
         $roomOptions = Room::query()
             ->visibleTo($currentUser)
             ->where('status', Room::STATUS_ACTIVE)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $musyrifOptions = User::query()
+            ->visibleTo($currentUser)
+            ->whereHas('roles', function ($q) use ($currentUser) {
+                $q->where('name', 'Musyrif/Ustadz')
+                    ->where(function ($tenantQ) use ($currentUser) {
+                        $tenantQ->whereNull('tenant_id')
+                            ->orWhere('tenant_id', $currentUser->tenant_id);
+                    });
+            })
             ->orderBy('name')
             ->get(['id', 'name']);
 
