@@ -212,30 +212,30 @@
                 <div class="row g-2">
                     <div class="col-md-5">
                         <label class="form-label">Surah</label>
-                        <select name="records[\${recordIndex}][surah_id]" class="form-select" required>
+                        <select name="records[${recordIndex}][surah_id]" class="form-select" required>
                             <option value="">Pilih Surah</option>
-                            \${surahOptionsHtml}
+                            ${surahOptionsHtml}
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Ayat Dari</label>
-                        <input type="number" name="records[\${recordIndex}][verse_start]" class="form-control" min="1" value="1" required>
+                        <input type="number" name="records[${recordIndex}][verse_start]" class="form-control" min="1" value="1" required>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Sampai</label>
-                        <input type="number" name="records[\${recordIndex}][verse_end]" class="form-control" min="1" value="1" required>
+                        <input type="number" name="records[${recordIndex}][verse_end]" class="form-control" min="1" value="1" required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Penilaian</label>
-                        <select name="records[\${recordIndex}][evaluation]" class="form-select" required>
+                        <select name="records[${recordIndex}][evaluation]" class="form-select" required>
                             <option value="">Pilih</option>
-                            \${evalOptionsHtml}
+                            ${evalOptionsHtml}
                         </select>
                     </div>
                 </div>
                 <div class="row g-2 mt-2">
                     <div class="col-md-10">
-                        <input type="text" name="records[\${recordIndex}][notes]" class="form-control" placeholder="Catatan (opsional)">
+                        <input type="text" name="records[${recordIndex}][notes]" class="form-control" placeholder="Catatan (opsional)">
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
                         <button type="button" class="btn btn-outline-danger btn-sm remove-record-btn">Hapus</button>
