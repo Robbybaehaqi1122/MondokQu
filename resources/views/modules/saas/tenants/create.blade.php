@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <div class="text-secondary text-uppercase small fw-bold">SaaS</div>
+            <div class="text-secondary text-uppercase small fw-bold">Pengaturan Sistem</div>
             <h2 class="page-title mt-1">Tambah Tenant Baru (Wizard)</h2>
             <div class="text-secondary mt-2">Isi data pondok secara bertahap melalui 3 langkah mudah.</div>
         </div>

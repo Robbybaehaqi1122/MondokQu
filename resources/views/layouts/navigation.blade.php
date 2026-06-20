@@ -797,7 +797,7 @@
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-building-bank"></i>
                             </span>
-                            <span class="flex-grow-1">SaaS</span>
+                            <span class="flex-grow-1">Pengaturan Sistem</span>
                             <span class="sidebar-dropdown-arrow">
                                 <i class="ti ti-chevron-down"></i>
                             </span>
@@ -808,7 +808,7 @@
                                 <span class="sidebar-link-icon">
                                     <i class="ti ti-chart-dots-3"></i>
                                 </span>
-                                <span>Dashboard SaaS</span>
+                                <span>Dashboard Sistem</span>
                             </a>
                             <a class="sidebar-sublink {{ request()->routeIs('saas.tenants.*') ? 'active' : '' }}" href="{{ route('saas.tenants.index') }}">
                                 <span class="sidebar-link-icon">

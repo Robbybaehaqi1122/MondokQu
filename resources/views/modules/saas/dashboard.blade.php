@@ -56,7 +56,7 @@
     <x-slot name="header">
         <div>
             <div class="text-secondary text-uppercase small fw-bold">Platform</div>
-            <h2 class="page-title mt-1">SaaS Dashboard</h2>
+            <h2 class="page-title mt-1">Dashboard Pengaturan Sistem</h2>
         </div>
     </x-slot>
 
@@ -304,7 +304,7 @@
                 <div class="card-header">
                     <div>
                         <h3 class="card-title mb-1">Daftar Tenant</h3>
-                        <div class="text-secondary small">Pondasi modul SaaS untuk pengelolaan trial, langganan, dan billing tenant.</div>
+                        <div class="text-secondary small">Pondasi modul Pengaturan Sistem untuk pengelolaan trial, langganan, dan billing tenant.</div>
                     </div>
                 </div>
 
@@ -374,7 +374,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-secondary">Belum ada tenant. Modul SaaS siap dipakai untuk tahap provisioning tenant berikutnya.</td>
+                                    <td colspan="4" class="text-secondary">Belum ada tenant. Modul Pengaturan Sistem siap dipakai untuk tahap provisioning tenant berikutnya.</td>
                                 </tr>
                             @endforelse
                         </tbody>

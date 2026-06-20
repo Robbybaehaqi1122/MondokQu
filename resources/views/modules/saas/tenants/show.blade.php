@@ -12,7 +12,7 @@
 
     <x-slot name="header">
         <div>
-            <div class="text-secondary text-uppercase small fw-bold">SaaS</div>
+            <div class="text-secondary text-uppercase small fw-bold">Pengaturan Sistem</div>
             <h2 class="page-title mt-1">{{ $tenant->name }}</h2>
             <div class="text-secondary mt-2">Detail tenant, status langganan, dan ringkasan penggunaan pondok.</div>
         </div>

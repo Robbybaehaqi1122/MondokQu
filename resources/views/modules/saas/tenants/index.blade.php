@@ -34,7 +34,7 @@
 
     <x-slot name="header">
         <div>
-            <div class="text-secondary text-uppercase small fw-bold">SaaS</div>
+            <div class="text-secondary text-uppercase small fw-bold">Pengaturan Sistem</div>
             <h2 class="page-title mt-1">Tenant Management</h2>
         </div>
     </x-slot>
@@ -514,7 +514,7 @@
                     <div class="modal-header">
                         <div>
                             <h5 class="modal-title">Tambah Tenant Baru</h5>
-                            <div class="text-secondary small mt-1">Tenant baru akan langsung mendapat masa trial awal sesuai konfigurasi SaaS.</div>
+                            <div class="text-secondary small mt-1">Tenant baru akan langsung mendapat masa trial awal sesuai konfigurasi Pengaturan Sistem.</div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>

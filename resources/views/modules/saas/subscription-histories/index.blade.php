@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <div class="text-secondary text-uppercase small fw-bold">SaaS</div>
+            <div class="text-secondary text-uppercase small fw-bold">Pengaturan Sistem</div>
             <h2 class="page-title mt-1">Riwayat Subscription</h2>
         </div>
     </x-slot>
