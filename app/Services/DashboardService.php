@@ -26,6 +26,13 @@ class DashboardService
             ->orderBy('name')
             ->get();
 
+        if ($currentUser?->isSuperAdmin()) {
+            $roles = $roles
+                ->groupBy('name')
+                ->map(fn ($group) => tap($group->first(), fn ($role) => $role->users_count = $group->sum('users_count')))
+                ->values();
+        }
+
         $maxRoleUsers = max(1, (int) $roles->max('users_count'));
         $santriBaseQuery = Santri::query()->visibleTo($currentUser);
         $invoiceBaseQuery = SantriInvoice::query()->visibleTo($currentUser);
