@@ -79,9 +79,19 @@
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('santri.payments.index') }}" class="btn btn-outline-secondary">Overview</a>
                     @php $exportQuery = request()->only(['q', 'status', 'santri']); @endphp
-                    <div class="btn-group">
-                        <a href="{{ route('santri.payments.invoices.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="btn btn-outline-primary">Excel</a>
-                        <a href="{{ route('santri.payments.invoices.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="btn btn-outline-primary">PDF</a>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-download me-1"></i>
+                            Export
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a href="{{ route('santri.payments.invoices.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="dropdown-item">
+                                <i class="ti ti-file-spreadsheet me-2"></i> Excel
+                            </a>
+                            <a href="{{ route('santri.payments.invoices.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="dropdown-item">
+                                <i class="ti ti-file me-2"></i> PDF
+                            </a>
+                        </div>
                     </div>
                     @if ($canCreateInvoice)
                         <button

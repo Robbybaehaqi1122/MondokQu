@@ -21,9 +21,19 @@
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">Filter</button>
                         @php $exportQuery = request()->only(['date_from', 'date_to']); @endphp
-                        <div class="btn-group">
-                            <a href="{{ route('santri.payments.reports.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="btn btn-outline-primary">Excel</a>
-                            <a href="{{ route('santri.payments.reports.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="btn btn-outline-primary">PDF</a>
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ti ti-download me-1"></i>
+                                Export
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a href="{{ route('santri.payments.reports.export', array_merge($exportQuery, ['format' => 'xlsx'])) }}" class="dropdown-item">
+                                    <i class="ti ti-file-spreadsheet me-2"></i> Excel
+                                </a>
+                                <a href="{{ route('santri.payments.reports.export', array_merge($exportQuery, ['format' => 'pdf'])) }}" class="dropdown-item">
+                                    <i class="ti ti-file me-2"></i> PDF
+                                </a>
+                            </div>
                         </div>
                         <a href="{{ route('santri.payments.reports') }}" class="btn btn-outline-secondary">Reset</a>
                     </div>
