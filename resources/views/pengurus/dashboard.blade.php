@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div>
             <h2 class="page-title">Dashboard Pengurus</h2>
-            <div class="text-secondary mt-1">Operasional santri, kamar, dan izin.</div>
+            <div class="text-secondary mt-1">Ringkasan seluruh aktivitas pondok — santri, keuangan, kamar, dan izin.</div>
         </div>
     </x-slot>
 
@@ -88,29 +88,42 @@
     </div>
 
     <div class="row row-cards mt-3">
-        <div class="col-lg-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
-                    <h3 class="card-title">Tugas Pengurus</h3>
-                    <p class="text-secondary mb-2">Pengurus dapat input data santri, mengatur kamar, dan mengelola izin.</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        @if ($canViewSantri)
-                            <a href="{{ route('pengurus.santri') }}" class="btn btn-primary">Buka Data Santri</a>
-                        @endif
-                        @if ($canManageRooms)
-                            <a href="{{ route('rooms.index') }}" class="btn btn-outline-primary">Buka Kamar</a>
-                        @endif
-                        @if ($canManageLeaveRequests)
-                            <a href="{{ route('pengurus.izin.index') }}" class="btn btn-outline-primary">Buka Perizinan</a>
-                        @endif
-                        @if ($canManageRooms || $canManageLeaveRequests)
-                            <a href="{{ route('pengurus.reports.index') }}" class="btn btn-outline-primary">Buka Laporan</a>
-                        @endif
-                    </div>
+                    <h3 class="card-title mb-1">Pemasukan Bulan Ini</h3>
+                    <div class="fs-2 fw-bold">Rp {{ number_format($financeStats['paid_this_month'] / 100, 0, ',', '.') }}</div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-1">Total Tagihan</h3>
+                    <div class="fs-2 fw-bold">{{ number_format($financeStats['total_invoices']) }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-1">Sisa Tagihan</h3>
+                    <div class="fs-2 fw-bold">Rp {{ number_format($financeStats['total_outstanding'] / 100, 0, ',', '.') }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-1">Tagihan Menunggak</h3>
+                    <div class="fs-2 fw-bold text-danger">{{ number_format($financeStats['overdue_invoices']) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cards mt-3">
+        <div class="col-lg-6">
             <div class="card">
                 <div class="card-body">
                     <h3 class="card-title">Sebaran Kamar</h3>
@@ -135,7 +148,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-6">
             <div class="card">
                 <div class="card-body">
                     <h3 class="card-title">Sebaran Angkatan</h3>
@@ -179,18 +192,18 @@
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-body">
-                    <h3 class="card-title">Terakhir Diperbarui</h3>
-                    @if($recentlyUpdatedSantri->isNotEmpty())
+                    <h3 class="card-title">Pembayaran Terbaru</h3>
+                    @if($recentPayments->isNotEmpty())
                         <ul class="list-unstyled mb-0">
-                            @foreach($recentlyUpdatedSantri as $santri)
+                            @foreach($recentPayments as $payment)
                                 <li class="mb-2">
-                                    <span class="fw-semibold">{{ $santri->full_name }}</span>
-                                    <div class="text-secondary small">Diubah {{ $santri->updated_at->diffForHumans() }}</div>
+                                    <span class="fw-semibold">{{ $payment->santri?->full_name ?? '-' }}</span>
+                                    <div class="text-secondary small">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }} &middot; {{ $payment->paid_at?->translatedFormat('d M Y H:i') }}</div>
                                 </li>
                             @endforeach
                         </ul>
                     @else
-                        <p class="text-secondary mb-0">Belum ada pembaruan santri.</p>
+                        <p class="text-secondary mb-0">Belum ada pembayaran tercatat.</p>
                     @endif
                 </div>
             </div>

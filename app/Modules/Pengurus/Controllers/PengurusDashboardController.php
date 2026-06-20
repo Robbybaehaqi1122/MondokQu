@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
 use App\Models\Room;
 use App\Models\Santri;
+use App\Models\SantriInvoice;
+use App\Models\SantriPayment;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -22,6 +25,18 @@ class PengurusDashboardController extends Controller
         $santriBaseQuery = Santri::query()->visibleTo($currentUser);
         $roomBaseQuery = Room::query()->visibleTo($currentUser);
         $leaveRequestBaseQuery = LeaveRequest::query()->visibleTo($currentUser);
+        $invoiceQuery = SantriInvoice::query()->visibleTo($currentUser);
+        $paymentQuery = SantriPayment::query()->visibleTo($currentUser);
+        $userQuery = User::query()->visibleTo($currentUser);
+
+        $paidThisMonth = (clone $paymentQuery)
+            ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->sum('amount');
+
+        $outstandingRow = (clone $invoiceQuery)
+            ->whereIn('status', [SantriInvoice::STATUS_PENDING, SantriInvoice::STATUS_PARTIAL])
+            ->selectRaw('COALESCE(SUM(amount - COALESCE(paid_amount, 0)), 0) as outstanding')
+            ->first();
 
         return view('pengurus.dashboard', [
             'tenantName' => $tenant?->name ?? 'Tanpa Tenant',
@@ -45,6 +60,19 @@ class PengurusDashboardController extends Controller
                     ->whereDate('end_date', '<', today())
                     ->count(),
             ],
+            'financeStats' => [
+                'paid_this_month' => (int) $paidThisMonth,
+                'total_outstanding' => (int) ($outstandingRow?->outstanding ?? 0),
+                'overdue_invoices' => (clone $invoiceQuery)
+                    ->whereIn('status', [SantriInvoice::STATUS_PENDING, SantriInvoice::STATUS_PARTIAL])
+                    ->whereDate('due_date', '<', now())
+                    ->count(),
+                'total_invoices' => (clone $invoiceQuery)->count(),
+            ],
+            'userStats' => [
+                'total_users' => (clone $userQuery)->count(),
+                'active_users' => (clone $userQuery)->where('status', User::STATUS_ACTIVE)->count(),
+            ],
             'genderStats' => [
                 'male' => (clone $santriBaseQuery)->where('gender', Santri::GENDER_MALE)->count(),
                 'female' => (clone $santriBaseQuery)->where('gender', Santri::GENDER_FEMALE)->count(),
@@ -61,15 +89,16 @@ class PengurusDashboardController extends Controller
                 ->latest()
                 ->limit(5)
                 ->get(),
+            'recentPayments' => (clone $paymentQuery)
+                ->with(['santri'])
+                ->latest('paid_at')
+                ->limit(5)
+                ->get(),
             'recentlyUpdatedSantri' => (clone $santriBaseQuery)
                 ->with('room')
                 ->orderByDesc('updated_at')
                 ->limit(5)
                 ->get(),
-            'canCreateSantri' => $currentUser?->can('create', Santri::class) ?? false,
-            'canViewSantri' => $currentUser?->can('viewAny', Santri::class) ?? false,
-            'canManageRooms' => $currentUser?->can('manage kamar') ?? false,
-            'canManageLeaveRequests' => $currentUser?->canAny(['create izin', 'approve izin']) ?? false,
         ]);
     }
 
