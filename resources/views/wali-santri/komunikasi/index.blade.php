@@ -8,9 +8,6 @@
         </div>
     </x-slot>
 
-    <div class="row row-cards mb-3">
-        @foreach ($santris as $s)
-            <div class="col-lg-4">
     <div class="card mb-3">
         <div class="card-body">
             <form method="GET" action="{{ route('wali-santri.komunikasi.index') }}" class="row g-3">
@@ -49,7 +46,10 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="row row-cards mb-3">
+        @foreach ($santris as $s)
+            <div class="col-lg-4">
+                <div class="card">
                     <div class="card-body text-center">
                         <span class="avatar avatar-lg mb-2 bg-primary-lt text-primary">
                             {{ strtoupper(substr($s->full_name, 0, 1)) }}

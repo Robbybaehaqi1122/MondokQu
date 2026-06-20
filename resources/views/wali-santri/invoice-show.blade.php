@@ -64,39 +64,39 @@
 
                     <div class="row g-3 mt-3">
                         <div class="col-sm-6 col-lg-4">
-                            <div class="wali-mobile-field h-100">
-                                <span>Santri</span>
-                                <strong>{{ $invoice->santri?->full_name ?? '-' }}</strong>
+                            <div class="bg-secondary-lt rounded p-3 h-100">
+                                <div class="text-secondary small">Santri</div>
+                                <div class="fw-semibold mt-1">{{ $invoice->santri?->full_name ?? '-' }}</div>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-4">
-                            <div class="wali-mobile-field h-100">
-                                <span>NIS</span>
-                                <strong>{{ $invoice->santri?->nis ?? '-' }}</strong>
+                            <div class="bg-secondary-lt rounded p-3 h-100">
+                                <div class="text-secondary small">NIS</div>
+                                <div class="fw-semibold mt-1">{{ $invoice->santri?->nis ?? '-' }}</div>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-4">
-                            <div class="wali-mobile-field h-100">
-                                <span>Periode</span>
-                                <strong>{{ $periodLabel }}</strong>
+                            <div class="bg-secondary-lt rounded p-3 h-100">
+                                <div class="text-secondary small">Periode</div>
+                                <div class="fw-semibold mt-1">{{ $periodLabel }}</div>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-4">
-                            <div class="wali-mobile-field h-100">
-                                <span>Jatuh Tempo</span>
-                                <strong>{{ $invoice->due_date?->translatedFormat('d M Y') ?? '-' }}</strong>
+                            <div class="bg-secondary-lt rounded p-3 h-100">
+                                <div class="text-secondary small">Jatuh Tempo</div>
+                                <div class="fw-semibold mt-1">{{ $invoice->due_date?->translatedFormat('d M Y') ?? '-' }}</div>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-4">
-                            <div class="wali-mobile-field h-100">
-                                <span>Nominal</span>
-                                <strong>Rp {{ number_format($invoiceAmount / 100, 0, ',', '.') }}</strong>
+                            <div class="bg-secondary-lt rounded p-3 h-100">
+                                <div class="text-secondary small">Nominal</div>
+                                <div class="fw-semibold mt-1">Rp {{ number_format($invoiceAmount / 100, 0, ',', '.') }}</div>
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-4">
-                            <div class="wali-mobile-field h-100">
-                                <span>Sisa</span>
-                                <strong>Rp {{ number_format($outstandingAmount / 100, 0, ',', '.') }}</strong>
+                            <div class="bg-secondary-lt rounded p-3 h-100">
+                                <div class="text-secondary small">Sisa</div>
+                                <div class="fw-semibold mt-1">Rp {{ number_format($outstandingAmount / 100, 0, ',', '.') }}</div>
                             </div>
                         </div>
                     </div>
@@ -160,15 +160,15 @@
                 <div class="card-header">
                     <h3 class="card-title">Bukti Bayar Dikirim</h3>
                 </div>
-                <div class="card-body wali-payment-list">
+                <div class="card-body">
                     @forelse ($paymentConfirmations as $confirmation)
-                        <div class="wali-payment-item d-flex align-items-start gap-3">
+                        <div class="d-flex align-items-start gap-3 py-3 @unless($loop->last) border-bottom @endunless">
                             <span class="avatar avatar-sm {{ $confirmationBadgeClasses[$confirmation->status] ?? 'bg-secondary-lt text-secondary' }}">
                                 <i class="ti ti-receipt-2"></i>
                             </span>
                             <div class="flex-fill min-width-0">
                                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-1">
-                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format($confirmation->amount / 100, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold">Rp {{ number_format($confirmation->amount / 100, 0, ',', '.') }}</div>
                                     <span class="badge {{ $confirmationBadgeClasses[$confirmation->status] ?? 'bg-secondary-lt text-secondary' }}">
                                         {{ $confirmation->statusLabel() }}
                                     </span>
@@ -196,15 +196,15 @@
                 <div class="card-header">
                     <h3 class="card-title">Riwayat Pembayaran</h3>
                 </div>
-                <div class="card-body wali-payment-list">
+                <div class="card-body">
                     @forelse ($payments as $payment)
-                        <div class="wali-payment-item d-flex align-items-start gap-3">
+                        <div class="d-flex align-items-start gap-3 py-3 @unless($loop->last) border-bottom @endunless">
                             <span class="avatar avatar-sm bg-success-lt text-success">
                                 <i class="ti ti-check"></i>
                             </span>
                             <div class="flex-fill min-width-0">
                                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-1">
-                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">{{ $payment->paid_at?->translatedFormat('d M Y H:i') }}</div>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 mt-2">

@@ -173,24 +173,24 @@
                                     <i class="ti ti-user me-1"></i>
                                     Profil Santri
                                 </a>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('wali-santri.absensi', $santri) }}" class="btn btn-outline-azure">
+                                <div class="d-flex flex-wrap gap-1">
+                                    <a href="{{ route('wali-santri.absensi', $santri) }}" class="btn btn-outline-azure btn-sm">
                                         <i class="ti ti-clipboard-check me-1"></i>
                                         Absensi
                                     </a>
-                                    <a href="{{ route('wali-santri.pelanggaran', $santri) }}" class="btn btn-outline-danger">
+                                    <a href="{{ route('wali-santri.pelanggaran', $santri) }}" class="btn btn-outline-danger btn-sm">
                                         <i class="ti ti-alert-triangle me-1"></i>
                                         Pelanggaran
                                     </a>
-                                    <a href="{{ route('wali-santri.tahfidz', $santri) }}" class="btn btn-outline-success">
+                                    <a href="{{ route('wali-santri.tahfidz', $santri) }}" class="btn btn-outline-success btn-sm">
                                         <i class="ti ti-book me-1"></i>
                                         Tahfidz
                                     </a>
-                                    <a href="{{ route('wali-santri.akademik', $santri) }}" class="btn btn-outline-info">
+                                    <a href="{{ route('wali-santri.akademik', $santri) }}" class="btn btn-outline-info btn-sm">
                                         <i class="ti ti-books me-1"></i>
                                         Akademik
                                     </a>
-                                    <a href="{{ route('wali-santri.rapor', $santri) }}" class="btn btn-outline-warning">
+                                    <a href="{{ route('wali-santri.rapor', $santri) }}" class="btn btn-outline-warning btn-sm">
                                         <i class="ti ti-report-analytics me-1"></i>
                                         Rapor
                                     </a>
@@ -376,7 +376,7 @@
                         <h3 class="card-title">Tagihan Aktif</h3>
                     </div>
                 </div>
-                <div class="table-responsive d-none d-md-block">
+                <div class="table-responsive">
                     <table class="table table-vcenter card-table">
                         <thead>
                             <tr>
@@ -433,60 +433,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div class="wali-mobile-list d-md-none" data-mobile-invoice-list>
-                    @forelse ($upcomingInvoices as $invoice)
-                        @php
-                            $displayStatus = $invoice->isOverdue() ? 'overdue' : $invoice->status;
-                            $pendingConfirmations = $pendingPaymentConfirmationsByInvoice->get($invoice->id, collect());
-                        @endphp
-
-                        <article class="wali-mobile-item" data-mobile-invoice-card>
-                            <div class="d-flex align-items-start justify-content-between gap-3">
-                                <div class="wali-mobile-title">
-                                    <div class="fw-semibold">{{ $invoice->title }}</div>
-                                    <div class="text-secondary small">{{ $invoice->invoice_number }}</div>
-                                </div>
-                                <span class="badge {{ $invoiceBadgeClasses[$displayStatus] ?? 'bg-secondary-lt text-secondary' }}">
-                                    {{ $invoice->statusLabel() }}
-                                </span>
-                            </div>
-                            @if ($pendingConfirmations->isNotEmpty())
-                                <span class="badge mt-3 {{ $confirmationBadgeClasses['pending'] }}">
-                                    Bukti bayar menunggu verifikasi
-                                </span>
-                            @endif
-
-                            <div class="wali-mobile-grid mt-3">
-                                <div class="wali-mobile-field">
-                                    <span>Santri</span>
-                                    <strong>{{ $invoice->santri?->full_name ?? '-' }}</strong>
-                                </div>
-                                <div class="wali-mobile-field">
-                                    <span>Jatuh Tempo</span>
-                                    <strong>{{ $invoice->due_date?->translatedFormat('d M Y') ?? '-' }}</strong>
-                                </div>
-                                <div class="wali-mobile-field wali-mobile-field-wide">
-                                    <span>Sisa Tagihan</span>
-                                    <strong>Rp {{ number_format($invoice->outstandingAmount() / 100, 0, ',', '.') }}</strong>
-                                </div>
-                            </div>
-
-                            <div class="d-grid gap-2 mt-3">
-                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#uploadProofModal{{ $invoice->id }}">
-                                    <i class="ti ti-upload me-1"></i>
-                                    Upload Bukti Bayar
-                                </button>
-                                <a href="{{ route('wali-santri.invoices.show', $invoice) }}" class="btn btn-outline-primary">
-                                    <i class="ti ti-eye me-1"></i>
-                                    Detail Tagihan
-                                </a>
-                            </div>
-                        </article>
-                    @empty
-                        <div class="text-secondary p-3">Tidak ada tagihan aktif untuk santri terhubung.</div>
-                    @endforelse
-                </div>
             </div>
         </div>
 
@@ -497,19 +443,20 @@
                         <h3 class="card-title">Pembayaran Terakhir</h3>
                     </div>
                 </div>
-                <div class="card-body wali-payment-list" data-mobile-payment-list>
+                <div class="card-body">
                     @forelse ($recentPayments as $payment)
-                        <div class="wali-payment-item d-flex align-items-start gap-3" data-mobile-payment-card>
+                        <div class="d-flex align-items-start gap-3 py-3 @unless($loop->last) border-bottom @endunless">
                             <span class="avatar avatar-sm bg-success-lt text-success">
                                 <i class="ti ti-check"></i>
                             </span>
                             <div class="flex-fill min-width-0">
                                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-1">
-                                    <div class="fw-semibold wali-payment-amount">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</div>
+                                    <div class="fw-semibold">Rp {{ number_format($payment->amount / 100, 0, ',', '.') }}</div>
                                     <div class="text-secondary small">{{ $payment->paid_at?->translatedFormat('d M Y') }}</div>
                                 </div>
-                                <div class="wali-payment-meta text-secondary small mt-1">
+                                <div class="text-secondary small mt-1">
                                     <span>{{ $payment->santri?->full_name ?? '-' }}</span>
+                                    &middot;
                                     <span>{{ $payment->invoice?->title ?? 'Tanpa tagihan' }}</span>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 mt-2">
