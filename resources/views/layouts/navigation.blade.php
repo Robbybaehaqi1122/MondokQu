@@ -10,7 +10,7 @@
     $canOpenKomunikasiModule = $user->can('manage komunikasi');
     $canOpenAkademikModule = $user->can('manage akademik');
     $canOpenKesehatanModule = $user->can('manage kesehatan');
-    $canOpenKeuanganQuModule = $user->can('manage keuangan') || $user->can('view pembayaran') || $user->can('view laporan keuangan');
+    $canOpenKeuanganQuModule = $user->hasRole('Bendahara') || $user->can('manage keuangan') || $user->can('view pembayaran') || $user->can('view laporan keuangan');
     $canOpenInventarisQuModule = $user->can('manage inventaris');
     $canOpenKegiatanQuModule = $user->can('manage kegiatan');
     $canOpenPpdbQuModule = $user->can('manage ppdb');

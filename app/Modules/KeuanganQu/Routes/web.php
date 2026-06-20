@@ -8,7 +8,7 @@ use App\Modules\KeuanganQu\Controllers\ReceiptController;
 use App\Modules\KeuanganQu\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage keuangan'])
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|Admin|Bendahara|manage keuangan'])
     ->prefix('keuangan')->name('keuangan.')->group(function () {
 
     Route::get('/dashboard', KeuanganQuDashboardController::class)->name('dashboard');
