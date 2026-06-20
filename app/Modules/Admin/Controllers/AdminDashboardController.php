@@ -19,10 +19,11 @@ class AdminDashboardController extends Controller
     {
         $currentUser = request()->user();
         $tenant = $currentUser?->tenant;
-        $cachedData = $this->dashboardCacheTtl() > 0
+        $ttl = $this->dashboardCacheTtl($currentUser);
+        $cachedData = $ttl > 0
             ? Cache::remember(
                 $this->dashboardCacheKey($currentUser),
-                now()->addSeconds($this->dashboardCacheTtl()),
+                now()->addSeconds($ttl),
                 fn (): array => $this->dashboardService->buildCachedDashboardData($currentUser)
             )
             : $this->dashboardService->buildCachedDashboardData($currentUser);
@@ -49,8 +50,12 @@ class AdminDashboardController extends Controller
         ]);
     }
 
-    protected function dashboardCacheTtl(): int
+    protected function dashboardCacheTtl(?User $currentUser = null): int
     {
+        if ($currentUser?->isSuperAdmin()) {
+            return 0;
+        }
+
         return max(0, (int) config('cache.dashboard_ttl_seconds', 300));
     }
 

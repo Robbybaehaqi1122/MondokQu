@@ -16,7 +16,10 @@ class DashboardService
     public function buildCachedDashboardData(?User $currentUser): array
     {
         $roles = Role::query()
-            ->forTenant($currentUser?->isSuperAdmin() ? null : $currentUser?->tenant_id)
+            ->when(
+                ! $currentUser?->isSuperAdmin(),
+                fn ($query) => $query->forTenant($currentUser?->tenant_id),
+            )
             ->withCount([
                 'users' => fn ($query) => $query->visibleTo($currentUser),
             ])
