@@ -91,7 +91,7 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="btn-group">
+                                <div class="d-flex flex-wrap gap-1">
                                     <a href="{{ route('akademik.nilai.edit', $nilai) }}"
                                         class="btn btn-outline-primary btn-sm">
                                         <i class="ti ti-edit"></i>

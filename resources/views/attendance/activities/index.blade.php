@@ -90,7 +90,7 @@
                     </select>
                 </div>
                 <div class="col-md-4 col-lg-3">
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-wrap gap-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="ti ti-filter me-1"></i>
                             Filter
@@ -144,7 +144,7 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="d-flex gap-2">
+                                <div class="d-flex flex-wrap gap-2">
                                     <button type="button" class="btn btn-outline-secondary btn-sm btn-icon" data-bs-toggle="modal" data-bs-target="#editAttendanceActivityModal{{ $activity->id }}" aria-label="Edit kegiatan">
                                         <i class="ti ti-edit"></i>
                                     </button>

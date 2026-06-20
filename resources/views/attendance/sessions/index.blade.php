@@ -102,7 +102,7 @@
                     </select>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-wrap gap-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="ti ti-filter me-1"></i>
                             Filter
@@ -159,7 +159,7 @@
                                 <span class="text-secondary small">{{ $session->notes ?: '-' }}</span>
                             </td>
                             <td>
-                                <div class="d-flex gap-2">
+                                <div class="d-flex flex-wrap gap-2">
                                     <a href="{{ route('attendance.sessions.records.edit', $session) }}" class="btn btn-outline-primary btn-sm btn-icon" aria-label="Input absensi">
                                         <i class="ti ti-clipboard-check"></i>
                                     </a>

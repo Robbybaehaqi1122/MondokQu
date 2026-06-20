@@ -23,7 +23,7 @@
 
     @if ($selectedKegiatan)
         <div class="row row-cards mb-3">
-            <div class="col-3">
+            <div class="col-6 col-sm-3">
                 <div class="card">
                     <div class="card-body text-center">
                         <div class="text-secondary small text-uppercase fw-bold">Total Hadir</div>
@@ -31,7 +31,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-3">
+            <div class="col-6 col-sm-3">
                 <div class="card">
                     <div class="card-body text-center">
                         <div class="text-secondary small text-uppercase fw-bold">Sakit</div>
@@ -39,7 +39,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-3">
+            <div class="col-6 col-sm-3">
                 <div class="card">
                     <div class="card-body text-center">
                         <div class="text-secondary small text-uppercase fw-bold">Izin</div>
@@ -47,7 +47,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-3">
+            <div class="col-6 col-sm-3">
                 <div class="card">
                     <div class="card-body text-center">
                         <div class="text-secondary small text-uppercase fw-bold">Alpha</div>

@@ -256,21 +256,21 @@
         </div>
         <div class="card-body">
             <div class="row text-center">
-                <div class="col-4">
+                <div class="col-12 col-sm-4">
                     <div class="mb-4" style="height: 60px;"></div>
                     <div class="fw-bold">{{ config('app.ponpes_city', 'Kota Santri') }}, {{ now()->translatedFormat('d F Y') }}</div>
                     <div class="text-secondary small">Kepala Madrasah / Pondok</div>
                     <div class="mb-4" style="height: 60px;"></div>
                     <div class="fw-bold">{{ config('app.kepala_ponpes', '(____________________)') }}</div>
                 </div>
-                <div class="col-4">
+                <div class="col-12 col-sm-4">
                     <div class="mb-4" style="height: 60px;"></div>
                     <div class="fw-bold">&nbsp;</div>
                     <div class="text-secondary small">Wali Kelas</div>
                     <div class="mb-4" style="height: 60px;"></div>
                     <div class="fw-bold">{{ config('app.wali_kelas', '(____________________)') }}</div>
                 </div>
-                <div class="col-4">
+                <div class="col-12 col-sm-4">
                     <div class="mb-4" style="height: 60px;"></div>
                     <div class="fw-bold">&nbsp;</div>
                     <div class="text-secondary small">Orang Tua / Wali Santri</div>

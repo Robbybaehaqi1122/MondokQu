@@ -85,7 +85,7 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="btn-group">
+                                <div class="d-flex flex-wrap gap-1">
                                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
                                         data-bs-target="#modal-edit-{{ $mapel->id }}">
                                         <i class="ti ti-edit"></i>

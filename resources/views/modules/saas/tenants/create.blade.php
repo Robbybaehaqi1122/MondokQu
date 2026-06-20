@@ -175,7 +175,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Kapasitas Awal</label>
                         <div class="row g-2">
-                            <div class="col-4">
+                            <div class="col-12 col-sm-4">
                                 <label for="max_users" class="form-label small">Max User</label>
                                 <input
                                     id="max_users"
@@ -190,7 +190,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-4">
+                            <div class="col-12 col-sm-4">
                                 <label for="max_santri" class="form-label small">Max Santri</label>
                                 <input
                                     id="max_santri"
@@ -205,7 +205,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-4">
+                            <div class="col-12 col-sm-4">
                                 <label for="max_storage_mb" class="form-label small">Storage (MB)</label>
                                 <input
                                     id="max_storage_mb"

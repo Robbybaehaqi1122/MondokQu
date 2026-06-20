@@ -262,7 +262,7 @@
                 </table>
             </div>
 
-            <div class="card-footer d-flex justify-content-end gap-2">
+            <div class="card-footer d-flex flex-wrap justify-content-end gap-2">
                 <a href="{{ route('attendance.sessions.index') }}" class="btn btn-outline-secondary">Batal</a>
                 <button type="submit" class="btn btn-primary" @disabled(! $canEditRecords || $activeSantris->isEmpty())>
                     <i class="ti ti-device-floppy me-1"></i>

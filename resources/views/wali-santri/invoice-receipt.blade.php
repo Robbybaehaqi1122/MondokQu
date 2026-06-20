@@ -385,7 +385,7 @@
 
             <section>
                 <div class="section-title">Riwayat Pembayaran</div>
-                <table>
+                <div class="table-responsive"><table>
                     <thead>
                         <tr>
                             <th>Tanggal</th>
@@ -413,7 +413,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </table></div>
             </section>
 
             @if ($invoice->notes)
