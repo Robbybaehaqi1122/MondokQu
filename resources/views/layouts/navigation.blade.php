@@ -770,7 +770,7 @@
                                 </a>
                             @endif
 
-                            @if ($user->hasRole('Superadmin') || $user->can('view activity logs'))
+                            @if ($user->hasRole('Superadmin'))
                                 <a class="sidebar-sublink {{ request()->routeIs('admin.audit-logs') ? 'active' : '' }}" href="{{ route('admin.audit-logs') }}">
                                     <span class="sidebar-link-icon">
                                         <i class="ti ti-clipboard-list"></i>
