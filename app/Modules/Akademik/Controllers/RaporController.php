@@ -28,11 +28,7 @@ class RaporController extends Controller
             ->orderBy('full_name')
             ->get();
 
-        $semesters = NilaiSantri::query()
-            ->visibleTo($currentUser)
-            ->distinct()
-            ->orderBy('semester', 'desc')
-            ->pluck('semester');
+        $semesters = $this->availableSemesters();
 
         return view('modules.akademik.rapor.index', [
             'santris' => $santris,
@@ -282,6 +278,19 @@ class RaporController extends Controller
             'peringkat' => $peringkat,
             'total' => $totalSantri,
             'rata_rata' => $rataSaya,
+        ];
+    }
+
+    protected function availableSemesters(): array
+    {
+        $year = now()->year;
+        $nextYear = $year + 1;
+
+        return [
+            "{$year}/{$nextYear} Ganjil",
+            "{$year}/{$nextYear} Genap",
+            (($year - 1)."/{$year} Ganjil"),
+            (($year - 1)."/{$year} Genap"),
         ];
     }
 }
