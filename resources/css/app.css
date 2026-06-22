@@ -2359,3 +2359,130 @@ body {
     background: var(--custom-surface-raised);
     border-color: var(--custom-border);
 }
+
+/* ── user-detail (santri & admin) ── */
+[data-bs-theme="dark"] .user-detail-hero-card {
+    background:
+        radial-gradient(circle at top right, rgba(32, 107, 196, 0.18), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(34, 197, 94, 0.10), transparent 26%),
+        linear-gradient(135deg, var(--custom-surface-raised) 0%, var(--custom-surface) 100%);
+    box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .user-detail-avatar {
+    color: #60a5fa;
+    background:
+        linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05)),
+        var(--custom-surface);
+    box-shadow:
+        inset 0 0 0 1px rgba(59, 130, 246, 0.15),
+        0 0.6rem 1.5rem rgba(59, 130, 246, 0.15);
+}
+
+[data-bs-theme="dark"] .user-detail-avatar-frame {
+    background:
+        linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05)),
+        var(--custom-surface);
+    box-shadow:
+        inset 0 0 0 1px rgba(59, 130, 246, 0.15),
+        0 0.6rem 1.5rem rgba(59, 130, 246, 0.15);
+}
+
+[data-bs-theme="dark"] .santri-detail-avatar-frame {
+    background:
+        linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05)),
+        var(--custom-surface);
+    box-shadow:
+        inset 0 0 0 1px rgba(59, 130, 246, 0.15),
+        0 0.8rem 1.8rem rgba(59, 130, 246, 0.18);
+}
+
+[data-bs-theme="dark"] .user-detail-avatar-image {
+    background: var(--custom-surface);
+}
+
+[data-bs-theme="dark"] .user-detail-separator {
+    background: rgba(148, 163, 184, 0.5);
+}
+
+[data-bs-theme="dark"] .user-detail-meta-card {
+    background: var(--custom-surface-raised);
+    border-color: var(--custom-border);
+}
+
+[data-bs-theme="dark"] .user-detail-actions {
+    background: var(--custom-surface-raised);
+    border-color: var(--custom-border);
+}
+
+[data-bs-theme="dark"] .user-detail-actions-head {
+    border-bottom-color: var(--custom-border);
+}
+
+[data-bs-theme="dark"] .user-detail-action-block {
+    background: var(--custom-surface);
+    border-color: var(--custom-border);
+}
+
+[data-bs-theme="dark"] .user-detail-action-title {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .user-detail-info-row span {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .user-detail-info-row strong {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .user-detail-info-row {
+    border-bottom-color: var(--custom-border);
+}
+
+[data-bs-theme="dark"] .user-detail-timeline-item + .user-detail-timeline-item {
+    border-top-color: var(--custom-border);
+}
+
+[data-bs-theme="dark"] .reset-password-toggle {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .reset-password-toggle:hover,
+[data-bs-theme="dark"] .reset-password-toggle:focus {
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.12);
+}
+
+[data-bs-theme="dark"] .user-inline-avatar {
+    box-shadow: 0 0.45rem 1.1rem rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .user-tenant-slug {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .saas-chart-value {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .saas-dashboard-empty h3 {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .saas-dashboard-empty p {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .table-responsive {
+    border-top-color: var(--custom-border);
+}
+
+[data-bs-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(148, 163, 184, 0.03);
+}
+
+[data-bs-theme="dark"] .modal-header .btn-close,
+[data-bs-theme="dark"] .offcanvas-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
