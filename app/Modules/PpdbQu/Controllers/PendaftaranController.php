@@ -4,6 +4,7 @@ namespace App\Modules\PpdbQu\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Santri;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\PpdbQu\Models\PpdbGelombang;
 use App\Modules\PpdbQu\Models\PpdbPendaftaran;
@@ -28,11 +29,16 @@ class PendaftaranController extends Controller
             ->get();
 
         $selectedGelombang = null;
+        $tenant = null;
+
         if ($gelombang) {
             $selectedGelombang = PpdbGelombang::withoutTenantScope()->find($gelombang);
+            if ($selectedGelombang) {
+                $tenant = Tenant::find($selectedGelombang->tenant_id);
+            }
         }
 
-        return view('modules.ppdb-qu.pendaftaran.create', compact('gelombangs', 'selectedGelombang'));
+        return view('modules.ppdb-qu.pendaftaran.create', compact('gelombangs', 'selectedGelombang', 'tenant'));
     }
 
     public function store(StorePendaftaranRequest $request): RedirectResponse

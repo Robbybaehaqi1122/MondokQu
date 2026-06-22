@@ -18,7 +18,7 @@
 <body>
     <div class="header">
         <h1>FORMULIR PENDAFTARAN</h1>
-        <h2>PPDB Online - Mondok Qu</h2>
+        <h2>PPDB Online - {{ $tenant?->settings['ponpes_name'] ?? $tenant?->name ?? 'Pesantren' }}</h2>
         <p>No. Pendaftaran: <strong>{{ $pendaftaran->nomor_pendaftaran }}</strong></p>
     </div>
 

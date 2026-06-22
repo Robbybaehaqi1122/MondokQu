@@ -19,17 +19,17 @@
 </head>
 <body>
     @php
-        $namaPondok = $pendaftaran->gelombang?->nama ?? 'Pesantren';
+        $namaPondok = $tenant?->settings['ponpes_name'] ?? $tenant?->name ?? 'Pesantren';
     @endphp
 
     <div class="header">
         <h1>SURAT KETERANGAN DITERIMA</h1>
-        <h2>PPDB Mondok Qu</h2>
+        <h2>PPDB {{ $namaPondok }}</h2>
         <p>Nomor: {{ $pendaftaran->nomor_pendaftaran }}/SK-PPDB/{{ now()->year }}</p>
     </div>
 
     <div class="content">
-        <p>Yang bertanda tangan di bawah ini, Panitia PPDB Mondok Qu, menerangkan bahwa:</p>
+        <p>Yang bertanda tangan di bawah ini, Panitia PPDB {{ $namaPondok }}, menerangkan bahwa:</p>
 
         <table>
             <tr><td class="label">Nama Lengkap</td><td>: {{ $pendaftaran->nama_lengkap }}</td></tr>
@@ -39,7 +39,7 @@
             <tr><td class="label">Gelombang</td><td>: {{ $pendaftaran->gelombang?->nama ?? '-' }}</td></tr>
         </table>
 
-        <p><strong>DINYATAKAN DITERIMA</strong> sebagai calon santri di Mondok Qu.</p>
+        <p><strong>DINYATAKAN DITERIMA</strong> sebagai calon santri di {{ $namaPondok }}.</p>
         <p>Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
     </div>
 

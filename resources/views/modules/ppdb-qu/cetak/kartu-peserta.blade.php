@@ -18,7 +18,7 @@
     <div class="card">
         <div class="header">
             <h1>KARTU PESERTA</h1>
-            <h2>PPDB Mondok Qu</h2>
+            <h2>PPDB {{ $tenant?->settings['ponpes_name'] ?? $tenant?->name ?? 'Pesantren' }}</h2>
         </div>
         <div class="no-reg">{{ $pendaftaran->nomor_pendaftaran }}</div>
         <table>

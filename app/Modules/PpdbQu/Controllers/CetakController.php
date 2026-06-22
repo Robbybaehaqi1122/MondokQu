@@ -16,9 +16,11 @@ class CetakController extends Controller
         }
 
         $ppdbPendaftaran->load('gelombang');
+        $tenant = auth()->user()->tenant;
 
         $pdf = Pdf::loadView('modules.ppdb-qu.cetak.formulir', [
             'pendaftaran' => $ppdbPendaftaran,
+            'tenant' => $tenant,
         ]);
 
         return $pdf->download('formulir-ppdb-' . $ppdbPendaftaran->nomor_pendaftaran . '.pdf');
@@ -31,9 +33,11 @@ class CetakController extends Controller
         }
 
         $ppdbPendaftaran->load('gelombang');
+        $tenant = auth()->user()->tenant;
 
         $pdf = Pdf::loadView('modules.ppdb-qu.cetak.kartu-peserta', [
             'pendaftaran' => $ppdbPendaftaran,
+            'tenant' => $tenant,
         ]);
 
         return $pdf->download('kartu-peserta-ppdb-' . $ppdbPendaftaran->nomor_pendaftaran . '.pdf');
@@ -50,9 +54,11 @@ class CetakController extends Controller
         }
 
         $ppdbPendaftaran->load('gelombang');
+        $tenant = auth()->user()->tenant;
 
         $pdf = Pdf::loadView('modules.ppdb-qu.cetak.surat-terima', [
             'pendaftaran' => $ppdbPendaftaran,
+            'tenant' => $tenant,
         ]);
 
         return $pdf->download('surat-keterangan-diterima-' . $ppdbPendaftaran->nomor_pendaftaran . '.pdf');
