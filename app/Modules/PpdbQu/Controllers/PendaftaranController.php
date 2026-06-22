@@ -33,7 +33,7 @@ class PendaftaranController extends Controller
         $tenant = null;
 
         if ($gelombang) {
-            $selectedGelombang = PpdbGelombang::withoutTenantScope()->find($gelombang);
+            $selectedGelombang = PpdbGelombang::withoutTenantScope()->where('uuid', $gelombang)->first();
             if ($selectedGelombang) {
                 $tenant = Tenant::find($selectedGelombang->tenant_id);
 

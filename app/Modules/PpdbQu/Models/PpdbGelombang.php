@@ -3,12 +3,14 @@
 namespace App\Modules\PpdbQu\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PpdbGelombang extends Model
 {
     use BelongsToTenant;
+    use HasUuids;
 
     protected $table = 'ppdb_gelombangs';
 
@@ -21,6 +23,16 @@ class PpdbGelombang extends Model
         'biaya_pendaftaran',
         'status',
     ];
+
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
 
     protected function casts(): array
     {

@@ -25,8 +25,8 @@
         <div class="card-header"><h3 class="card-title">Link Pendaftaran</h3></div>
         <div class="card-body">
             <div class="input-group">
-                <input type="text" class="form-control" id="link-pendaftaran" value="{{ route('ppdb.daftar', $gelombang->id) }}" readonly>
-                <button type="button" class="btn btn-outline-success" onclick="salinLink('{{ route('ppdb.daftar', $gelombang->id) }}', this)">Salin Link</button>
+                <input type="text" class="form-control" id="link-pendaftaran" value="{{ route('ppdb.daftar', $gelombang) }}" readonly>
+                <button type="button" class="btn btn-outline-success" onclick="salinLink('{{ route('ppdb.daftar', $gelombang) }}', this)">Salin Link</button>
             </div>
             <div class="form-text mt-1">Bagikan link ini kepada calon santri untuk mendaftar.</div>
         </div>

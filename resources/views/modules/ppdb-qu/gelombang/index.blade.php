@@ -53,7 +53,7 @@
                             </td>
                             <td class="text-end">
                                 @if ($g->status === 'aktif')
-                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="salinLink('{{ route('ppdb.daftar', $g->id) }}', this)">Salin Link</button>
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="salinLink('{{ route('ppdb.daftar', $g) }}', this)">Salin Link</button>
                                 @endif
                                 <a href="{{ route('ppdb.gelombang.edit', $g) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
                             </td>
