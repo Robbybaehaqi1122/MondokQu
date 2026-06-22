@@ -11,6 +11,21 @@
         </div>
     </x-slot>
 
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible d-flex align-items-center gap-2" role="alert">
+            <i class="ti ti-circle-check fs-3"></i>
+            <span>{{ session('success') }}</span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible d-flex align-items-center gap-2" role="alert">
+            <i class="ti ti-alert-circle fs-3"></i>
+            <span>{{ session('error') }}</span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="table-responsive">
             <table class="table table-vcenter card-table">
