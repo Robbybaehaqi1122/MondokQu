@@ -137,17 +137,9 @@
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const toastElement = document.querySelector('[data-login-toast]');
-
                 if (toastElement) {
-                    toastElement.classList.add('show');
-
-                    window.setTimeout(() => {
-                        toastElement.classList.remove('show');
-
-                        window.setTimeout(() => {
-                            toastElement.remove();
-                        }, 300);
-                    }, 7000);
+                    const toast = new bootstrap.Toast(toastElement, { delay: 7000 });
+                    toast.show();
                 }
             });
         </script>

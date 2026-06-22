@@ -111,7 +111,7 @@
                     const original = btn.textContent;
                     btn.textContent = 'Tersalin!';
                     setTimeout(() => btn.textContent = original, 2000);
-                });
+                }).catch(() => {});
             }
         </script>
     @endpush
