@@ -6,6 +6,17 @@
         </div>
     </x-slot>
 
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">Link Pendaftaran</h3></div>
+        <div class="card-body">
+            <div class="input-group">
+                <input type="text" class="form-control" id="link-pendaftaran" value="{{ route('ppdb.daftar', $gelombang->id) }}" readonly>
+                <button type="button" class="btn btn-outline-success" onclick="salinLink('{{ route('ppdb.daftar', $gelombang->id) }}', this)">Salin Link</button>
+            </div>
+            <div class="form-text mt-1">Bagikan link ini kepada calon santri untuk mendaftar.</div>
+        </div>
+    </div>
+
     <form action="{{ route('ppdb.gelombang.update', $gelombang) }}" method="POST">
         @csrf
         @method('PUT')
@@ -54,4 +65,15 @@
             </div>
         </div>
     </form>
+    @push('scripts')
+        <script>
+            function salinLink(url, btn) {
+                navigator.clipboard.writeText(url).then(() => {
+                    const original = btn.textContent;
+                    btn.textContent = 'Tersalin!';
+                    setTimeout(() => btn.textContent = original, 2000);
+                });
+            }
+        </script>
+    @endpush
 </x-app-layout>

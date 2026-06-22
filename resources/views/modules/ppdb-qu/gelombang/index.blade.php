@@ -37,6 +37,9 @@
                                 <span class="badge {{ $g->status === 'aktif' ? 'bg-success' : 'bg-secondary' }}">{{ $g->status }}</span>
                             </td>
                             <td class="text-end">
+                                @if ($g->status === 'aktif')
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="salinLink('{{ route('ppdb.daftar', $g->id) }}', this)">Salin Link</button>
+                                @endif
                                 <a href="{{ route('ppdb.gelombang.edit', $g) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
                             </td>
                         </tr>
@@ -101,4 +104,15 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+        <script>
+            function salinLink(url, btn) {
+                navigator.clipboard.writeText(url).then(() => {
+                    const original = btn.textContent;
+                    btn.textContent = 'Tersalin!';
+                    setTimeout(() => btn.textContent = original, 2000);
+                });
+            }
+        </script>
+    @endpush
 </x-app-layout>

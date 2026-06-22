@@ -35,6 +35,10 @@ class PendaftaranController extends Controller
             $selectedGelombang = PpdbGelombang::withoutTenantScope()->find($gelombang);
             if ($selectedGelombang) {
                 $tenant = Tenant::find($selectedGelombang->tenant_id);
+
+                if ($selectedGelombang->status !== 'aktif' || $selectedGelombang->tanggal_mulai > now() || $selectedGelombang->tanggal_selesai < now()) {
+                    return view('modules.ppdb-qu.pendaftaran.closed', compact('selectedGelombang', 'tenant'));
+                }
             }
         }
 
