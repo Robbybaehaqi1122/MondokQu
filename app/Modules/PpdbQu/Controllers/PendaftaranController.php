@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
+use Spatie\Activitylog\Facades\Activity;
 
 class PendaftaranController extends Controller
 {
@@ -156,7 +157,7 @@ class PendaftaranController extends Controller
             }
         }
 
-        activity()->log('Mengupdate status PPDB: ' . $ppdbPendaftaran->nomor_pendaftaran . ' -> ' . $data['status']);
+        Activity::log('Mengupdate status PPDB: ' . $ppdbPendaftaran->nomor_pendaftaran . ' -> ' . $data['status']);
 
         return redirect()->route('ppdb.pendaftaran.show', $ppdbPendaftaran)
             ->with('success', 'Status pendaftaran berhasil diperbarui.');
@@ -223,7 +224,7 @@ class PendaftaranController extends Controller
             'daftar_ulang_at' => now(),
         ]);
 
-        activity()->log('PPDB daftar ulang: ' . $ppdbPendaftaran->nomor_pendaftaran . ' -> Santri ' . $santri->nis);
+        Activity::log('PPDB daftar ulang: ' . $ppdbPendaftaran->nomor_pendaftaran . ' -> Santri ' . $santri->nis);
 
         return redirect()->route('ppdb.pendaftaran.show', $ppdbPendaftaran)
             ->with('success', 'Calon santri berhasil didaftarkan sebagai santri aktif (NIS: ' . $santri->nis . ').');

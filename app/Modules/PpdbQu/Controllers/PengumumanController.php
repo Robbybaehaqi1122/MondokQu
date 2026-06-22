@@ -10,6 +10,7 @@ use App\Modules\PpdbQu\Requests\StorePengumumanRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Spatie\Activitylog\Facades\Activity;
 
 class PengumumanController extends Controller
 {
@@ -63,7 +64,7 @@ class PengumumanController extends Controller
             ]
         );
 
-        activity()->log('Membuat pengumuman PPDB: ' . $request->judul);
+        Activity::log('Membuat pengumuman PPDB: ' . $request->judul);
 
         return redirect()->route('ppdb.pengumuman.index')
             ->with('success', 'Pengumuman berhasil dibuat.');
@@ -98,7 +99,7 @@ class PengumumanController extends Controller
 
         $ppdbPengumuman->update(['published_at' => now()]);
 
-        activity()->log('Mempublikasikan pengumuman PPDB: ' . $ppdbPengumuman->judul);
+        Activity::log('Mempublikasikan pengumuman PPDB: ' . $ppdbPengumuman->judul);
 
         return redirect()->route('ppdb.pengumuman.show', $ppdbPengumuman)
             ->with('success', 'Pengumuman berhasil dipublikasikan.');

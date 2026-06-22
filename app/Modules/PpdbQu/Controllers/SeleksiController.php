@@ -10,6 +10,7 @@ use App\Modules\PpdbQu\Requests\UpdateSeleksiRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Spatie\Activitylog\Facades\Activity;
 
 class SeleksiController extends Controller
 {
@@ -70,7 +71,7 @@ class SeleksiController extends Controller
             $ppdbPendaftaran->update(['status' => 'diproses', 'diproses_oleh' => $user->id]);
         }
 
-        activity()->log('Input seleksi PPDB: ' . $ppdbPendaftaran->nomor_pendaftaran . ' - ' . $request->jenis);
+        Activity::log('Input seleksi PPDB: ' . $ppdbPendaftaran->nomor_pendaftaran . ' - ' . $request->jenis);
 
         return redirect()->route('ppdb.pendaftaran.show', $ppdbPendaftaran)
             ->with('success', 'Hasil seleksi berhasil disimpan.');
@@ -85,7 +86,7 @@ class SeleksiController extends Controller
 
         $ppdbSeleksi->update($request->validated());
 
-        activity()->log('Update seleksi PPDB: ' . $ppdbSeleksi->pendaftaran?->nomor_pendaftaran . ' - ' . $ppdbSeleksi->jenis);
+        Activity::log('Update seleksi PPDB: ' . $ppdbSeleksi->pendaftaran?->nomor_pendaftaran . ' - ' . $ppdbSeleksi->jenis);
 
         return redirect()->route('ppdb.seleksi.index')
             ->with('success', 'Hasil seleksi berhasil diperbarui.');
