@@ -44,20 +44,20 @@
 
                         <h5 class="mb-3">Data Calon Santri</h5>
                         <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-6">
+                            <div class="col-12">
                                 <label class="form-label required">Nama Lengkap</label>
                                 <input type="text" name="nama_lengkap" class="form-control @error('nama_lengkap') is-invalid @enderror" value="{{ old('nama_lengkap') }}" required>
                                 @error('nama_lengkap')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-4">
                                 <label class="form-label">Tempat Lahir</label>
                                 <input type="text" name="tempat_lahir" class="form-control @error('tempat_lahir') is-invalid @enderror" value="{{ old('tempat_lahir') }}">
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-4">
                                 <label class="form-label">Tanggal Lahir</label>
                                 <input type="date" name="tanggal_lahir" class="form-control @error('tanggal_lahir') is-invalid @enderror" value="{{ old('tanggal_lahir') }}">
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-4">
                                 <label class="form-label required">Jenis Kelamin</label>
                                 <select name="jenis_kelamin" class="form-select @error('jenis_kelamin') is-invalid @enderror" required>
                                     <option value="">Pilih</option>
@@ -65,11 +65,11 @@
                                     <option value="perempuan" @selected(old('jenis_kelamin') === 'perempuan')>Perempuan</option>
                                 </select>
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-3">
                                 <label class="form-label">Asal Sekolah</label>
                                 <input type="text" name="asal_sekolah" class="form-control @error('asal_sekolah') is-invalid @enderror" value="{{ old('asal_sekolah') }}">
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-3">
                                 <label class="form-label required">No. HP</label>
                                 <input type="text" name="no_hp" class="form-control @error('no_hp') is-invalid @enderror" value="{{ old('no_hp') }}" required>
                             </div>
