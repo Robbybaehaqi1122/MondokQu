@@ -7,26 +7,6 @@
     </x-slot>
 
     <div class="row row-cards">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body d-flex align-items-center justify-content-between gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="avatar avatar-lg bg-primary-lt text-primary">
-                            <i class="ti ti-link fs-1"></i>
-                        </span>
-                        <div>
-                            <div class="fw-semibold">Link Pendaftaran Santri Baru</div>
-                            <div class="text-secondary small">Bagikan link ini kepada calon santri untuk mendaftar tanpa login</div>
-                            <code id="ppdb-link" class="d-block mt-1">{{ url('/ppdb/daftar') }}</code>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-outline-primary" onclick="navigator.clipboard.writeText('{{ url('/ppdb/daftar') }}').then(() => { this.textContent = 'Tersalin!'; setTimeout(() => this.textContent = 'Salin Link', 2000); })">
-                        Salin Link
-                    </button>
-                </div>
-            </div>
-        </div>
-
         @if ($summary)
             <div class="col-12">
                 <div class="row g-3">
