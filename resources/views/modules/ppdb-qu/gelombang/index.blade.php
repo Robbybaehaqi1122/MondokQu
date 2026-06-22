@@ -52,10 +52,24 @@
                                 <span class="badge {{ $g->status === 'aktif' ? 'bg-success' : 'bg-secondary' }}">{{ $g->status }}</span>
                             </td>
                             <td class="text-end">
-                                @if ($g->status === 'aktif')
-                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="salinLink('{{ route('ppdb.daftar', $g) }}', this)">Salin Link</button>
-                                @endif
-                                <a href="{{ route('ppdb.gelombang.edit', $g) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <div class="btn-group">
+                                    @if ($g->status === 'aktif')
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="salinLink('{{ route('ppdb.daftar', $g) }}', this)">Salin Link</button>
+                                    @endif
+                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="visually-hidden">Actions</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="{{ route('ppdb.gelombang.edit', $g) }}">Edit</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ route('ppdb.gelombang.destroy', $g) }}" method="POST" class="d-inline">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Hapus gelombang {{ $g->nama }}?')">Hapus</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
                             </td>
                         </tr>
                     @empty
