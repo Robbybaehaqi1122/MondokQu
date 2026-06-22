@@ -3,6 +3,8 @@
     $roles = $user?->getRoleNames() ?? collect();
     $roleLabel = $roles->implode(', ') ?: 'Tanpa role';
     $userInitial = strtoupper(substr($user->name, 0, 1));
+    $tenantName = $user->tenant?->settings['ponpes_name'] ?? $user->tenant?->name;
+@endphp
     $canOpenOperationalReports = $user->can('manage kamar') || $user->canAny(['create izin', 'approve izin']);
     $canOpenAbsensiModule = $user->can('manage absensi');
     $canOpenTahfidzModule = $user->can('manage tahfidz');
@@ -79,6 +81,9 @@
                 </span>
                 <span class="sidebar-brand-copy">
                     <span class="sidebar-brand-title">Mondok Qu</span>
+                    @if ($tenantName)
+                        <span class="sidebar-brand-subtitle" style="font-size:.675rem;font-weight:400;color:var(--tblr-navbar-dark-color);opacity:.65">Selamat Bekerja, {{ $tenantName }}</span>
+                    @endif
                 </span>
             </a>
         </h1>
@@ -96,6 +101,9 @@
                     <span class="mobile-sidebar-user-name">{{ $user->name }}</span>
                     <span class="mobile-sidebar-user-meta">{{ '@'.$user->username }}</span>
                     <span class="mobile-sidebar-user-meta">{{ $roleLabel }}</span>
+                    @if ($tenantName)
+                        <span class="mobile-sidebar-user-meta" style="opacity:.75">Selamat Bekerja, {{ $tenantName }}</span>
+                    @endif
                 </span>
                 <span class="mobile-sidebar-user-arrow">
                     <i class="ti ti-chevron-right"></i>
