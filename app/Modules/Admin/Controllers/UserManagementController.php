@@ -17,9 +17,9 @@ use App\Modules\Admin\Requests\UpdateUserStatusRequest;
 use App\Services\ActivityLogger;
 use App\Services\UserAvatarUploader;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -698,7 +698,17 @@ class UserManagementController extends Controller
             userAgent: request()?->userAgent()
         );
 
-        $user->delete();
+        try {
+            $user->delete();
+        } catch (QueryException $e) {
+            if (str_contains($e->getMessage(), 'Integrity constraint violation')) {
+                return redirect()
+                    ->route('admin.users')
+                    ->with('error', 'User tidak dapat dihapus karena masih memiliki data terkait (nilai santri, target tahfidz, atau data lainnya). Hapus atau pindahkan data tersebut terlebih dahulu.');
+            }
+
+            throw $e;
+        }
 
         return redirect()
             ->route('admin.users')
