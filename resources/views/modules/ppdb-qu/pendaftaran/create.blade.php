@@ -49,6 +49,8 @@
                                 <input type="text" name="nama_lengkap" class="form-control @error('nama_lengkap') is-invalid @enderror" value="{{ old('nama_lengkap') }}" required>
                                 @error('nama_lengkap')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+                        </div>
+                        <div class="row g-3 mb-3">
                             <div class="col-12 col-md-4">
                                 <label class="form-label">Tempat Lahir</label>
                                 <input type="text" name="tempat_lahir" class="form-control @error('tempat_lahir') is-invalid @enderror" value="{{ old('tempat_lahir') }}">
@@ -65,6 +67,8 @@
                                     <option value="perempuan" @selected(old('jenis_kelamin') === 'perempuan')>Perempuan</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="row g-3 mb-3">
                             <div class="col-12 col-md-3">
                                 <label class="form-label">Asal Sekolah</label>
                                 <input type="text" name="asal_sekolah" class="form-control @error('asal_sekolah') is-invalid @enderror" value="{{ old('asal_sekolah') }}">
@@ -95,6 +99,8 @@
                                 <label class="form-label">Nama Ibu</label>
                                 <input type="text" name="nama_ibu" class="form-control @error('nama_ibu') is-invalid @enderror" value="{{ old('nama_ibu') }}">
                             </div>
+                        </div>
+                        <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6">
                                 <label class="form-label">No. HP Orang Tua</label>
                                 <input type="text" name="no_hp_orangtua" class="form-control @error('no_hp_orangtua') is-invalid @enderror" value="{{ old('no_hp_orangtua') }}">
