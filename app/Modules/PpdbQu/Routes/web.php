@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/ppdb/daftar/{gelombang?}', [PendaftaranController::class, 'create'])->name('ppdb.daftar');
 Route::post('/ppdb/daftar', [PendaftaranController::class, 'store'])->name('ppdb.daftar.store');
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage ppdb'])
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|Admin|Bendahara|manage ppdb'])
     ->prefix('ppdb')->name('ppdb.')->group(function () {
 
     Route::get('/dashboard', PpdbQuDashboardController::class)->name('dashboard');

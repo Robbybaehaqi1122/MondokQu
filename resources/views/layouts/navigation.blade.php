@@ -13,7 +13,7 @@
     $canOpenKeuanganQuModule = $user->hasRole('Bendahara') || $user->can('manage keuangan') || $user->can('view pembayaran') || $user->can('view laporan keuangan');
     $canOpenInventarisQuModule = $user->can('manage inventaris');
     $canOpenKegiatanQuModule = $user->can('manage kegiatan');
-    $canOpenPpdbQuModule = $user->can('manage ppdb');
+    $canOpenPpdbQuModule = $user->hasAnyRole(['Superadmin', 'Admin', 'Bendahara']) || $user->can('manage ppdb');
     $canOpenPerpustakaanQuModule = $user->can('manage perpustakaan');
     $canOpenKitabQuModule = $user->can('manage kitab');
     $canOpenKepengurusanQuModule = $user->can('manage kepengurusan');
