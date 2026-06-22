@@ -4,7 +4,6 @@
     $roleLabel = $roles->implode(', ') ?: 'Tanpa role';
     $userInitial = strtoupper(substr($user->name, 0, 1));
     $tenantName = $user->tenant?->settings['ponpes_name'] ?? $user->tenant?->name;
-@endphp
     $canOpenOperationalReports = $user->can('manage kamar') || $user->canAny(['create izin', 'approve izin']);
     $canOpenAbsensiModule = $user->can('manage absensi');
     $canOpenTahfidzModule = $user->can('manage tahfidz');
