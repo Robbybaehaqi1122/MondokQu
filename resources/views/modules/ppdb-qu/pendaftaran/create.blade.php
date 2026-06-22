@@ -14,7 +14,7 @@
         </div>
 
         <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
+            <div class="col-12 col-lg-12 col-xl-10">
                 <form action="{{ route('ppdb.daftar.store') }}" method="POST" enctype="multipart/form-data" class="card">
                     @csrf
                     <div class="card-header">
@@ -27,47 +27,55 @@
                             </div>
                         @endif
 
-                        <div class="mb-3">
-                            <label class="form-label required">Gelombang Pendaftaran</label>
-                            <select name="gelombang_id" class="form-select @error('gelombang_id') is-invalid @enderror" required>
-                                <option value="">Pilih Gelombang</option>
-                                @foreach ($gelombangs as $g)
-                                    <option value="{{ $g->id }}" @selected(old('gelombang_id', $selectedGelombang?->id) == $g->id)>
-                                        {{ $g->nama }} ({{ $g->tanggal_mulai->translatedFormat('d M Y') }} - {{ $g->tanggal_selesai->translatedFormat('d M Y') }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('gelombang_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                <label class="form-label required">Gelombang Pendaftaran</label>
+                                <select name="gelombang_id" class="form-select @error('gelombang_id') is-invalid @enderror" required>
+                                    <option value="">Pilih Gelombang</option>
+                                    @foreach ($gelombangs as $g)
+                                        <option value="{{ $g->id }}" @selected(old('gelombang_id', $selectedGelombang?->id) == $g->id)>
+                                            {{ $g->nama }} ({{ $g->tanggal_mulai->translatedFormat('d M Y') }} - {{ $g->tanggal_selesai->translatedFormat('d M Y') }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('gelombang_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
                         </div>
 
                         <h5 class="mb-3">Data Calon Santri</h5>
                         <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label required">Nama Lengkap</label>
                                 <input type="text" name="nama_lengkap" class="form-control @error('nama_lengkap') is-invalid @enderror" value="{{ old('nama_lengkap') }}" required>
                                 @error('nama_lengkap')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label">Asal Sekolah</label>
-                                <input type="text" name="asal_sekolah" class="form-control @error('asal_sekolah') is-invalid @enderror" value="{{ old('asal_sekolah') }}">
-                            </div>
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label">Tempat Lahir</label>
                                 <input type="text" name="tempat_lahir" class="form-control @error('tempat_lahir') is-invalid @enderror" value="{{ old('tempat_lahir') }}">
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label">Tanggal Lahir</label>
                                 <input type="date" name="tanggal_lahir" class="form-control @error('tanggal_lahir') is-invalid @enderror" value="{{ old('tanggal_lahir') }}">
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label required">Jenis Kelamin</label>
                                 <select name="jenis_kelamin" class="form-select @error('jenis_kelamin') is-invalid @enderror" required>
                                     <option value="">Pilih</option>
                                     <option value="laki-laki" @selected(old('jenis_kelamin') === 'laki-laki')>Laki-laki</option>
                                     <option value="perempuan" @selected(old('jenis_kelamin') === 'perempuan')>Perempuan</option>
                                 </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label">Asal Sekolah</label>
+                                <input type="text" name="asal_sekolah" class="form-control @error('asal_sekolah') is-invalid @enderror" value="{{ old('asal_sekolah') }}">
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label required">No. HP</label>
+                                <input type="text" name="no_hp" class="form-control @error('no_hp') is-invalid @enderror" value="{{ old('no_hp') }}" required>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}">
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
@@ -76,28 +84,18 @@
                                 <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror" rows="2">{{ old('alamat') }}</textarea>
                             </div>
                         </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-6">
-                                <label class="form-label required">No. HP</label>
-                                <input type="text" name="no_hp" class="form-control @error('no_hp') is-invalid @enderror" value="{{ old('no_hp') }}" required>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}">
-                            </div>
-                        </div>
 
                         <h5 class="mb-3 mt-4">Data Orang Tua</h5>
                         <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label">Nama Ayah</label>
                                 <input type="text" name="nama_ayah" class="form-control @error('nama_ayah') is-invalid @enderror" value="{{ old('nama_ayah') }}">
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label">Nama Ibu</label>
                                 <input type="text" name="nama_ibu" class="form-control @error('nama_ibu') is-invalid @enderror" value="{{ old('nama_ibu') }}">
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label">No. HP Orang Tua</label>
                                 <input type="text" name="no_hp_orangtua" class="form-control @error('no_hp_orangtua') is-invalid @enderror" value="{{ old('no_hp_orangtua') }}">
                             </div>
