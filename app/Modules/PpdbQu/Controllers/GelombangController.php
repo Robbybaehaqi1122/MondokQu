@@ -9,7 +9,6 @@ use App\Modules\PpdbQu\Requests\UpdateGelombangRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Spatie\Activitylog\Facades\Activity;
 
 class GelombangController extends Controller
 {
@@ -49,7 +48,7 @@ class GelombangController extends Controller
             $request->validated() + ['tenant_id' => $tenantId]
         );
 
-        Activity::log('Menambah gelombang PPDB: ' . $request->nama);
+        activity()->log('Menambah gelombang PPDB: ' . $request->nama);
 
         return redirect()->route('ppdb.gelombang.index')
             ->with('success', 'Gelombang berhasil ditambahkan.');
@@ -71,7 +70,7 @@ class GelombangController extends Controller
 
         $ppdbGelombang->update($request->validated());
 
-        Activity::log('Mengupdate gelombang PPDB: ' . $ppdbGelombang->nama);
+        activity()->log('Mengupdate gelombang PPDB: ' . $ppdbGelombang->nama);
 
         return redirect()->route('ppdb.gelombang.index')
             ->with('success', 'Gelombang berhasil diperbarui.');
