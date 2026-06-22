@@ -80,9 +80,6 @@
                 </span>
                 <span class="sidebar-brand-copy">
                     <span class="sidebar-brand-title">Mondok Qu</span>
-                    @if ($tenantName)
-                        <span class="sidebar-brand-subtitle" style="font-size:.675rem;font-weight:400;color:var(--tblr-navbar-dark-color);opacity:.65">Selamat Bekerja, {{ $tenantName }}</span>
-                    @endif
                 </span>
             </a>
         </h1>
@@ -100,9 +97,6 @@
                     <span class="mobile-sidebar-user-name">{{ $user->name }}</span>
                     <span class="mobile-sidebar-user-meta">{{ '@'.$user->username }}</span>
                     <span class="mobile-sidebar-user-meta">{{ $roleLabel }}</span>
-                    @if ($tenantName)
-                        <span class="mobile-sidebar-user-meta" style="opacity:.75">Selamat Bekerja, {{ $tenantName }}</span>
-                    @endif
                 </span>
                 <span class="mobile-sidebar-user-arrow">
                     <i class="ti ti-chevron-right"></i>
@@ -905,7 +899,12 @@
             </button>
         </div>
 
-        <div class="navbar-nav flex-row order-md-last">
+        <div class="navbar-nav flex-row align-items-center order-md-last">
+            @if ($tenantName)
+                <div class="nav-item me-3 d-none d-md-block">
+                    <small class="text-secondary">Selamat Bekerja, <strong>{{ $tenantName }}</strong></small>
+                </div>
+            @endif
             <div class="nav-item me-3">
                 <button type="button" class="btn btn-outline-secondary btn-icon" id="theme-toggle" aria-label="Toggle dark mode">
                     <i class="ti ti-moon"></i>
