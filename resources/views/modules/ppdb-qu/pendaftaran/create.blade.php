@@ -22,6 +22,11 @@
             </div>
         @endif
 
+        @php
+            $selectedEndDate = $selectedGelombang?->tanggal_selesai;
+            $daysLeft = $selectedEndDate ? (int) ceil(now()->floatDiffInDays($selectedEndDate->endOfDay(), false)) : null;
+        @endphp
+
         <div class="mb-3">
             <label class="form-label required">Gelombang Pendaftaran</label>
             <select name="gelombang_id" class="form-select @error('gelombang_id') is-invalid @enderror" required>
@@ -33,6 +38,21 @@
                 @endforeach
             </select>
             @error('gelombang_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+            <div id="countdown-box" class="mt-2 {{ $selectedGelombang ? '' : 'd-none' }}">
+                <div class="alert alert-info d-flex align-items-center gap-2 mb-0 py-2" role="alert">
+                    <i class="ti ti-clock-hour-4 fs-4"></i>
+                    <span id="countdown-text">
+                        @if ($selectedGelombang)
+                            @if ($daysLeft > 0)
+                                Pendaftaran ditutup dalam <strong>{{ $daysLeft }} hari</strong> lagi
+                            @else
+                                Pendaftaran ditutup <strong>hari ini</strong>
+                            @endif
+                        @endif
+                    </span>
+                </div>
+            </div>
         </div>
 
         <h5 class="mb-3">Data Calon Santri</h5>
@@ -106,4 +126,36 @@
             <button type="submit" class="btn btn-primary btn-lg px-5">Daftar Sekarang</button>
         </div>
     </form>
+
+    @push('scripts')
+        <script>
+            const gelombangDates = @json($gelombangs->mapWithKeys(fn($g) => [$g->id => $g->tanggal_selesai->toDateString()]));
+
+            document.querySelector('[name="gelombang_id"]').addEventListener('change', function () {
+                const box = document.getElementById('countdown-box');
+                const text = document.getElementById('countdown-text');
+                const endDate = gelombangDates[this.value];
+
+                if (! endDate) {
+                    box.classList.add('d-none');
+                    return;
+                }
+
+                const now = new Date();
+                const end = new Date(endDate + 'T23:59:59');
+                const diffMs = end - now;
+                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+                if (diffMs <= 0) {
+                    text.innerHTML = 'Pendaftaran telah ditutup';
+                } else if (diffDays <= 0) {
+                    text.innerHTML = 'Pendaftaran ditutup <strong>hari ini</strong>';
+                } else {
+                    text.innerHTML = 'Pendaftaran ditutup dalam <strong>' + diffDays + ' hari</strong> lagi';
+                }
+
+                box.classList.remove('d-none');
+            });
+        </script>
+    @endpush
 </x-guest-layout>
