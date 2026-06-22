@@ -6,10 +6,12 @@
         </div>
     </x-slot>
 
-    <form action="{{ route('ppdb.gelombang.update', $gelombang) }}" method="POST">
-        @csrf
-        @method('PUT')
-        <div class="card">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-8">
+            <form action="{{ route('ppdb.gelombang.update', $gelombang) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="card">
             <div class="card-header"><h3 class="card-title">Informasi Gelombang</h3></div>
             <div class="card-body">
                 <div class="mb-3">
@@ -50,5 +52,7 @@
                 <a href="{{ route('ppdb.gelombang.index') }}" class="btn btn-outline-secondary">Batal</a>
             </div>
         </div>
-    </form>
+            </form>
+        </div>
+    </div>
 </x-app-layout>

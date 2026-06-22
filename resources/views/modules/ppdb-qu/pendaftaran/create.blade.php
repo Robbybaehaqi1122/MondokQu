@@ -14,7 +14,7 @@
         </div>
 
         <div class="row justify-content-center">
-            <div class="col-12 col-lg-8">
+            <div class="col-12 col-lg-10">
                 <form action="{{ route('ppdb.daftar.store') }}" method="POST" enctype="multipart/form-data" class="card">
                     @csrf
                     <div class="card-header">
@@ -41,10 +41,16 @@
                         </div>
 
                         <h5 class="mb-3">Data Calon Santri</h5>
-                        <div class="mb-3">
-                            <label class="form-label required">Nama Lengkap</label>
-                            <input type="text" name="nama_lengkap" class="form-control @error('nama_lengkap') is-invalid @enderror" value="{{ old('nama_lengkap') }}" required>
-                            @error('nama_lengkap')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label required">Nama Lengkap</label>
+                                <input type="text" name="nama_lengkap" class="form-control @error('nama_lengkap') is-invalid @enderror" value="{{ old('nama_lengkap') }}" required>
+                                @error('nama_lengkap')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Asal Sekolah</label>
+                                <input type="text" name="asal_sekolah" class="form-control @error('asal_sekolah') is-invalid @enderror" value="{{ old('asal_sekolah') }}">
+                            </div>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-4">
@@ -64,9 +70,11 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Alamat</label>
-                            <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror" rows="2">{{ old('alamat') }}</textarea>
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Alamat</label>
+                                <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror" rows="2">{{ old('alamat') }}</textarea>
+                            </div>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6">
@@ -77,10 +85,6 @@
                                 <label class="form-label">Email</label>
                                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}">
                             </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Asal Sekolah</label>
-                            <input type="text" name="asal_sekolah" class="form-control @error('asal_sekolah') is-invalid @enderror" value="{{ old('asal_sekolah') }}">
                         </div>
 
                         <h5 class="mb-3 mt-4">Data Orang Tua</h5>

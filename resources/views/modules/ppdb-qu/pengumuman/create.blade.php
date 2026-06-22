@@ -6,7 +6,9 @@
         </div>
     </x-slot>
 
-    <form action="{{ route('ppdb.pengumuman.store') }}" method="POST">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-8">
+            <form action="{{ route('ppdb.pengumuman.store') }}" method="POST">
         @csrf
         <div class="card">
             <div class="card-header"><h3 class="card-title">Informasi Pengumuman</h3></div>
@@ -42,5 +44,7 @@
                 <a href="{{ route('ppdb.pengumuman.index') }}" class="btn btn-outline-secondary">Batal</a>
             </div>
         </div>
-    </form>
+            </form>
+        </div>
+    </div>
 </x-app-layout>
