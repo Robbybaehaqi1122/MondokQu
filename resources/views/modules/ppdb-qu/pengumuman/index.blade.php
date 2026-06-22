@@ -40,6 +40,8 @@
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-outline-success">Publikasikan</button>
                             </form>
+                        @else
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="salinLink('{{ route('ppdb.pengumuman.public', $p) }}', this)">Salin Link</button>
                         @endif
                         <form action="{{ route('ppdb.pengumuman.destroy', $p) }}" method="POST" class="d-inline">
                             @csrf @method('DELETE')
@@ -95,4 +97,15 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+        <script>
+            function salinLink(url, btn) {
+                navigator.clipboard.writeText(url).then(() => {
+                    const original = btn.textContent;
+                    btn.textContent = 'Tersalin!';
+                    setTimeout(() => btn.textContent = original, 2000);
+                }).catch(() => {});
+            }
+        </script>
+    @endpush
 </x-app-layout>

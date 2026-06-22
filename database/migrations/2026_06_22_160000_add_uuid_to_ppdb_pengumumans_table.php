@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (! Schema::hasColumn('ppdb_pengumumans', 'uuid')) {
+            Schema::table('ppdb_pengumumans', function ($table) {
+                $table->uuid('uuid')->after('id')->nullable()->unique();
+            });
+        }
+
+        DB::statement('UPDATE ppdb_pengumumans SET uuid = UUID() WHERE uuid IS NULL');
+
+        Schema::table('ppdb_pengumumans', function ($table) {
+            $table->uuid('uuid')->nullable(false)->change();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('ppdb_pengumumans', function ($table) {
+            $table->dropColumn('uuid');
+        });
+    }
+};

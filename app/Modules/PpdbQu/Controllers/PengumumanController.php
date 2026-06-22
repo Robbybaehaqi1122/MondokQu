@@ -92,6 +92,26 @@ class PengumumanController extends Controller
         ]);
     }
 
+    public function publicShow(string $uuid): View
+    {
+        $pengumuman = PpdbPengumuman::withoutTenantScope()
+            ->where('uuid', $uuid)
+            ->whereNotNull('published_at')
+            ->with(['gelombang', 'creator'])
+            ->firstOrFail();
+
+        $pendaftarans = PpdbPendaftaran::withoutTenantScope()
+            ->where('tenant_id', $pengumuman->tenant_id)
+            ->where('gelombang_id', $pengumuman->gelombang_id)
+            ->orderBy('nama_lengkap')
+            ->get(['id', 'nomor_pendaftaran', 'nama_lengkap', 'status']);
+
+        return view('modules.ppdb-qu.pengumuman.public-show', [
+            'pengumuman' => $pengumuman,
+            'pendaftarans' => $pendaftarans,
+        ]);
+    }
+
     public function publish(PpdbPengumuman $ppdbPengumuman): RedirectResponse
     {
         if ($ppdbPengumuman->tenant_id !== auth()->user()->tenant_id) {

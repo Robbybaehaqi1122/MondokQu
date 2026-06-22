@@ -6,12 +6,16 @@
                 <h2 class="page-title mt-1">{{ $pengumuman->judul }}</h2>
                 <div class="text-secondary small">{{ $pengumuman->gelombang?->nama }} &middot; {{ $pengumuman->tanggal_pengumuman->translatedFormat('d M Y') }}</div>
             </div>
-            @if (! $pengumuman->published_at)
-                <form action="{{ route('ppdb.pengumuman.publish', $pengumuman) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-success">Publikasikan</button>
-                </form>
-            @endif
+            <div class="d-flex gap-2">
+                @if (! $pengumuman->published_at)
+                    <form action="{{ route('ppdb.pengumuman.publish', $pengumuman) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-success">Publikasikan</button>
+                    </form>
+                @else
+                    <button type="button" class="btn btn-outline-info" onclick="salinLink('{{ route('ppdb.pengumuman.public', $pengumuman) }}', this)">Salin Link Publik</button>
+                @endif
+            </div>
         </div>
     </x-slot>
 
@@ -72,4 +76,15 @@
             </table>
         </div>
     </div>
+    @push('scripts')
+        <script>
+            function salinLink(url, btn) {
+                navigator.clipboard.writeText(url).then(() => {
+                    const original = btn.textContent;
+                    btn.textContent = 'Tersalin!';
+                    setTimeout(() => btn.textContent = original, 2000);
+                }).catch(() => {});
+            }
+        </script>
+    @endpush
 </x-app-layout>
