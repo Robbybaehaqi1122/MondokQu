@@ -6,11 +6,14 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionStatusController;
 use App\Http\Controllers\TenantImpersonationController;
 use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
+use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [PublicController::class, 'index'])->name('landing');
+Route::get('/tentang',           [PublicController::class, 'about'])->name('about');
+Route::get('/faq',               [PublicController::class, 'faq'])->name('faq');
+Route::get('/syarat-ketentuan',  [PublicController::class, 'terms'])->name('terms');
+Route::get('/keamanan-privasi',  [PublicController::class, 'securityPrivacy'])->name('security-privacy');
 
 Route::get('/dashboard', function (DetermineDashboardRouteAction $determineDashboardRoute) {
     return redirect($determineDashboardRoute->handle(auth()->user()));
