@@ -212,6 +212,19 @@ php artisan migrate --seed
 php artisan storage:link
 ```
 
+### 4.2.1 Setelah git pull di VPS
+Karena aset frontend Vite disimpan di folder public/build dan tidak ikut dipakai dari Git, setiap kali pull kode baru di VPS wajib menjalankan build frontend agar CSS/JS Tailwind muncul kembali.
+
+```bash
+npm ci
+npm run build
+php artisan config:clear
+php artisan view:clear
+php artisan cache:clear
+```
+
+Jika ingin lebih praktis, jalankan script [post-pull.sh](post-pull.sh) setelah pull.
+
 ### 4.3 Konfigurasi Nginx
 
 Buat file `/etc/nginx/sites-available/mondok-qu`:
