@@ -65,8 +65,7 @@ class UserManagementController extends Controller
                     $userQuery
                         ->where('name', 'like', "%{$query}%")
                         ->orWhere('username', 'like', "%{$query}%")
-                        ->orWhere('email', 'like', "%{$query}%")
-                        ->orWhere('phone_number', 'like', "%{$query}%");
+                        ->orWhere('email', 'like', "%{$query}%");
                 });
             })
             ->when($selectedRole !== '', function ($builder) use ($selectedRole) {

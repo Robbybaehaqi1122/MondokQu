@@ -80,6 +80,12 @@ class Santri extends Model
             'birth_date' => 'date',
             'entry_date' => 'date',
             'entry_year' => 'integer',
+            'father_phone' => 'encrypted',
+            'mother_phone' => 'encrypted',
+            'guardian_phone_number' => 'encrypted',
+            'emergency_contact' => 'encrypted',
+            'address' => 'encrypted',
+            'guardian_address' => 'encrypted',
         ];
     }
 
@@ -245,11 +251,8 @@ class Santri extends Model
                         ->where('nis', 'like', "%{$search}%")
                         ->orWhere('full_name', 'like', "%{$search}%")
                         ->orWhere('guardian_name', 'like', "%{$search}%")
-                        ->orWhere('guardian_phone_number', 'like', "%{$search}%")
                         ->orWhere('father_name', 'like', "%{$search}%")
-                        ->orWhere('father_phone', 'like', "%{$search}%")
                         ->orWhere('mother_name', 'like', "%{$search}%")
-                        ->orWhere('mother_phone', 'like', "%{$search}%")
                         ->orWhereHas('room', fn (Builder $roomQuery) => $roomQuery->where('name', 'like', "%{$search}%"))
                         ->orWhereHas('guardians', function (Builder $guardianQuery) use ($search): void {
                             $guardianQuery

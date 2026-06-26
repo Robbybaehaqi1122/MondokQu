@@ -56,6 +56,8 @@ class Tenant extends Model
             'subscription_ends_at' => 'datetime',
             'grace_ends_at' => 'datetime',
             'settings' => 'array',
+            'contact_email' => 'encrypted',
+            'contact_phone_number' => 'encrypted',
         ];
     }
 

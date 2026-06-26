@@ -71,6 +71,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
             'last_login_at' => 'datetime',
             'password_change_required' => 'boolean',
             'password' => 'hashed',
+            'phone_number' => 'encrypted',
         ];
     }
 

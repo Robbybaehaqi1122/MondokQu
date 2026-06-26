@@ -48,9 +48,7 @@ class TenantManagementController extends Controller
                     $query->where(function ($tenantQuery) use ($search) {
                         $tenantQuery
                             ->where('name', 'like', "%{$search}%")
-                            ->orWhere('slug', 'like', "%{$search}%")
-                            ->orWhere('contact_email', 'like', "%{$search}%")
-                            ->orWhere('contact_phone_number', 'like', "%{$search}%");
+                            ->orWhere('slug', 'like', "%{$search}%");
                     });
                 })
                 ->when(in_array($status, Tenant::subscriptionStatuses(), true), fn ($query) => $query->where('subscription_status', $status))
