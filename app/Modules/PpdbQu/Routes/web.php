@@ -9,10 +9,12 @@ use App\Modules\PpdbQu\Controllers\PpdbQuNotificationController;
 use App\Modules\PpdbQu\Controllers\SeleksiController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/ppdb/daftar/{gelombang?}', [PendaftaranController::class, 'create'])->name('ppdb.daftar');
-Route::post('/ppdb/daftar', [PendaftaranController::class, 'store'])->name('ppdb.daftar.store');
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/ppdb/daftar/{gelombang?}', [PendaftaranController::class, 'create'])->name('ppdb.daftar');
+    Route::get('/ppdb/pengumuman/{uuid}', [PengumumanController::class, 'publicShow'])->name('ppdb.pengumuman.public');
+});
 
-Route::get('/ppdb/pengumuman/{uuid}', [PengumumanController::class, 'publicShow'])->name('ppdb.pengumuman.public');
+Route::post('/ppdb/daftar', [PendaftaranController::class, 'store'])->name('ppdb.daftar.store')->middleware('throttle:5,1');
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|Admin|Bendahara|manage ppdb'])
     ->prefix('ppdb')->name('ppdb.')->group(function () {
