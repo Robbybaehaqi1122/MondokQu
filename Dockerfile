@@ -16,6 +16,7 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     freetype-dev \
     oniguruma-dev \
+    libxml2-dev \
     && docker-php-ext-install -j$(nproc) \
         pdo pdo_mysql bcmath ctype fileinfo mbstring xml zip gd
 
