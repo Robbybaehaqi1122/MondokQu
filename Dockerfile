@@ -17,6 +17,7 @@ RUN apk add --no-cache \
     freetype-dev \
     oniguruma-dev \
     libxml2-dev \
+    libzip-dev \
     && docker-php-ext-install -j$(nproc) \
         pdo pdo_mysql bcmath ctype fileinfo mbstring xml zip gd
 
