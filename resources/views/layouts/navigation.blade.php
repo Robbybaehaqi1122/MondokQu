@@ -723,8 +723,8 @@
                     @unless ($canOpenCoreModules)
                         <div class="sidebar-section-title">Modul</div>
                     @endunless
-                    <details class="sidebar-dropdown" @if (request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs') || request()->routeIs('admin.audit-logs')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs') || request()->routeIs('admin.audit-logs') ? 'active' : '' }}">
+                    <details class="sidebar-dropdown" @if (request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs') || request()->routeIs('admin.audit-logs') || request()->routeIs('admin.queue-monitoring')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('admin.users') || request()->routeIs('admin.roles') || request()->routeIs('admin.permissions') || request()->routeIs('admin.activity-logs') || request()->routeIs('admin.audit-logs') || request()->routeIs('admin.queue-monitoring') ? 'active' : '' }}">
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-shield-lock"></i>
                             </span>
@@ -777,6 +777,15 @@
                                         <i class="ti ti-clipboard-list"></i>
                                     </span>
                                     <span>Audit Trail</span>
+                                </a>
+                            @endif
+
+                            @if ($user->hasAnyRole(['Superadmin', 'Admin']))
+                                <a class="sidebar-sublink {{ request()->routeIs('admin.queue-monitoring') ? 'active' : '' }}" href="{{ route('admin.queue-monitoring') }}">
+                                    <span class="sidebar-link-icon">
+                                        <i class="ti ti-server"></i>
+                                    </span>
+                                    <span>Queue Monitoring</span>
                                 </a>
                             @endif
                         </div>

@@ -4,14 +4,15 @@ use App\Modules\Admin\Controllers\ActivityLogController;
 use App\Modules\Admin\Controllers\AdminDashboardController;
 use App\Modules\Admin\Controllers\AuditLogController;
 use App\Modules\Admin\Controllers\PermissionManagementController;
+use App\Modules\Admin\Controllers\QueueMonitoringController;
 use App\Modules\Admin\Controllers\RoleManagementController;
 use App\Modules\Admin\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin|Admin', 'throttle:60,1'])->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/queue-monitoring', [QueueMonitoringController::class, 'index'])->name('admin.queue-monitoring');
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
-    Route::get('/admin/users/{user}', [UserManagementController::class, 'show'])->name('admin.users.show');
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
     Route::patch('/admin/users/{user}', [UserManagementController::class, 'updateProfile'])->name('admin.users.update');
     Route::patch('/admin/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('admin.users.update-role');
