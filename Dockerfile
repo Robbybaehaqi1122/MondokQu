@@ -40,8 +40,11 @@ RUN set -eux \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 RUN set -eux \
+    && export NODE_OPTIONS="--dns-result-order=ipv4first" \
     && npm config set fetch-retries 10 \
-    && npm config set fetch-retry-mintimeout 40000 \
+    && npm config set fetch-retry-mintimeout 60000 \
+    && npm config set fetch-timeout 120000 \
+    && npm config set registry https://registry.npmmirror.com/ \
     && npm install --no-optional --no-audit --no-fund \
     && npm run build
 
