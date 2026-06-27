@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin|Admin', 'throttle:60,1'])->group(function () {
     Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/queue-monitoring', [QueueMonitoringController::class, 'index'])->name('admin.queue-monitoring');
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
     Route::patch('/admin/users/{user}', [UserManagementController::class, 'updateProfile'])->name('admin.users.update');
@@ -48,6 +47,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin', 'throttle:60,1'])->group(function () {
     Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs');
+    Route::get('/admin/queue-monitoring', [QueueMonitoringController::class, 'index'])->name('admin.queue-monitoring');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin', 'password.confirm', 'throttle:10,1'])->group(function () {

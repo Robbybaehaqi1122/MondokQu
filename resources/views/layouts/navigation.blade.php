@@ -780,7 +780,7 @@
                                 </a>
                             @endif
 
-                            @if ($user->hasAnyRole(['Superadmin', 'Admin']))
+                            @if ($user->hasRole('Superadmin'))
                                 <a class="sidebar-sublink {{ request()->routeIs('admin.queue-monitoring') ? 'active' : '' }}" href="{{ route('admin.queue-monitoring') }}">
                                     <span class="sidebar-link-icon">
                                         <i class="ti ti-server"></i>
