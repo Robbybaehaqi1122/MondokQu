@@ -36,8 +36,9 @@ COPY . .
 
 RUN set -eux \
     && COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev --no-progress --no-interaction --prefer-dist --optimize-autoloader \
-    && npm config set fetch-retries 5 \
-    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retries 10 \
+    && npm config set fetch-retry-mintimeout 40000 \
+    && npm config set prefer-ip-version 4 \
     && npm ci \
     && npm run build \
     && chown -R $UID:$GID /var/www/html/storage /var/www/html/bootstrap/cache \
