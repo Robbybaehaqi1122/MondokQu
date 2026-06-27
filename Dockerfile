@@ -12,7 +12,12 @@ RUN apk add --no-cache \
     nodejs \
     npm \
     linux-headers \
-    && docker-php-ext-install pdo pdo_mysql bcmath ctype fileinfo json mbstring openssl xml
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    oniguruma-dev \
+    && docker-php-ext-install -j$(nproc) \
+        pdo pdo_mysql bcmath ctype fileinfo mbstring xml zip gd
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
