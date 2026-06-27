@@ -14,7 +14,12 @@ return new class extends Migration
             });
         }
 
-        DB::statement('UPDATE ppdb_pengumumans SET uuid = UUID() WHERE uuid IS NULL');
+        $rows = DB::table('ppdb_pengumumans')->whereNull('uuid')->get();
+        foreach ($rows as $row) {
+            DB::table('ppdb_pengumumans')->where('id', $row->id)->update([
+                'uuid' => (string) \Illuminate\Support\Str::uuid(),
+            ]);
+        }
 
         Schema::table('ppdb_pengumumans', function ($table) {
             $table->uuid('uuid')->nullable(false)->change();

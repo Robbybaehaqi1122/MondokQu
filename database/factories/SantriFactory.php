@@ -19,6 +19,7 @@ class SantriFactory extends Factory
     public function definition(): array
     {
         return [
+            'uuid' => fake()->uuid(),
             'tenant_id' => null,
             'nis' => fake()->unique()->numerify('NIS#######'),
             'full_name' => fake()->name(),

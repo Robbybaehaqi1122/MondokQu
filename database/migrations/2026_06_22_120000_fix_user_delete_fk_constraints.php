@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('nilai_santris', function (Blueprint $table): void {
-            $table->dropForeign('nilai_santris_input_by_foreign');
+            $table->dropForeign(['input_by']);
             $table->unsignedBigInteger('input_by')->nullable()->change();
             $table->foreign('input_by')->references('id')->on('users')->nullOnDelete();
         });
 
         Schema::table('tahfidz_targets', function (Blueprint $table): void {
-            $table->dropForeign('tahfidz_targets_created_by_foreign');
+            $table->dropForeign(['created_by']);
             $table->unsignedBigInteger('created_by')->nullable()->change();
             $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
         });
@@ -24,14 +24,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('nilai_santris', function (Blueprint $table): void {
-            $table->dropForeign('nilai_santris_input_by_foreign');
-            DB::statement('ALTER TABLE nilai_santris MODIFY input_by BIGINT UNSIGNED NOT NULL');
+            $table->dropForeign(['input_by']);
+            $table->unsignedBigInteger('input_by')->nullable(false)->change();
             $table->foreign('input_by')->references('id')->on('users');
         });
 
         Schema::table('tahfidz_targets', function (Blueprint $table): void {
-            $table->dropForeign('tahfidz_targets_created_by_foreign');
-            DB::statement('ALTER TABLE tahfidz_targets MODIFY created_by BIGINT UNSIGNED NOT NULL');
+            $table->dropForeign(['created_by']);
+            $table->unsignedBigInteger('created_by')->nullable(false)->change();
             $table->foreign('created_by')->references('id')->on('users');
         });
     }
