@@ -35,7 +35,7 @@ WORKDIR /var/www/html
 COPY . .
 
 RUN set -eux \
-    && composer install --no-dev --no-progress --no-interaction --prefer-dist --optimize-autoloader \
+    && COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev --no-progress --no-interaction --prefer-dist --optimize-autoloader \
     && npm ci \
     && npm run build \
     && chown -R $UID:$GID /var/www/html/storage /var/www/html/bootstrap/cache \
