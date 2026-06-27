@@ -42,7 +42,6 @@ RUN set -eux \
 RUN set -eux \
     && npm config set fetch-retries 10 \
     && npm config set fetch-retry-mintimeout 40000 \
-    && npm config set prefer-ip-version 4 \
     && npm install --no-optional --no-audit --no-fund \
     && npm run build
 
