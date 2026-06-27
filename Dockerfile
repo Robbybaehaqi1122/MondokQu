@@ -36,13 +36,15 @@ COPY . .
 
 RUN set -eux \
     && COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev --no-progress --no-interaction --prefer-dist --optimize-autoloader \
+    && chown -R $UID:$GID /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+RUN set -eux \
     && npm config set fetch-retries 10 \
     && npm config set fetch-retry-mintimeout 40000 \
     && npm config set prefer-ip-version 4 \
-    && npm ci \
-    && npm run build \
-    && chown -R $UID:$GID /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+    && npm install --no-optional --no-audit --no-fund \
+    && npm run build
 
 EXPOSE 80
 
