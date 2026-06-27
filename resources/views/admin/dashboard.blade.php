@@ -46,7 +46,7 @@
 
         <div class="col-12">
             <div class="row g-3">
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-6 col-sm-6 col-xl-3">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3">
@@ -56,14 +56,14 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Total User</div>
                                     <div class="h1 mb-1">{{ $stats['total_users'] }}</div>
-                                    <div class="text-secondary small">Seluruh akun pengelola yang terdaftar.</div>
+                                    <div class="text-secondary small d-none d-sm-block">Seluruh akun pengelola yang terdaftar.</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-6 col-sm-6 col-xl-3">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3">
@@ -73,14 +73,14 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">User Aktif</div>
                                     <div class="h1 mb-1">{{ $stats['active_users'] }}</div>
-                                    <div class="text-secondary small">Akun yang saat ini bisa login.</div>
+                                    <div class="text-secondary small d-none d-sm-block">Akun yang saat ini bisa login.</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-6 col-sm-6 col-xl-3">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3">
@@ -90,14 +90,14 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Total Santri</div>
                                     <div class="h1 mb-1">{{ $santriStats['total_santri'] }}</div>
-                                    <div class="text-secondary small">Seluruh data santri terdaftar.</div>
+                                    <div class="text-secondary small d-none d-sm-block">Seluruh data santri terdaftar.</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-6 col-sm-6 col-xl-3">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3">
@@ -107,7 +107,7 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Santri Aktif</div>
                                     <div class="h1 mb-1">{{ $santriStats['active_santri'] }}</div>
-                                    <div class="text-secondary small">Santri yang masih aktif mondok.</div>
+                                    <div class="text-secondary small d-none d-sm-block">Santri yang masih aktif mondok.</div>
                                 </div>
                             </div>
                         </div>
@@ -118,7 +118,7 @@
 
         <div class="col-12">
             <div class="row g-3">
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-6 col-sm-6 col-xl-3">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3">
@@ -128,14 +128,14 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Pemasukan Bulan Ini</div>
                                     <div class="h2 mb-1">Rp {{ number_format($financeStats['paid_this_month'] / 100, 0, ',', '.') }}</div>
-                                    <div class="text-secondary small">Total pembayaran yang sudah tercatat.</div>
+                                    <div class="text-secondary small d-none d-sm-block">Total pembayaran yang sudah tercatat.</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-6 col-sm-6 col-xl-3">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3">
@@ -145,14 +145,14 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Sisa Tagihan</div>
                                     <div class="h2 mb-1">Rp {{ number_format($financeStats['outstanding_amount'] / 100, 0, ',', '.') }}</div>
-                                    <div class="text-secondary small">Nominal yang belum lunas.</div>
+                                    <div class="text-secondary small d-none d-sm-block">Nominal yang belum lunas.</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-6 col-sm-6 col-xl-3">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3">
@@ -162,14 +162,14 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Tagihan Menunggak</div>
                                     <div class="h2 mb-1">{{ $financeStats['overdue_invoices'] }}</div>
-                                    <div class="text-secondary small">Tagihan lewat jatuh tempo.</div>
+                                    <div class="text-secondary small d-none d-sm-block">Tagihan lewat jatuh tempo.</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-6 col-sm-6 col-xl-3">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex align-items-center gap-3">
@@ -179,7 +179,7 @@
                                 <div>
                                     <div class="text-secondary small text-uppercase fw-bold">Santri Non-Aktif</div>
                                     <div class="h2 mb-1">{{ $santriStats['leave_santri'] + $santriStats['alumni_santri'] + $santriStats['exited_santri'] }}</div>
-                                    <div class="text-secondary small">Libur, alumni, dan keluar.</div>
+                                    <div class="text-secondary small d-none d-sm-block">Libur, alumni, dan keluar.</div>
                                 </div>
                             </div>
                         </div>

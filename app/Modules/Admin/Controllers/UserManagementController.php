@@ -167,6 +167,10 @@ class UserManagementController extends Controller
         })->values();
 
         $allPermissions = Permission::query()
+            ->when(! $currentUser->isSuperAdmin(), function ($query) use ($currentUser) {
+                $userPermissionIds = $currentUser->getAllPermissions()->pluck('id');
+                $query->whereIn('id', $userPermissionIds);
+            })
             ->orderBy('name')
             ->get(['id', 'name']);
 

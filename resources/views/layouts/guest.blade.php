@@ -17,6 +17,12 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
+        @if ($faviconUrl = config('app.tenant_favicon'))
+            <link rel="icon" type="image/png" href="{{ $faviconUrl }}">
+        @else
+            <link rel="icon" href="{{ asset('favicon.ico') }}">
+        @endif
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -45,6 +51,10 @@
                         {{ $slot }}
                     </div>
                 </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <small class="text-white">powerby @2026 Erby Lintas Inovasi</small>
             </div>
         </div>
 
