@@ -35,7 +35,7 @@ WORKDIR /var/www/html
 COPY . .
 
 RUN set -eux \
-    && COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev --no-progress --no-interaction --prefer-dist --optimize-autoloader \
+    && COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev --no-progress --no-interaction --optimize-autoloader \
     && chown -R $UID:$GID /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
