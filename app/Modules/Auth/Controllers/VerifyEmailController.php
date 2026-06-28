@@ -7,19 +7,30 @@ use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Illuminate\Support\Facades\Log;
 
 class VerifyEmailController extends Controller
 {
     /**
-     * Mark the selected user's email address as verified using a signed URL.
+     * Mark the selected user's email address as verified.
      */
     public function __invoke(Request $request, int $id, string $hash): RedirectResponse
     {
         $user = User::query()->findOrFail($id);
 
-        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            throw new AccessDeniedHttpException('Link verifikasi email tidak valid.');
+        $expectedHash = sha1($user->getEmailForVerification());
+
+        if (! hash_equals((string) $hash, $expectedHash)) {
+            Log::warning('Verifikasi email gagal: hash tidak cocok', [
+                'user_id' => $id,
+                'user_email' => $user->email,
+                'hash_dari_url' => $hash,
+                'hash_diharapkan' => $expectedHash,
+            ]);
+
+            return redirect()
+                ->route('login')
+                ->with('status', 'Link verifikasi email tidak valid. Silakan minta tautan baru.');
         }
 
         if ($user->hasVerifiedEmail()) {
