@@ -21,7 +21,7 @@ Route::get('/dashboard', function (DetermineDashboardRouteAction $determineDashb
 
 Route::get('/dashboard/home', function () {
     return view('dashboard');
-})->middleware(['auth', 'password_change_required', 'subscription_active', 'verified'])->name('dashboard.home');
+})->middleware(['auth', 'password_change_required', 'subscription_active'])->name('dashboard.home');
 
 Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -31,7 +31,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::post('/impersonation/stop', [TenantImpersonationController::class, 'destroy'])->name('impersonation.stop');
 });
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'throttle:60,1'])->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'throttle:60,1'])->group(function () {
     Route::get('/exports/{dataExport}/download', DataExportDownloadController::class)->name('exports.download');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
