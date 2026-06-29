@@ -69,8 +69,6 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>
-        <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/@tabler/core@1.4.0/dist/js/tabler.min.js';"></script>
-
         <div class="page" id="app-page">
             @include('layouts.navigation')
 

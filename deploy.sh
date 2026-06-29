@@ -95,6 +95,7 @@ php "${DEPLOY_DIR}/artisan" migrate --force
 echo "[STEP 7/9] Caching configuration..."
 php "${DEPLOY_DIR}/artisan" config:cache
 php "${DEPLOY_DIR}/artisan" route:cache
+php "${DEPLOY_DIR}/artisan" view:clear
 php "${DEPLOY_DIR}/artisan" view:cache
 
 # Create storage link
