@@ -1023,7 +1023,7 @@
                 }
 
                 updatePpdbBadge();
-                setInterval(updatePpdbBadge, 15000);
+                setInterval(updatePpdbBadge, 60000);
             })();
         </script>
     @endpush

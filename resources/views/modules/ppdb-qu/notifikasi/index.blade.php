@@ -83,7 +83,7 @@
                 }
 
                 updatePpdbNotificationCount();
-                setInterval(updatePpdbNotificationCount, 15000);
+                setInterval(updatePpdbNotificationCount, 60000);
             })();
         </script>
     @endpush
