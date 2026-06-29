@@ -69,7 +69,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>
-        <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/@tabler/core@1.4.0/dist/js/tabler.min.js';"></script>
 
         <div class="page" id="app-page">
             @include('layouts.navigation')
@@ -110,7 +110,7 @@
 
                         @if (session('success') || session('error'))
                             <div class="toast-container position-fixed top-0 end-0 p-3 auth-toast-container" style="z-index: 1080;">
-                                <div class="toast auth-toast {{ session('error') ? 'auth-toast-danger' : 'auth-toast-success' }}" role="alert" aria-live="assertive" aria-atomic="true" data-login-toast>
+                                <div class="toast auth-toast show {{ session('error') ? 'auth-toast-danger' : 'auth-toast-success' }}" role="alert" aria-live="assertive" aria-atomic="true" data-login-toast>
                                     <div class="toast-header border-0">
                                         <span class="auth-toast-icon {{ session('error') ? 'bg-danger-lt text-danger' : 'bg-success-lt text-success' }}">
                                             <i class="ti {{ session('error') ? 'ti-alert-circle' : 'ti-circle-check' }}"></i>
@@ -138,8 +138,12 @@
             document.addEventListener('DOMContentLoaded', () => {
                 const toastElement = document.querySelector('[data-login-toast]');
                 if (toastElement) {
-                    const toast = new bootstrap.Toast(toastElement, { delay: 7000 });
-                    toast.show();
+                    try {
+                        const toast = new bootstrap.Toast(toastElement, { delay: 7000 });
+                        toast.show();
+                    } catch (e) {
+                        // Fallback: toast already visible via 'show' class
+                    }
                 }
             });
         </script>

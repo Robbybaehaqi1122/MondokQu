@@ -31,7 +31,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="d-flex flex-column">
-        <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/@tabler/core@1.4.0/dist/js/tabler.min.js';"></script>
 
         <div class="page page-center min-vh-100 auth-shell">
             <div class="auth-panel">
@@ -97,8 +97,12 @@
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('[data-auth-toast]').forEach((toastElement) => {
-                    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-                    toast.show();
+                    try {
+                        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+                        toast.show();
+                    } catch (e) {
+                        // Toast already visible via 'show' class
+                    }
                 });
             });
         </script>
