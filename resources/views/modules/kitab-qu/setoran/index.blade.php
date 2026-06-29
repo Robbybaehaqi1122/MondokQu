@@ -126,7 +126,7 @@
     <script>
         function rejectSetoran(id) {
             document.getElementById('rejectForm').action = '{{ url("kitab/setoran") }}/' + id + '/reject';
-            new bootstrap.Modal(document.getElementById('rejectModal')).show();
+            new window.bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
     </script>
 </x-app-layout>

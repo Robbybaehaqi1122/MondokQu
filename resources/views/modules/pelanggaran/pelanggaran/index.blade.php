@@ -187,7 +187,7 @@
     <script>
         @if (old('santri_id') || $errors->any())
             document.addEventListener('DOMContentLoaded', () => {
-                const modal = new bootstrap.Modal('#createPelanggaranModal');
+                const modal = new window.bootstrap.Modal('#createPelanggaranModal');
                 modal.show();
             });
         @endif
