@@ -41,15 +41,6 @@ Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'
     ->middleware('throttle:6,1')
     ->name('verification.verify');
 
-Route::get('verify-bypass', function (\Illuminate\Http\Request $request) {
-    $user = $request->user();
-    if ($user) {
-        $user->forceFill(['email_verified_at' => now()])->save();
-        return redirect(route('dashboard.home'));
-    }
-    return redirect(route('login'));
-})->middleware('auth')->name('verification.bypass');
-
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
