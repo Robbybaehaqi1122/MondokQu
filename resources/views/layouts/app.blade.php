@@ -106,21 +106,18 @@
                             </div>
                         @endif
 
-                        @if (session('success') || session('error'))
-                            <div class="toast-container position-fixed top-0 end-0 p-3 auth-toast-container" style="z-index: 1080;">
-                                <div class="toast auth-toast show {{ session('error') ? 'auth-toast-danger' : 'auth-toast-success' }}" role="alert" aria-live="assertive" aria-atomic="true" data-login-toast>
-                                    <div class="toast-header border-0">
-                                        <span class="auth-toast-icon {{ session('error') ? 'bg-danger-lt text-danger' : 'bg-success-lt text-success' }}">
-                                            <i class="ti {{ session('error') ? 'ti-alert-circle' : 'ti-circle-check' }}"></i>
-                                        </span>
-                                        <strong class="me-auto">Mondok Qu</strong>
-                                        <small>Baru saja</small>
-                                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                                    </div>
-                                    <div class="toast-body">
-                                        {{ session('error') ?? session('success') }}
-                                    </div>
-                                </div>
+                        @if (session('success'))
+                            <div style="position:fixed;top:1rem;right:1rem;padding:0.75rem 1rem;border-radius:0.5rem;z-index:9999;background:#059669;color:#fff;font-family:sans-serif;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:24rem;display:flex;align-items:center;gap:0.5rem;border:0;">
+                                <span style="display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:999px;background:rgba(255,255,255,0.2);flex-shrink:0;">&#10003;</span>
+                                <span>{{ session('success') }}</span>
+                                <button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;color:#fff;cursor:pointer;font-size:1.25rem;padding:0;line-height:1;">&times;</button>
+                            </div>
+                        @endif
+                        @if (session('error'))
+                            <div style="position:fixed;top:1rem;right:1rem;padding:0.75rem 1rem;border-radius:0.5rem;z-index:9999;background:#dc2626;color:#fff;font-family:sans-serif;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:24rem;display:flex;align-items:center;gap:0.5rem;border:0;">
+                                <span style="display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:999px;background:rgba(255,255,255,0.2);flex-shrink:0;">&#9888;</span>
+                                <span>{{ session('error') }}</span>
+                                <button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;color:#fff;cursor:pointer;font-size:1.25rem;padding:0;line-height:1;">&times;</button>
                             </div>
                         @endif
 
@@ -131,19 +128,5 @@
         </div>
 
         @stack('scripts')
-
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const toastElement = document.querySelector('[data-login-toast]');
-                if (toastElement) {
-                    try {
-                        const toast = new bootstrap.Toast(toastElement, { delay: 7000 });
-                        toast.show();
-                    } catch (e) {
-                        // Fallback: toast already visible via 'show' class
-                    }
-                }
-            });
-        </script>
     </body>
 </html>
