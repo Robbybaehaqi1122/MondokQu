@@ -1,3 +1,23 @@
+# Stage 1: PHP dependencies
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-progress \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader
+
+# Stage 2: Frontend build
+FROM node:20-alpine AS frontend
+WORKDIR /app
+COPY package.json package-lock.json vite.config.js tailwind.config.js postcss.config.js ./
+RUN npm ci
+COPY resources/ resources/
+RUN npm run build
+
+# Stage 3: Final image
 FROM php:8.3-fpm-alpine
 
 ARG UID=1000
@@ -20,6 +40,21 @@ RUN apk add --no-cache \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
+
+COPY . .
+
+COPY --from=vendor /app/vendor/ /var/www/html/vendor/
+
+COPY --from=frontend /app/public/build/ /var/www/html/public/build/
+
+RUN mkdir -p storage/app/public \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/testing \
+    storage/framework/views \
+    storage/logs \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 9000
 
