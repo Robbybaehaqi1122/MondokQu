@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine AS base
+FROM php:8.3-fpm-alpine
 
 ARG UID=1000
 ARG GID=1000
@@ -7,10 +7,6 @@ RUN apk add --no-cache \
     curl \
     git \
     unzip \
-    nginx \
-    supervisor \
-    nodejs \
-    npm \
     linux-headers \
     libpng-dev \
     libjpeg-turbo-dev \
@@ -23,45 +19,8 @@ RUN apk add --no-cache \
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Nginx config
-COPY docker/nginx.conf /etc/nginx/nginx.conf
-COPY docker/nginx-app.conf /etc/nginx/http.d/default.conf
-
-# Supervisor config
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 WORKDIR /var/www/html
 
-COPY . .
+EXPOSE 9000
 
-RUN set -eux \
-    && COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev --no-progress --no-interaction --optimize-autoloader \
-    && chown -R $UID:$GID /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-RUN set -eux \
-    && export NODE_OPTIONS="--dns-result-order=ipv4first" \
-    && npm config set fetch-retries 10 \
-    && npm config set fetch-retry-mintimeout 60000 \
-    && npm config set fetch-timeout 120000 \
-    && npm config set registry https://registry.npmmirror.com/ \
-    && npm install --no-optional --no-audit --no-fund \
-    && npm run build
-
-EXPOSE 80
-
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
-FROM base AS dev
-
-RUN apk add --no-cache \
-    pdo_sqlite \
-    sqlite \
-    && docker-php-ext-install pdo_sqlite
-
-RUN set -eux \
-    && composer install --no-progress --no-interaction --prefer-dist
-
-EXPOSE 8000
-
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php-fpm"]
