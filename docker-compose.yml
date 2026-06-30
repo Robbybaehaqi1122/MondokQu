@@ -17,11 +17,12 @@ services:
       DB_DATABASE: "${DB_DATABASE}"
       DB_USERNAME: "${DB_USERNAME}"
       DB_PASSWORD: "${DB_PASSWORD}"
+      REDIS_CLIENT: phpredis
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SESSION_DRIVER: database
-      CACHE_STORE: database
-      QUEUE_CONNECTION: database
+      CACHE_STORE: "${CACHE_STORE:-redis}"
+      QUEUE_CONNECTION: redis
       FILESYSTEM_DISK: local
       MAIL_MAILER: "${MAIL_MAILER:-smtp}"
       MAIL_HOST: "${MAIL_HOST}"
@@ -107,10 +108,11 @@ services:
       DB_DATABASE: "${DB_DATABASE}"
       DB_USERNAME: "${DB_USERNAME}"
       DB_PASSWORD: "${DB_PASSWORD}"
+      REDIS_CLIENT: phpredis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      CACHE_STORE: database
-      QUEUE_CONNECTION: database
+      CACHE_STORE: "${CACHE_STORE:-redis}"
+      QUEUE_CONNECTION: redis
       MAIL_MAILER: "${MAIL_MAILER:-log}"
       FILESYSTEM_DISK: local
       SENTRY_LARAVEL_DSN: "${SENTRY_LARAVEL_DSN}"
@@ -139,10 +141,11 @@ services:
       DB_DATABASE: "${DB_DATABASE}"
       DB_USERNAME: "${DB_USERNAME}"
       DB_PASSWORD: "${DB_PASSWORD}"
+      REDIS_CLIENT: phpredis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      CACHE_STORE: database
-      QUEUE_CONNECTION: database
+      CACHE_STORE: "${CACHE_STORE:-redis}"
+      QUEUE_CONNECTION: redis
       MAIL_MAILER: "${MAIL_MAILER:-log}"
       FILESYSTEM_DISK: local
       SENTRY_LARAVEL_DSN: "${SENTRY_LARAVEL_DSN}"
