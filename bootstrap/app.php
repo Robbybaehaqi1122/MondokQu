@@ -4,6 +4,7 @@ use App\Http\Middleware\AuditMiddleware;
 use App\Http\Middleware\CheckImpersonation;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\EnsureTenantSubscriptionIsActive;
+use App\Http\Middleware\FlashCookieBridge;
 use App\Http\Middleware\LoadTenantSettings;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             CheckImpersonation::class,
             LoadTenantSettings::class,
             AuditMiddleware::class,
+            FlashCookieBridge::class,
         ]);
 
         $middleware->alias([
