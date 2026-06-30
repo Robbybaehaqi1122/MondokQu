@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureTenantSubscriptionIsActive
@@ -32,12 +33,10 @@ class EnsureTenantSubscriptionIsActive
                 return $next($request);
             }
 
-            \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
-                \Sentry\Breadcrumb::LEVEL_WARNING,
-                \Sentry\Breadcrumb::TYPE_NAVIGATION,
-                'middleware',
-                'EnsureTenantSubscriptionIsActive: no tenant for user ' . ($user->id ?? '?')
-            ));
+            Log::warning('middleware.tenant.no_tenant', [
+                'user_id' => $user->id ?? '?',
+                'target_route' => 'subscription.expired',
+            ]);
 
             $request->session()->reflash();
 
@@ -56,12 +55,11 @@ class EnsureTenantSubscriptionIsActive
             return $next($request);
         }
 
-        \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
-            \Sentry\Breadcrumb::LEVEL_WARNING,
-            \Sentry\Breadcrumb::TYPE_NAVIGATION,
-            'middleware',
-            'EnsureTenantSubscriptionIsActive: subscription expired for tenant ' . ($tenant->id ?? '?')
-        ));
+        Log::warning('middleware.tenant.subscription_expired', [
+            'user_id' => $user->id ?? '?',
+            'tenant_id' => $tenant->id ?? '?',
+            'target_route' => 'subscription.expired',
+        ]);
 
         $request->session()->reflash();
 

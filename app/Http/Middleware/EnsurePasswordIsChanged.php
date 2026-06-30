@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsurePasswordIsChanged
@@ -28,12 +29,10 @@ class EnsurePasswordIsChanged
             return $next($request);
         }
 
-        \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
-            \Sentry\Breadcrumb::LEVEL_WARNING,
-            \Sentry\Breadcrumb::TYPE_NAVIGATION,
-            'middleware',
-            'EnsurePasswordIsChanged redirecting user ' . ($user->id ?? '?') . ' to profile.edit'
-        ));
+        Log::warning('middleware.password_change_required', [
+            'user_id' => $user->id ?? '?',
+            'target_route' => 'profile.edit',
+        ]);
 
         $request->session()->reflash();
 

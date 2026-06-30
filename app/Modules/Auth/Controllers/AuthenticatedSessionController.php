@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -33,8 +34,16 @@ class AuthenticatedSessionController extends Controller
     ): RedirectResponse {
         $attemptLogin->handle($request, $request->validated(), $request->boolean('remember'));
 
+        $user = $request->user();
+
+        Log::info('flash.set.success', [
+            'user_id' => $user->id,
+            'action' => 'login',
+            'target_route' => $determineDashboardRoute->handle($user),
+        ]);
+
         return redirect()->intended(
-            $determineDashboardRoute->handle($request->user())
+            $determineDashboardRoute->handle($user)
         )->with('success', 'Login berhasil. Selamat datang kembali.');
     }
 

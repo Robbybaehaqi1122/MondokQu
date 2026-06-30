@@ -18,6 +18,7 @@ use App\Services\ActivityLogger;
 use App\Services\UserAvatarUploader;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -270,14 +271,18 @@ class UserManagementController extends Controller
 
         $verificationSent = $this->sendVerificationNotificationSafely($user);
 
+        $msg = $verificationSent
+            ? 'User baru berhasil dibuat dan email verifikasi sudah dikirim.'
+            : 'User baru berhasil dibuat, tetapi email verifikasi belum bisa dikirim. Periksa konfigurasi mailer atau kirim ulang nanti.';
+
+        Log::info('flash.set.success', [
+            'action' => 'user.store',
+            'user_id' => $user->id,
+        ]);
+
         return redirect()
             ->route('admin.users')
-            ->with(
-                'success',
-                $verificationSent
-                    ? 'User baru berhasil dibuat dan email verifikasi sudah dikirim.'
-                    : 'User baru berhasil dibuat, tetapi email verifikasi belum bisa dikirim. Periksa konfigurasi mailer atau kirim ulang nanti.'
-            );
+            ->with('success', $msg);
     }
 
     /**
@@ -311,6 +316,11 @@ class UserManagementController extends Controller
             ipAddress: $request->ip(),
             userAgent: $request->userAgent()
         );
+
+        Log::info('flash.set.success', [
+            'action' => 'user.update_role',
+            'target_user_id' => $user->id,
+        ]);
 
         return redirect()
             ->route('admin.users')

@@ -6,6 +6,7 @@ use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckImpersonation
@@ -27,12 +28,10 @@ class CheckImpersonation
             return $next($request);
         }
 
-        \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
-            \Sentry\Breadcrumb::LEVEL_WARNING,
-            \Sentry\Breadcrumb::TYPE_NAVIGATION,
-            'middleware',
-            'CheckImpersonation: invalidating session for user ' . ($request->user()?->id ?? '?')
-        ));
+        Log::warning('middleware.impersonation.invalid', [
+            'user_id' => $request->user()?->id ?? '?',
+            'impersonator_id' => $impersonatorId,
+        ]);
 
         Auth::logout();
         $request->session()->invalidate();

@@ -114,7 +114,7 @@
                         @if (session('success'))
                             @php
                                 $msg = session('success');
-                                \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(\Sentry\Breadcrumb::LEVEL_INFO, \Sentry\Breadcrumb::TYPE_NAVIGATION, 'flash', 'success: ' . substr($msg, 0, 100)));
+                                \Illuminate\Support\Facades\Log::info('flash.view.success', ['message' => substr($msg, 0, 200)]);
                             @endphp
                             <div style="position:fixed;top:1rem;right:1rem;padding:0.75rem 1rem;border-radius:0.5rem;z-index:9999;background:#059669;color:#fff;font-family:sans-serif;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:24rem;display:flex;align-items:center;gap:0.5rem;border:0;">
                                 <span style="display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:999px;background:rgba(255,255,255,0.2);flex-shrink:0;">&#10003;</span>
@@ -125,7 +125,7 @@
                         @if (session('error'))
                             @php
                                 $msg = session('error');
-                                \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(\Sentry\Breadcrumb::LEVEL_ERROR, \Sentry\Breadcrumb::TYPE_NAVIGATION, 'flash', 'error: ' . substr($msg, 0, 100)));
+                                \Illuminate\Support\Facades\Log::warning('flash.view.error', ['message' => substr($msg, 0, 200)]);
                             @endphp
                             <div style="position:fixed;top:1rem;right:1rem;padding:0.75rem 1rem;border-radius:0.5rem;z-index:9999;background:#dc2626;color:#fff;font-family:sans-serif;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:24rem;display:flex;align-items:center;gap:0.5rem;border:0;">
                                 <span style="display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:999px;background:rgba(255,255,255,0.2);flex-shrink:0;">&#9888;</span>
