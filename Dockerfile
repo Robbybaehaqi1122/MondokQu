@@ -8,7 +8,8 @@ RUN composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
-    --ignore-platform-req=ext-gd
+    --ignore-platform-req=ext-gd \
+    --ignore-platform-req=php
 
 # Stage 2: Frontend build
 FROM node:20-alpine AS frontend
