@@ -8,6 +8,7 @@ RUN composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
+    --no-scripts \
     --ignore-platform-reqs
 
 # Stage 2: Frontend build
