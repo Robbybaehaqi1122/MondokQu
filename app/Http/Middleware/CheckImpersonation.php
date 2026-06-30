@@ -27,6 +27,13 @@ class CheckImpersonation
             return $next($request);
         }
 
+        \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
+            \Sentry\Breadcrumb::LEVEL_WARNING,
+            \Sentry\Breadcrumb::TYPE_NAVIGATION,
+            'middleware',
+            'CheckImpersonation: invalidating session for user ' . ($request->user()?->id ?? '?')
+        ));
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

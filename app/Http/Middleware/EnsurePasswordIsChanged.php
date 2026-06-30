@@ -28,6 +28,15 @@ class EnsurePasswordIsChanged
             return $next($request);
         }
 
+        \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
+            \Sentry\Breadcrumb::LEVEL_WARNING,
+            \Sentry\Breadcrumb::TYPE_NAVIGATION,
+            'middleware',
+            'EnsurePasswordIsChanged redirecting user ' . ($user->id ?? '?') . ' to profile.edit'
+        ));
+
+        $request->session()->reflash();
+
         return redirect()
             ->route('profile.edit')
             ->with('error', 'Untuk keamanan akun, Anda wajib mengganti password default sebelum melanjutkan.');

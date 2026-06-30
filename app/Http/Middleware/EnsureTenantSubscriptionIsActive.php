@@ -32,6 +32,15 @@ class EnsureTenantSubscriptionIsActive
                 return $next($request);
             }
 
+            \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
+                \Sentry\Breadcrumb::LEVEL_WARNING,
+                \Sentry\Breadcrumb::TYPE_NAVIGATION,
+                'middleware',
+                'EnsureTenantSubscriptionIsActive: no tenant for user ' . ($user->id ?? '?')
+            ));
+
+            $request->session()->reflash();
+
             return redirect()
                 ->route('subscription.expired')
                 ->with('error', 'Akun Anda belum terhubung ke tenant pondok. Silakan hubungi admin platform.');
@@ -46,6 +55,15 @@ class EnsureTenantSubscriptionIsActive
         ])) {
             return $next($request);
         }
+
+        \Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
+            \Sentry\Breadcrumb::LEVEL_WARNING,
+            \Sentry\Breadcrumb::TYPE_NAVIGATION,
+            'middleware',
+            'EnsureTenantSubscriptionIsActive: subscription expired for tenant ' . ($tenant->id ?? '?')
+        ));
+
+        $request->session()->reflash();
 
         return redirect()
             ->route('subscription.expired')
