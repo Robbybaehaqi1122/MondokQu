@@ -1,5 +1,19 @@
 import './bootstrap';
 
+import * as Sentry from '@sentry/browser';
+
+const sentryDsn = document.querySelector('meta[name="sentry-dsn"]')?.getAttribute('content');
+
+if (sentryDsn) {
+    Sentry.init({
+        dsn: sentryDsn,
+        environment: document.querySelector('meta[name="sentry-environment"]')?.getAttribute('content') || 'production',
+        release: document.querySelector('meta[name="sentry-release"]')?.getAttribute('content') || undefined,
+        integrations: [Sentry.browserTracingIntegration()],
+        tracesSampleRate: 0.2,
+    });
+}
+
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;

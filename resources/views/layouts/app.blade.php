@@ -14,6 +14,11 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        @if (app()->bound('sentry') && $dsn = config('sentry.dsn'))
+            <meta name="sentry-dsn" content="{{ $dsn }}">
+            <meta name="sentry-environment" content="{{ app()->environment() }}">
+            <meta name="sentry-release" content="{{ config('sentry.release') ?? '' }}">
+        @endif
 
         <title>{{ config('app.ponpes_name', config('app.name', 'Laravel')) }}</title>
 
