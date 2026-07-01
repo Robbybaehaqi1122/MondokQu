@@ -24,8 +24,12 @@
 
         @if ($faviconUrl = config('app.tenant_favicon'))
             <link rel="icon" type="image/png" href="{{ $faviconUrl }}">
+            <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
         @else
-            <link rel="icon" href="{{ asset('favicon.ico') }}">
+            <link rel="icon" type="image/svg+xml" href="{{ asset('images/mondok-qu-logo.png') }}">
+            <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/mondok-qu-logo.png') }}">
+            <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+            <link rel="apple-touch-icon" href="{{ asset('images/mondok-qu-logo.png') }}">
         @endif
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
