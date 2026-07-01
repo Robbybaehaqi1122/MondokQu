@@ -73,6 +73,10 @@
             .border-primary {
                 border-color: {{ $themeColor }} !important;
             }
+            @keyframes flash-shrink {
+                from { width: 100%; }
+                to { width: 0%; }
+            }
         </style>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -115,27 +119,30 @@
                             </div>
                         @endif
 
-                        @if (session('success'))
+                        @php
+                            $flashMsg = session('success');
+                            $flashType = 'success';
+                            if (! $flashMsg) { $flashMsg = session('error'); $flashType = 'error'; }
+                        @endphp
+                        @if ($flashMsg)
                             @php
-                                $msg = session('success');
-                                \Illuminate\Support\Facades\Log::info('flash.view.success', ['message' => substr($msg, 0, 200)]);
+                                $isSuccess = $flashType === 'success';
+                                $bgColor = $isSuccess ? '#059669' : '#dc2626';
+                                $progressColor = $isSuccess ? '#047857' : '#b91c1c';
+                                $icon = $isSuccess ? '&#10003;' : '&#9888;';
+                                \Illuminate\Support\Facades\Log::info('flash.view.' . $flashType, ['message' => substr($flashMsg, 0, 200)]);
                             @endphp
-                            <div style="position:fixed;top:1rem;right:1rem;padding:0.75rem 1rem;border-radius:0.5rem;z-index:9999;background:#059669;color:#fff;font-family:sans-serif;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:24rem;display:flex;align-items:center;gap:0.5rem;border:0;">
-                                <span style="display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:999px;background:rgba(255,255,255,0.2);flex-shrink:0;">&#10003;</span>
-                                <span>{{ $msg }}</span>
-                                <button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;color:#fff;cursor:pointer;font-size:1.25rem;padding:0;line-height:1;">&times;</button>
+                            <div class="flash-notif" role="alert" style="position:fixed;top:1rem;right:1rem;padding:0.75rem 1rem 0;border-radius:0.5rem;z-index:9999;background:{{ $bgColor }};color:#fff;font-family:sans-serif;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:24rem;overflow:hidden;">
+                                <div style="display:flex;align-items:center;gap:0.5rem;padding-bottom:0.75rem;">
+                                    <span style="display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:999px;background:rgba(255,255,255,0.2);flex-shrink:0;">{!! $icon !!}</span>
+                                    <span>{{ $flashMsg }}</span>
+                                    <button data-flash-close style="margin-left:auto;background:none;border:none;color:#fff;cursor:pointer;font-size:1.25rem;padding:0;line-height:1;flex-shrink:0;">&times;</button>
+                                </div>
+                                <div class="flash-progress" style="height:3px;background:{{ $progressColor }};animation:flash-shrink 7s linear forwards;"></div>
                             </div>
-                        @endif
-                        @if (session('error'))
                             @php
-                                $msg = session('error');
-                                \Illuminate\Support\Facades\Log::warning('flash.view.error', ['message' => substr($msg, 0, 200)]);
+                                $flashType = null; $flashMsg = null;
                             @endphp
-                            <div style="position:fixed;top:1rem;right:1rem;padding:0.75rem 1rem;border-radius:0.5rem;z-index:9999;background:#dc2626;color:#fff;font-family:sans-serif;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:24rem;display:flex;align-items:center;gap:0.5rem;border:0;">
-                                <span style="display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:999px;background:rgba(255,255,255,0.2);flex-shrink:0;">&#9888;</span>
-                                <span>{{ $msg }}</span>
-                                <button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;color:#fff;cursor:pointer;font-size:1.25rem;padding:0;line-height:1;">&times;</button>
-                            </div>
                         @endif
 
                         {{ $slot }}
@@ -144,6 +151,15 @@
             </div>
         </div>
 
+        <script>
+            document.querySelectorAll('.flash-notif').forEach(function(el) {
+                var timer = setTimeout(function() { if (el.parentElement) el.remove(); }, 7000);
+                el.querySelector('[data-flash-close]').addEventListener('click', function() {
+                    clearTimeout(timer);
+                    el.remove();
+                });
+            });
+        </script>
         @stack('scripts')
     </body>
 </html>
