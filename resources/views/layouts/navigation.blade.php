@@ -187,6 +187,12 @@
                                 </span>
                                 <span>Laporan Absensi</span>
                             </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('attendance.scan.*') ? 'active' : '' }}" href="{{ route('attendance.scan.index') }}">
+                                <span class="sidebar-link-icon">
+                                    <i class="ti ti-scan"></i>
+                                </span>
+                                <span>Scan Barcode</span>
+                            </a>
                         </div>
                     </details>
                 @endif

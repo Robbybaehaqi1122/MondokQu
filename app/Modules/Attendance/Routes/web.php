@@ -4,6 +4,7 @@ use App\Modules\Attendance\Controllers\AttendanceActivityController;
 use App\Modules\Attendance\Controllers\AttendanceDashboardController;
 use App\Modules\Attendance\Controllers\AttendanceRecordController;
 use App\Modules\Attendance\Controllers\AttendanceReportController;
+use App\Modules\Attendance\Controllers\AttendanceScanController;
 use App\Modules\Attendance\Controllers\AttendanceSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,5 +26,12 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::put('/sesi/{attendanceSession}/input', [AttendanceRecordController::class, 'update'])->name('sessions.records.update');
         Route::patch('/sesi/{attendanceSession}', [AttendanceSessionController::class, 'update'])->name('sessions.update');
         Route::delete('/sesi/{attendanceSession}', [AttendanceSessionController::class, 'destroy'])->name('sessions.destroy');
+
+        Route::get('/scan', [AttendanceScanController::class, 'index'])->name('scan.index');
+        Route::get('/scan/cari', [AttendanceScanController::class, 'search'])->name('scan.search');
+        Route::get('/scan/cari-nama', [AttendanceScanController::class, 'searchByName'])->name('scan.search-name');
+        Route::post('/scan/absen', [AttendanceScanController::class, 'record'])->name('scan.record');
+        Route::get('/santri/{santri}/barcode', [AttendanceScanController::class, 'barcodeImage'])->name('scan.barcode-image');
+        Route::get('/santri/{santri}/kartu', [AttendanceScanController::class, 'card'])->name('scan.card');
     });
 });

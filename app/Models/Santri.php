@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Santri extends Model
 {
@@ -40,6 +41,7 @@ class Santri extends Model
      */
     protected $fillable = [
         'tenant_id',
+        'barcode',
         'nis',
         'nisn',
         'full_name',
@@ -87,6 +89,26 @@ class Santri extends Model
             'address' => 'encrypted',
             'guardian_address' => 'encrypted',
         ];
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (Santri $santri): void {
+            if (! $santri->barcode) {
+                $santri->barcode = static::generateUniqueBarcode();
+            }
+        });
+    }
+
+    public static function generateUniqueBarcode(): string
+    {
+        do {
+            $barcode = strtoupper(Str::random(8));
+        } while (static::query()->where('barcode', $barcode)->exists());
+
+        return $barcode;
     }
 
     /**
