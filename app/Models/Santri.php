@@ -96,6 +96,10 @@ class Santri extends Model
         parent::boot();
 
         static::creating(function (Santri $santri): void {
+            if (! $santri->uuid) {
+                $santri->uuid = (string) Str::uuid();
+            }
+
             if (! $santri->barcode) {
                 $santri->barcode = static::generateUniqueBarcode();
             }
