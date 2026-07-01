@@ -36,6 +36,7 @@ services:
       SENTRY_TRACES_SAMPLE_RATE: 0.2
       SENTRY_ENABLE_LOGS: true
     volumes:
+      - mondok-qu-app:/var/www/html
       - mondok-qu-storage:/var/www/html/storage/app
     depends_on:
       mariadb:
@@ -54,6 +55,7 @@ services:
       - "443:443"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - mondok-qu-app:/var/www/html:ro
       - mondok-qu-storage:/var/www/html/storage/app:ro
     depends_on:
       - app
@@ -118,6 +120,7 @@ services:
       SENTRY_LARAVEL_DSN: "${SENTRY_LARAVEL_DSN}"
       SENTRY_ENABLE_LOGS: true
     volumes:
+      - mondok-qu-app:/var/www/html
       - mondok-qu-storage:/var/www/html/storage/app
     depends_on:
       - mariadb
@@ -151,6 +154,7 @@ services:
       SENTRY_LARAVEL_DSN: "${SENTRY_LARAVEL_DSN}"
       SENTRY_ENABLE_LOGS: true
     volumes:
+      - mondok-qu-app:/var/www/html
       - mondok-qu-storage:/var/www/html/storage/app
     depends_on:
       - mariadb
@@ -161,6 +165,7 @@ services:
 volumes:
   mondok-qu-db:
   mondok-qu-redis:
+  mondok-qu-app:
   mondok-qu-storage:
 
 networks:
