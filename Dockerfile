@@ -29,8 +29,15 @@ RUN apk add --no-cache \
     libxml2-dev \
     libzip-dev \
     && docker-php-ext-install -j$(nproc) \
-        pdo pdo_mysql bcmath ctype fileinfo mbstring xml zip gd \
-    && pecl install redis && docker-php-ext-enable redis
+        pdo pdo_mysql bcmath ctype fileinfo mbstring xml zip gd
+
+RUN apk add --no-cache --virtual .build-deps \
+    autoconf \
+    g++ \
+    make \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
