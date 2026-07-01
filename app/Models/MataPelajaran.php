@@ -49,7 +49,7 @@ class MataPelajaran extends Model
 
         return $query->whereHas('gradeLevels', function ($q) use ($gradeLevelId) {
             $q->where('grade_level_id', $gradeLevelId)
-                ->where('is_active', true);
+                ->where('grade_levels.is_active', true);
         });
     }
 }
