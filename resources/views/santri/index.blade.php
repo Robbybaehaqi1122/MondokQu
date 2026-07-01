@@ -201,6 +201,13 @@
                                                     Lihat Detail Santri
                                                 </a>
 
+                                                @if ($managedSantri->barcode)
+                                                    <div class="dropdown-divider my-3"></div>
+                                                    <a href="{{ route('santri.barcode.card', $managedSantri) }}" class="btn btn-outline-primary btn-sm w-100" target="_blank">
+                                                        <i class="ti ti-qrcode"></i> Cetak Kartu Barcode
+                                                    </a>
+                                                @endif
+
                                                 @can('update', $managedSantri)
                                                     <div class="dropdown-divider my-3"></div>
 

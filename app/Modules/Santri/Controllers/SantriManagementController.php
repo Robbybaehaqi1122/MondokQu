@@ -23,6 +23,7 @@ use App\Modules\Santri\Requests\StoreSantriRequest;
 use App\Modules\Santri\Requests\UpdateSantriRequest;
 use App\Services\ActivityLogger;
 use App\Services\DataExportManager;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Services\FormatDispatcher;
 use App\Services\SantriService;
 use Illuminate\Http\RedirectResponse;
@@ -605,5 +606,29 @@ class SantriManagementController extends Controller
             ->orderBy('name')
             ->get(['id', 'tenant_id', 'name', 'status'])
             ->groupBy('tenant_id');
+    }
+
+    public function barcodeCard(Santri $santri): View
+    {
+        $this->authorize('view', $santri);
+
+        return view('attendance.scan.card', [
+            'santri' => $santri->load('room'),
+        ]);
+    }
+
+    public function downloadBarcode(Santri $santri)
+    {
+        $this->authorize('view', $santri);
+
+        $qrCode = QrCode::format('svg')
+            ->size(300)
+            ->errorCorrection('M')
+            ->generate($santri->barcode);
+
+        return response($qrCode, 200, [
+            'Content-Type' => 'image/svg+xml',
+            'Content-Disposition' => 'attachment; filename="barcode-' . $santri->uuid . '.svg"',
+        ]);
     }
 }

@@ -341,6 +341,43 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
+                    <h3 class="card-title">Kartu Barcode</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center g-3">
+                        <div class="col-auto">
+                            <div class="border rounded p-2" style="width:120px;height:120px;">
+                                @if ($santri->barcode)
+                                    <img src="{{ route('attendance.scan.barcode-image', $santri) }}" alt="QR {{ $santri->barcode }}" style="width:100%;height:100%;object-fit:contain;">
+                                @else
+                                    <div class="text-secondary d-flex align-items-center justify-content-center h-100 small">Belum ada barcode</div>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col">
+                            @if ($santri->barcode)
+                                <div class="fw-bold fs-3 font-monospace">{{ $santri->barcode }}</div>
+                                <div class="text-secondary small mt-1">Kode unik untuk absen scan</div>
+                                <div class="mt-2 d-flex gap-2 flex-wrap">
+                                    <a href="{{ route('santri.barcode.card', $santri) }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                        <i class="ti ti-printer"></i> Cetak Kartu
+                                    </a>
+                                    <a href="{{ route('santri.barcode.download', $santri) }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="ti ti-download"></i> Download QR
+                                    </a>
+                                </div>
+                            @else
+                                <div class="text-secondary">Santri ini belum memiliki barcode. Jalankan <code>php artisan santri:generate-barcodes</code> untuk generate.</div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
                     <div class="d-flex flex-wrap align-items-center gap-3 w-100">
                         <div>
                             <h3 class="card-title">Dokumen Santri</h3>

@@ -19,6 +19,8 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:view santri', 'throttle:120,1'])->group(function () {
     Route::get('/santri/{santri}', [SantriManagementController::class, 'show'])->name('santri.show');
+    Route::get('/santri/{santri}/barcode', [SantriManagementController::class, 'barcodeCard'])->name('santri.barcode.card');
+    Route::get('/santri/{santri}/barcode/download', [SantriManagementController::class, 'downloadBarcode'])->name('santri.barcode.download');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:update santri', 'throttle:60,1'])->group(function () {
