@@ -36,6 +36,15 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
+        if (! $user->hasVerifiedEmail()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('status', 'Email Anda belum terverifikasi. Silakan periksa email Anda untuk link verifikasi.');
+        }
+
         Log::info('flash.set.success', [
             'user_id' => $user->id,
             'action' => 'login',
