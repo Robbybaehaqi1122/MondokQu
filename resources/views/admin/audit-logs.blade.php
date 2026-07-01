@@ -44,9 +44,43 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div>
-                        <h3 class="card-title">Audit Trail Request</h3>
-                        <p class="text-secondary mb-0">Seluruh request POST, PUT, PATCH, dan DELETE yang melalui middleware audit.</p>
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-3 w-100">
+                        <div>
+                            <h3 class="card-title">Audit Trail Request</h3>
+                            <p class="text-secondary mb-0">Seluruh request POST, PUT, PATCH, dan DELETE yang melalui middleware audit.</p>
+                        </div>
+
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ti ti-dots-vertical me-1"></i>
+                                Aksi
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a
+                                    href="{{ route('admin.audit-logs.export-pdf', request()->only(['search', 'method', 'user_id', 'date_from', 'date_to'])) }}"
+                                    class="dropdown-item"
+                                >
+                                    <i class="ti ti-file-export me-2"></i>
+                                    Export PDF
+                                </a>
+                                <a
+                                    href="{{ route('admin.audit-logs.export-csv', request()->only(['search', 'method', 'user_id', 'date_from', 'date_to'])) }}"
+                                    class="dropdown-item"
+                                >
+                                    <i class="ti ti-download me-2"></i>
+                                    Export CSV
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form method="POST" action="{{ route('admin.audit-logs.destroy-all', request()->only(['search', 'method', 'user_id', 'date_from', 'date_to'])) }}" onsubmit="return confirm('Yakin ingin menghapus semua audit log yang sesuai filter? Tindakan ini tidak bisa dibatalkan.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="ti ti-trash me-2"></i>
+                                        Hapus Semua Log
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body border-bottom">
@@ -151,6 +185,7 @@
                                     </td>
                                     <td class="text-secondary small">{{ $log->ip_address ?? '-' }}</td>
                                     <td>
+                                        <div class="d-flex gap-1">
                                         <button
                                             type="button"
                                             class="btn btn-sm btn-outline-secondary"
@@ -160,6 +195,15 @@
                                         >
                                             <i class="ti ti-eye"></i>
                                         </button>
+
+                                        <form method="POST" action="{{ route('admin.audit-logs.destroy', $log) }}" onsubmit="return confirm('Yakin ingin menghapus log ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus log">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </form>
+                                        </div>
 
                                         <div class="modal modal-blur fade" id="audit-detail-{{ $log->id }}" tabindex="-1" role="dialog" aria-hidden="true">
                                             <div class="modal-dialog modal-lg modal-dialog-centered" role="document">

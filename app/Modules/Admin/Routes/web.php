@@ -48,9 +48,13 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin', 'throttle:60,1'])->group(function () {
     Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs');
+    Route::get('/admin/audit-logs/export-pdf', [AuditLogController::class, 'exportPdf'])->name('admin.audit-logs.export-pdf')->middleware('throttle:5,1');
+    Route::get('/admin/audit-logs/export-csv', [AuditLogController::class, 'exportCsv'])->name('admin.audit-logs.export-csv')->middleware('throttle:5,1');
+    Route::delete('/admin/audit-logs/{log}', [AuditLogController::class, 'destroy'])->name('admin.audit-logs.destroy');
     Route::get('/admin/queue-monitoring', [QueueMonitoringController::class, 'index'])->name('admin.queue-monitoring');
 });
 
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role:Superadmin', 'password.confirm', 'throttle:10,1'])->group(function () {
     Route::delete('/admin/activity-logs', [ActivityLogController::class, 'destroyAll'])->name('admin.activity-logs.destroy-all');
+    Route::delete('/admin/audit-logs', [AuditLogController::class, 'destroyAll'])->name('admin.audit-logs.destroy-all');
 });

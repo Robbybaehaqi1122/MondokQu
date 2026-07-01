@@ -5,8 +5,12 @@ namespace App\Modules\Admin\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AuditLogController extends Controller
 {
@@ -38,6 +42,89 @@ class AuditLogController extends Controller
                 ->latest('created_at')
                 ->paginate(20)
                 ->withQueryString(),
+        ]);
+    }
+
+    public function destroy(AuditLog $log): RedirectResponse
+    {
+        $log->delete();
+
+        return redirect()
+            ->route('admin.audit-logs')
+            ->with('success', 'Audit log berhasil dihapus.');
+    }
+
+    public function destroyAll(Request $request): RedirectResponse
+    {
+        $currentUser = $request->user();
+
+        AuditLog::query()
+            ->visibleTo($currentUser)
+            ->delete();
+
+        return redirect()
+            ->route('admin.audit-logs')
+            ->with('success', 'Semua audit log berhasil dihapus.');
+    }
+
+    public function exportPdf(Request $request): Response
+    {
+        $currentUser = $request->user();
+        $filters = $this->filtersFromRequest($request);
+        $logs = $this->applyFilters(AuditLog::query()->visibleTo($currentUser), $filters)
+            ->with('user')
+            ->latest('created_at')
+            ->get();
+
+        $pdf = Pdf::loadView('exports.pdf.audit-logs', compact('logs'));
+
+        return $pdf->download('audit-logs-'.now()->format('Ymd-His').'.pdf');
+    }
+
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        $currentUser = $request->user();
+        $filters = $this->filtersFromRequest($request);
+        $filename = 'audit-logs-'.now()->format('Ymd-His').'.csv';
+
+        return response()->streamDownload(function () use ($currentUser, $filters): void {
+            $handle = fopen('php://output', 'w');
+
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, [
+                'Waktu',
+                'User',
+                'Username',
+                'Method',
+                'URL',
+                'Status',
+                'Durasi (ms)',
+                'IP Address',
+                'User Agent',
+            ]);
+
+            $this->applyFilters(AuditLog::query()->visibleTo($currentUser), $filters)
+                ->with('user')
+                ->latest('created_at')
+                ->chunk(500, function ($logs) use ($handle): void {
+                    foreach ($logs as $log) {
+                        fputcsv($handle, [
+                            $log->created_at?->format('Y-m-d H:i:s'),
+                            $log->user?->name ?? 'Guest / System',
+                            $log->user?->username,
+                            $log->method,
+                            $log->url,
+                            $log->response_status,
+                            $log->duration_ms,
+                            $log->ip_address,
+                            $log->user_agent,
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
     }
 
