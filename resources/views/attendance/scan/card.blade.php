@@ -5,106 +5,82 @@
     <title>Kartu Barcode - {{ $santri->full_name }}</title>
     <style>
         @page {
-            size: 85.6mm 54mm;
+            size: 80mm 55mm;
             margin: 0;
         }
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Courier New', monospace;
-            width: 85.6mm;
-            height: 54mm;
+            font-family: Arial, sans-serif;
+            width: 80mm;
+            height: 55mm;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #fff;
         }
         .card {
             width: 100%;
             height: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            padding: 4mm;
+            justify-content: center;
+            padding: 3mm;
             box-sizing: border-box;
             background: #fff;
         }
-        .avatar {
-            width: 28mm;
-            height: 28mm;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #0d9488;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14mm;
-            font-weight: bold;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .info {
-            flex: 1;
-            padding-left: 4mm;
-            overflow: hidden;
+        .header {
+            text-align: center;
+            margin-bottom: 2mm;
         }
         .name {
-            font-size: 4.5mm;
+            font-size: 4mm;
             font-weight: bold;
             line-height: 1.2;
-            margin-bottom: 1mm;
         }
         .detail {
             font-size: 3mm;
-            color: #666;
-            line-height: 1.3;
+            color: #555;
+            margin-top: 0.5mm;
         }
-        .barcode-img {
-            margin-top: 2mm;
-            text-align: center;
+        .qr-wrap {
+            width: 38mm;
+            height: 38mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .barcode-img svg {
+        .qrcode {
             width: 100%;
-            max-width: 50mm;
             height: auto;
+            max-width: 38mm;
+            max-height: 38mm;
         }
         .barcode-text {
-            font-size: 2.5mm;
+            font-size: 3.5mm;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
             text-align: center;
             color: #333;
-            margin-top: 0.5mm;
-            letter-spacing: 1px;
+            margin-top: 1mm;
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="avatar">
-            @if ($santri->photoUrl())
-                <img src="{{ $santri->photoUrl() }}" alt="{{ $santri->full_name }}">
-            @else
-                {{ strtoupper(substr($santri->full_name, 0, 1)) }}
-            @endif
-        </div>
-        <div class="info">
+        <div class="header">
             <div class="name">{{ $santri->full_name }}</div>
             <div class="detail">
-                @if ($santri->nis)
-                    NIS: {{ $santri->nis }}<br>
-                @endif
-                @if ($santri->room)
-                    {{ $santri->room->name }}
-                @endif
+                @if ($santri->nis)NIS {{ $santri->nis }}@endif
+                @if ($santri->nis && $santri->room) &middot; @endif
+                @if ($santri->room){{ $santri->room->name }}@endif
             </div>
-            <div class="barcode-img">
-                <img src="{{ route('attendance.scan.barcode-image', $santri) }}" alt="QR">
-            </div>
-            <div class="barcode-text">{{ $santri->barcode }}</div>
         </div>
+        <div class="qr-wrap">
+            <img class="qrcode" src="{{ route('attendance.scan.barcode-image', $santri) }}" alt="QR {{ $santri->barcode }}">
+        </div>
+        <div class="barcode-text">{{ $santri->barcode }}</div>
     </div>
 </body>
 </html>

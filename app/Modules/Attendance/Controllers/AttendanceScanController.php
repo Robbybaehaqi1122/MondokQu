@@ -175,6 +175,7 @@ class AttendanceScanController extends Controller
     {
         $qrCode = QrCode::format('svg')
             ->size(300)
+            ->margin(3)
             ->errorCorrection('M')
             ->generate($santri->barcode);
 
