@@ -15,9 +15,7 @@ RUN composer install \
 FROM node:22-alpine AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm config set fetch-retries 5 \
-    && npm config set fetch-retry-mintimeout 30000 \
-    && npm config set fetch-retry-maxtimeout 120000 \
+RUN npm config set registry https://registry.npmmirror.com \
     && npm ci
 COPY vite.config.js tailwind.config.js postcss.config.js ./
 COPY resources/ resources/
