@@ -775,6 +775,11 @@ class UserManagementController extends Controller
 
         $permissionIds = $validated['permission_ids'] ?? [];
 
+        if (! $currentUser->isSuperAdmin()) {
+            $allowedIds = $currentUser->getAllPermissions()->pluck('id')->all();
+            $permissionIds = array_intersect($permissionIds, $allowedIds);
+        }
+
         $user->syncPermissions($permissionIds);
 
         $this->activityLogger->log(
