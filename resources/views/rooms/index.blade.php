@@ -36,15 +36,21 @@
                     <div class="text-secondary small mt-2">Menampilkan {{ $rooms->total() }} kamar berdasarkan filter aktif.</div>
                 </div>
 
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    id="open-create-room-modal"
-                    data-bs-toggle="modal"
-                    data-bs-target="#createRoomModal"
-                >
-                    Tambah Kamar
-                </button>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('akademik.mata-pelajaran.index') }}" class="btn btn-outline-secondary">
+                        <i class="ti ti-layers-difference"></i>
+                        Kelola Tingkat
+                    </a>
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        id="open-create-room-modal"
+                        data-bs-toggle="modal"
+                        data-bs-target="#createRoomModal"
+                    >
+                        Tambah Kamar
+                    </button>
+                </div>
             </div>
         </div>
 

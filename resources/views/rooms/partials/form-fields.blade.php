@@ -15,7 +15,12 @@
     </div>
 
     <div class="col-md-3">
-        <label for="{{ $formPrefix }}_grade_level_id" class="form-label">Tingkat / Kelas</label>
+        <div class="d-flex align-items-center gap-2">
+            <label for="{{ $formPrefix }}_grade_level_id" class="form-label mb-0">Tingkat / Kelas</label>
+            <a href="{{ route('akademik.mata-pelajaran.index') }}" class="text-secondary small" target="_blank">
+                <i class="ti ti-external-link"></i> Kelola
+            </a>
+        </div>
         <select id="{{ $formPrefix }}_grade_level_id" name="grade_level_id" class="form-select @if($errorBag->has('grade_level_id')) is-invalid @endif">
             <option value="">-- Tanpa Tingkat --</option>
             @foreach ($gradeLevels as $gl)
