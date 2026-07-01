@@ -21,8 +21,8 @@ COPY vite.config.js tailwind.config.js postcss.config.js ./
 COPY resources/ resources/
 RUN npm run build
 
-# Stage 3: Final image
-FROM php:8.3-fpm-alpine
+# Stage 3: Final PHP-FPM image
+FROM php:8.3-fpm-alpine AS app
 
 ARG UID=1000
 ARG GID=1000
@@ -65,8 +65,17 @@ RUN mkdir -p storage/app/public \
     storage/framework/views \
     storage/logs \
     && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && ln -sfn ../../storage/app/public public/storage
 
 EXPOSE 9000
 
 CMD ["php-fpm"]
+
+# Stage 4: Nginx (only public assets, no PHP)
+FROM nginx:1.27-alpine AS nginx
+
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+COPY --from=frontend /app/public/build /var/www/html/public/build
+COPY --from=app /var/www/html/public /var/www/html/public
