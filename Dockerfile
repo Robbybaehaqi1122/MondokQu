@@ -11,7 +11,16 @@ RUN composer install \
     --no-scripts \
     --ignore-platform-reqs
 
-# Stage 2: Final image
+# Stage 2: Frontend assets
+FROM node:22-alpine AS frontend
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY vite.config.js tailwind.config.js postcss.config.js ./
+COPY resources/ resources/
+RUN npm run build
+
+# Stage 3: Final image
 FROM php:8.3-fpm-alpine
 
 ARG UID=1000
@@ -46,6 +55,7 @@ WORKDIR /var/www/html
 COPY . .
 
 COPY --from=vendor /app/vendor/ /var/www/html/vendor/
+COPY --from=frontend /app/public/build/ /var/www/html/public/build/
 
 RUN mkdir -p storage/app/public \
     storage/framework/cache/data \
