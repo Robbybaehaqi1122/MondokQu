@@ -881,13 +881,6 @@
                 @endif
 
                 @if ($user->hasRole('Wali Santri'))
-                    <div class="sidebar-section-title">Portal Wali</div>
-                    <a class="sidebar-link {{ request()->routeIs('wali-santri.dashboard') ? 'active' : '' }}" href="{{ route('wali-santri.dashboard') }}">
-                        <span class="sidebar-link-icon">
-                            <i class="ti ti-users-group"></i>
-                        </span>
-                        <span>Portal Orang Tua</span>
-                    </a>
                     <a class="sidebar-link {{ request()->routeIs('wali-santri.komunikasi.*') ? 'active' : '' }}" href="{{ route('wali-santri.komunikasi.index') }}">
                         <span class="sidebar-link-icon">
                             <i class="ti ti-message"></i>
