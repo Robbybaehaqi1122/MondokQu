@@ -1,4 +1,0 @@
-- generic [active] [ref=f13e1]:
-  - heading "Service Unavailable" [level=1] [ref=f13e2]
-  - paragraph [ref=f13e3]: The server is temporarily unable to service your request due to maintenance downtime or capacity problems. Please try again later.
-  - paragraph [ref=f13e4]: Additionally, a 503 Service Unavailable error was encountered while trying to use an ErrorDocument to handle the request.
