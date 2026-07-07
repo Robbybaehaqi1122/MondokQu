@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionStatusController;
 use App\Http\Controllers\TenantImpersonationController;
 use App\Modules\Auth\Actions\DetermineDashboardRouteAction;
+use App\Http\Controllers\BlogPublicController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,9 @@ Route::get('/tentang',           [PublicController::class, 'about'])->name('abou
 Route::get('/faq',               [PublicController::class, 'faq'])->name('faq');
 Route::get('/syarat-ketentuan',  [PublicController::class, 'terms'])->name('terms');
 Route::get('/keamanan-privasi',  [PublicController::class, 'securityPrivacy'])->name('security-privacy');
+
+Route::get('/blog', [BlogPublicController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogPublicController::class, 'show'])->name('blog.show');
 
 Route::get('/dashboard', function (DetermineDashboardRouteAction $determineDashboardRoute) {
     return redirect($determineDashboardRoute->handle(auth()->user()));
@@ -64,3 +68,4 @@ require base_path('app/Modules/PpdbQu/Routes/web.php');
 require base_path('app/Modules/KepengurusanQu/Routes/web.php');
 require base_path('app/Modules/KitabQu/Routes/web.php');
 require base_path('app/Modules/PerpustakaanQu/Routes/web.php');
+require base_path('app/Modules/PengaturanQu/Routes/web.php');

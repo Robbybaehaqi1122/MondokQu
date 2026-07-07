@@ -230,6 +230,10 @@
                     Lainnya <i class="ti ti-chevron-down text-[.75rem]"></i>
                 </button>
                 <div class="nav-dropdown-menu" id="moreMenu" role="menu">
+                    <a href="{{ route('blog.index') }}"
+                       class="{{ request()->routeIs('blog.*') ? 'is-active' : '' }}">
+                        <i class="ti ti-article text-[.9rem]"></i> Blog
+                    </a>
                     <a href="{{ route('about') }}"
                        class="{{ request()->routeIs('about') ? 'is-active' : '' }}">
                         <i class="ti ti-info-circle text-[.9rem]"></i> Tentang Kami
@@ -306,6 +310,9 @@
     <a href="{{ url('/') }}#biaya" data-nav="biaya"
        class="mob-link flex items-center gap-2 px-3 py-[.7rem] text-[.9rem] font-medium rounded-lg" style="color:var(--c-ink-2);"><i class="ti ti-calculator"></i> Biaya</a>
     <hr class="my-1" style="border-top:1px solid var(--c-line);">
+    <a href="{{ route('blog.index') }}"
+       class="mob-link flex items-center gap-2 px-3 py-[.7rem] text-[.9rem] font-medium rounded-lg {{ request()->routeIs('blog.*') ? 'is-active' : '' }}"
+       style="color:var(--c-ink-2);"><i class="ti ti-article"></i> Blog</a>
     <a href="{{ route('about') }}"
        class="mob-link flex items-center gap-2 px-3 py-[.7rem] text-[.9rem] font-medium rounded-lg {{ request()->routeIs('about') ? 'is-active' : '' }}"
        style="color:var(--c-ink-2);"><i class="ti ti-info-circle"></i> Tentang Kami</a>

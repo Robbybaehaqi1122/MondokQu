@@ -552,6 +552,71 @@
 
 
 {{-- ═══════════════════════════════════════════
+     Blog
+════════════════════════════════════════════ --}}
+@if ($latestBlogs->isNotEmpty())
+    <section class="py-24 sm:py-16" aria-label="Blog" id="blog">
+        <div class="max-w-[1280px] mx-auto px-6">
+            <div class="text-center mb-12">
+                <span class="inline-block text-[.78rem] font-semibold tracking-[.06em] uppercase px-3 py-1 rounded-full border mb-4"
+                      style="color:var(--c-accent);border-color:color-mix(in srgb, var(--c-accent) 25%, transparent);">
+                    Blog
+                </span>
+                <h2 class="text-[clamp(1.55rem,3vw,2.1rem)] font-extrabold tracking-[-0.04em] leading-[1.1] mb-3"
+                    style="font-family:var(--f-display);color:var(--c-ink);">
+                    Artikel & Berita Terbaru
+                </h2>
+                <p class="text-[.94rem] leading-[1.8] max-w-[540px] mx-auto" style="color:var(--c-ink-3);">
+                    Informasi dan wawasan seputar pengelolaan pondok pesantren modern.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                @foreach ($latestBlogs as $blog)
+                    <a href="{{ route('blog.show', $blog->slug) }}" class="text-decoration-none">
+                        <div class="rounded-[16px] border overflow-hidden transition-all duration-200 h-100"
+                             style="border-color:var(--c-line);background:var(--c-bg);"
+                             onmouseover="this.style.boxShadow='0 8px 30px rgba(0,0,0,.08)';this.style.transform='translateY(-2px)'"
+                             onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+                            <div style="height: 180px; overflow: hidden; background: var(--c-bg-2);">
+                                @if ($blog->featured_image)
+                                    <img src="{{ asset('storage/'.$blog->featured_image) }}" alt="{{ $blog->title }}" class="w-100 h-100" style="object-fit: cover;">
+                                @else
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+                                        <i class="ti ti-article" style="font-size: 2.5rem; color: var(--c-ink-3);"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="p-4">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <small style="color:var(--c-ink-3);">{{ $blog->published_at?->translatedFormat('d M Y') }}</small>
+                                    <span style="color:var(--c-ink-3);">&middot;</span>
+                                    <small style="color:var(--c-ink-3);">{{ $blog->getReadingTime() }}</small>
+                                </div>
+                                <h5 class="fw-bold mb-1" style="color:var(--c-ink);">{{ $blog->title }}</h5>
+                                <p class="small mb-0" style="color:var(--c-ink-3);">
+                                    {{ $blog->getExcerptHtml() }}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+
+            <div class="text-center mt-8">
+                <a href="{{ route('blog.index') }}"
+                   class="inline-flex items-center gap-1.5 px-[1.2rem] py-[.5rem] text-[.85rem] font-semibold rounded-lg border transition-all duration-150"
+                   style="color:var(--c-ink-2);border-color:var(--c-line);background:var(--c-bg);"
+                   onmouseover="this.style.background='var(--c-bg-2)';this.style.color='var(--c-ink)'"
+                   onmouseout="this.style.background='var(--c-bg)';this.style.color='var(--c-ink-2)'">
+                    Lihat Semua Artikel <i class="ti ti-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+@endif
+
+{{-- ═══════════════════════════════════════════
      CTA
 ════════════════════════════════════════════ --}}
 <section class="py-24 sm:py-16" aria-label="Langkah selanjutnya">

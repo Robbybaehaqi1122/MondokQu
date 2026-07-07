@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Modules\PengaturanQu\Models\Blog;
 use App\Services\DashboardService;
 use Illuminate\View\View;
 
@@ -52,10 +53,17 @@ class PublicController extends Controller
             ['name' => 'Wali Santri', 'description' => 'Memonitor perkembangan santri dari sisi keluarga.'],
         ];
 
+        $latestBlogs = Blog::query()
+            ->withoutTenantScope()
+            ->published()
+            ->latest('published_at')
+            ->limit(3)
+            ->get();
+
         return view('index', compact(
             'currentUser', 'canSeeAdminStats', 'dashboardData',
             'themeColor', 'primaryAction', 'secondaryAction', 'registerEnabled',
-            'heroMetrics', 'featureCards', 'targetRoles',
+            'heroMetrics', 'featureCards', 'targetRoles', 'latestBlogs',
         ));
     }
 

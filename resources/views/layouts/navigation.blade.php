@@ -18,8 +18,9 @@
     $canOpenPerpustakaanQuModule = $user->can('manage perpustakaan');
     $canOpenKitabQuModule = $user->can('manage kitab');
     $canOpenKepengurusanQuModule = $user->can('manage kepengurusan');
+    $canOpenPengaturanQuModule = $user->hasAnyRole(['Superadmin', 'Admin']) || $user->can('manage pengaturan');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports;
-    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule || $canOpenKitabQuModule || $canOpenKepengurusanQuModule;
+    $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule || $canOpenKitabQuModule || $canOpenKepengurusanQuModule || $canOpenPengaturanQuModule;
     $unreadNotifications = collect();
     $unreadNotificationCount = 0;
 
@@ -657,6 +658,34 @@
                             <a class="sidebar-sublink {{ request()->routeIs('kepengurusan.jadwal.*') ? 'active' : '' }}" href="{{ route('kepengurusan.jadwal.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-calendar-clock"></i></span>
                                 <span>Jadwal Ngaji & Pengajar</span>
+                            </a>
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenPengaturanQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('pengaturan.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('pengaturan.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-settings"></i>
+                            </span>
+                            <span class="flex-grow-1">PengaturanQu</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('pengaturan.dashboard') ? 'active' : '' }}" href="{{ route('pengaturan.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard Pengaturan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('pengaturan.blog.*') ? 'active' : '' }}" href="{{ route('pengaturan.blog.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-article"></i></span>
+                                <span>Blog</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('branding.*') ? 'active' : '' }}" href="{{ route('branding.edit') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-palette"></i></span>
+                                <span>Branding</span>
                             </a>
                         </div>
                     </details>
