@@ -31,13 +31,21 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Kategori</label>
-                                <select name="category_id" class="form-select @error('category_id') is-invalid @enderror">
-                                    <option value="">Tanpa Kategori</option>
-                                    @foreach ($categories as $cat)
-                                        <option value="{{ $cat->id }}" @selected(old('category_id', $blog->category_id) == $cat->id)>{{ $cat->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="row g-2">
+                                    @forelse ($categories as $cat)
+                                        <div class="col-auto">
+                                            <label class="form-check">
+                                                <input type="checkbox" name="categories[]" value="{{ $cat->id }}" class="form-check-input @error('categories') is-invalid @enderror" @checked(in_array($cat->id, old('categories', $blog->categories->pluck('id')->all())))>
+                                                <span class="form-check-label">{{ $cat->name }}</span>
+                                            </label>
+                                        </div>
+                                    @empty
+                                        <div class="text-secondary small">
+                                            Belum ada kategori. <a href="{{ route('pengaturan.blog-category.create') }}">Buat kategori</a>
+                                        </div>
+                                    @endforelse
+                                </div>
+                                @error('categories')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
 

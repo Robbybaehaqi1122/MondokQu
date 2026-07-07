@@ -22,7 +22,7 @@ class BlogController extends Controller
 
         $blogs = Blog::query()
             ->visibleTo($currentUser)
-            ->with('author', 'category')
+            ->with('author', 'categories')
             ->when($search !== '', fn ($q) => $q->where('title', 'like', "%{$search}%"))
             ->orderByDesc('created_at')
             ->paginate(15)
@@ -62,7 +62,11 @@ class BlogController extends Controller
                 ->store('blog-images/'.$tenantId, 'public');
         }
 
-        Blog::query()->create($data);
+        $categories = $data['categories'] ?? [];
+        unset($data['categories']);
+
+        $blog = Blog::query()->create($data);
+        $blog->categories()->sync($categories);
 
         return redirect()->route('pengaturan.blog.index')
             ->with('success', 'Blog berhasil dibuat.');
@@ -94,7 +98,11 @@ class BlogController extends Controller
                 ->store('blog-images/'.$blog->tenant_id, 'public');
         }
 
+        $categories = $data['categories'] ?? [];
+        unset($data['categories']);
+
         $blog->update($data);
+        $blog->categories()->sync($categories);
 
         return redirect()->route('pengaturan.blog.index')
             ->with('success', 'Blog berhasil diperbarui.');

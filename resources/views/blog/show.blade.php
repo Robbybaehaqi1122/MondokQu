@@ -21,10 +21,10 @@
                             <small class="text-secondary">{{ $blog->published_at?->translatedFormat('d F Y') }}</small>
                             <span class="text-secondary">&middot;</span>
                             <small class="text-secondary">{{ $blog->getReadingTime() }}</small>
-                            @if ($blog->category)
+                            @foreach ($blog->categories as $cat)
                                 <span class="text-secondary">&middot;</span>
-                                <span class="badge" style="background: color-mix(in srgb, {{ $themeColor }} 15%, white); color: {{ $themeColor }}; font-size: 0.75rem;">{{ $blog->category->name }}</span>
-                            @endif
+                                <span class="badge" style="background: color-mix(in srgb, {{ $themeColor }} 15%, white); color: {{ $themeColor }}; font-size: 0.75rem;">{{ $cat->name }}</span>
+                            @endforeach
                             @if ($blog->author)
                                 <span class="text-secondary">&middot;</span>
                                 <small class="text-secondary">Oleh {{ $blog->author->name }}</small>

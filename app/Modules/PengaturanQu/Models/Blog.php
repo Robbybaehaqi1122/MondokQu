@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Blog extends Model
@@ -16,7 +17,6 @@ class Blog extends Model
         'tenant_id',
         'title',
         'slug',
-        'category_id',
         'content',
         'excerpt',
         'featured_image',
@@ -58,9 +58,9 @@ class Blog extends Model
         return $this->belongsTo(User::class, 'author_id');
     }
 
-    public function category(): BelongsTo
+    public function categories(): BelongsToMany
     {
-        return $this->belongsTo(BlogCategory::class, 'category_id');
+        return $this->belongsToMany(BlogCategory::class, 'blog_blog_category');
     }
 
     public function scopePublished($query): void

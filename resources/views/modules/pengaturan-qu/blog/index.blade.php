@@ -70,8 +70,10 @@
                                     </td>
                                     <td>{{ $blog->author?->name ?? '-' }}</td>
                                     <td>
-                                        @if ($blog->category)
-                                            <span class="badge bg-secondary-lt">{{ $blog->category->name }}</span>
+                                        @if ($blog->categories->isNotEmpty())
+                                            @foreach ($blog->categories as $cat)
+                                                <span class="badge bg-secondary-lt me-1">{{ $cat->name }}</span>
+                                            @endforeach
                                         @else
                                             <span class="text-secondary">-</span>
                                         @endif

@@ -4,7 +4,7 @@ namespace App\Modules\PengaturanQu\Models;
 
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class BlogCategory extends Model
@@ -29,8 +29,8 @@ class BlogCategory extends Model
         });
     }
 
-    public function blogs(): HasMany
+    public function blogs(): BelongsToMany
     {
-        return $this->hasMany(Blog::class, 'category_id');
+        return $this->belongsToMany(Blog::class, 'blog_blog_category');
     }
 }

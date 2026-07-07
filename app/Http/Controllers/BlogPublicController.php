@@ -12,7 +12,7 @@ class BlogPublicController extends Controller
         $blogs = Blog::query()
             ->withoutTenantScope()
             ->published()
-            ->with(['author', 'tenant', 'category'])
+            ->with(['author', 'tenant', 'categories'])
             ->orderByDesc('published_at')
             ->paginate(9);
 
@@ -25,7 +25,7 @@ class BlogPublicController extends Controller
             ->withoutTenantScope()
             ->published()
             ->where('slug', $slug)
-            ->with(['author', 'category'])
+            ->with(['author', 'categories'])
             ->firstOrFail();
 
         $recentBlogs = Blog::query()
