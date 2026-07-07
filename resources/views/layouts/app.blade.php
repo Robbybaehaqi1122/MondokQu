@@ -38,6 +38,8 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.44.0/dist/tabler-icons.min.css">
 
+        @stack('styles')
+
         @php
             $themeColor = config('app.tenant_theme_color', '#0d9488');
         @endphp

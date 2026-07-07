@@ -43,7 +43,8 @@
 
                         <div class="mb-3">
                             <label class="form-label required">Konten</label>
-                            <textarea name="content" class="form-control @error('content') is-invalid @enderror" rows="16" id="blog-editor">{{ old('content', $blog->content) }}</textarea>
+                            <input type="hidden" name="content" id="content-input" value="{{ old('content', $blog->content) }}">
+                            <div id="blog-editor" class="border rounded @error('content') is-invalid @enderror" style="min-height: 400px;"></div>
                             @error('content')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
@@ -86,31 +87,37 @@
         </div>
     </div>
 
+    @push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+    @endpush
+
     @push('scripts')
-    <script src="https://cdn.ckeditor.com/4.25.1-lts/full/ckeditor.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script>
-    CKEDITOR.replace('blog-editor', {
-        height: 500,
-        removePlugins: 'exportpdf',
-        toolbar: [
-            { name: 'document', items: ['Source', '-', 'Preview', 'Print'] },
-            { name: 'clipboard', items: ['Undo', 'Redo', '-', 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord'] },
-            '/',
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'] },
-            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
-            { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
-            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak'] },
-            '/',
-            { name: 'styles', items: ['Format', 'Font', 'FontSize'] },
-            { name: 'colors', items: ['TextColor', 'BGColor'] },
-            { name: 'tools', items: ['Maximize', 'ShowBlocks'] },
-        ],
-        format_tags: 'p;h1;h2;h3;h4;pre',
-        disableNativeSpellChecker: false,
-        allowedContent: true,
-        extraAllowedContent: '*(*){*}',
-        contentsCss: 'body { font-family: Inter, sans-serif; font-size: 16px; line-height: 1.8; }',
-    });
+    (function() {
+        var quill = new Quill('#blog-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, 4, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['blockquote', 'code-block'],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+
+        var input = document.querySelector('#content-input');
+        quill.root.innerHTML = input.value;
+
+        document.querySelector('form').addEventListener('submit', function() {
+            input.value = quill.root.innerHTML;
+        });
+    })();
     </script>
     @endpush
 </x-app-layout>
