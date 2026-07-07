@@ -2,9 +2,14 @@
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="page-title mb-0">Blog</h2>
-            <a href="{{ route('pengaturan.blog.create') }}" class="btn btn-primary">
-                <i class="ti ti-plus"></i> Buat Blog Baru
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('pengaturan.blog-category.index') }}" class="btn btn-outline-secondary">
+                    <i class="ti ti-category"></i> Kelola Kategori
+                </a>
+                <a href="{{ route('pengaturan.blog.create') }}" class="btn btn-primary">
+                    <i class="ti ti-plus"></i> Buat Blog Baru
+                </a>
+            </div>
         </div>
     </x-slot>
 
