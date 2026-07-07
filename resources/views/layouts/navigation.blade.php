@@ -18,7 +18,7 @@
     $canOpenPerpustakaanQuModule = $user->can('manage perpustakaan');
     $canOpenKitabQuModule = $user->can('manage kitab');
     $canOpenKepengurusanQuModule = $user->can('manage kepengurusan');
-    $canOpenPengaturanQuModule = $user->hasAnyRole(['Superadmin', 'Admin']) || $user->can('manage pengaturan');
+    $canOpenPengaturanQuModule = $user->hasRole('Superadmin') || $user->can('manage pengaturan');
     $canOpenSantriModule = $user->can('view santri') || $canOpenOperationalReports;
     $canOpenCoreModules = $canOpenAbsensiModule || $canOpenTahfidzModule || $canOpenPelanggaranModule || $canOpenKomunikasiModule || $canOpenAkademikModule || $canOpenKesehatanModule || $canOpenSantriModule || $canOpenKeuanganQuModule || $canOpenInventarisQuModule || $canOpenKegiatanQuModule || $canOpenPpdbQuModule || $canOpenPerpustakaanQuModule || $canOpenKitabQuModule || $canOpenKepengurusanQuModule || $canOpenPengaturanQuModule;
     $unreadNotifications = collect();

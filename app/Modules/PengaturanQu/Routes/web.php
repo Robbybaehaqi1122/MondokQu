@@ -4,7 +4,7 @@ use App\Modules\PengaturanQu\Controllers\BlogController;
 use App\Modules\PengaturanQu\Controllers\PengaturanQuDashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|Admin|manage pengaturan'])
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'role_or_permission:Superadmin|manage pengaturan'])
     ->prefix('pengaturan')
     ->name('pengaturan.')
     ->group(function () {
