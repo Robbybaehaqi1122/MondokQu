@@ -81,24 +81,29 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
     <script>
-    tinymce.init({
-        selector: '#blog-editor',
+    CKEDITOR.replace('blog-editor', {
         height: 500,
-        menubar: true,
-        plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        removePlugins: 'exportpdf',
+        toolbar: [
+            { name: 'document', items: ['Source', '-', 'Preview', 'Print'] },
+            { name: 'clipboard', items: ['Undo', 'Redo', '-', 'Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord'] },
+            '/',
+            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'] },
+            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
+            { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
+            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar', 'PageBreak'] },
+            '/',
+            { name: 'styles', items: ['Format', 'Font', 'FontSize'] },
+            { name: 'colors', items: ['TextColor', 'BGColor'] },
+            { name: 'tools', items: ['Maximize', 'ShowBlocks'] },
         ],
-        toolbar: 'undo redo | blocks | ' +
-            'bold italic strikethrough underline | alignleft aligncenter alignright alignjustify | ' +
-            'bullist numlist outdent indent | link image media | ' +
-            'removeformat fullscreen code | help',
-        branding: false,
-        promotion: false,
-        content_style: 'body { font-family: Inter, sans-serif; font-size: 16px; line-height: 1.8; }',
+        format_tags: 'p;h1;h2;h3;h4;pre',
+        disableNativeSpellChecker: false,
+        allowedContent: true,
+        extraAllowedContent: '*(*){*}',
+        contentsCss: 'body { font-family: Inter, sans-serif; font-size: 16px; line-height: 1.8; }',
     });
     </script>
     @endpush
