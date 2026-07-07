@@ -43,7 +43,7 @@
 
                         <div class="mb-3">
                             <label class="form-label required">Konten</label>
-                            <textarea name="content" id="content-input" class="form-control @error('content') is-invalid @enderror" rows="16">{{ old('content', $blog->content) }}</textarea>
+                            <textarea name="content" id="blog-editor" class="form-control @error('content') is-invalid @enderror" rows="16">{{ old('content', $blog->content) }}</textarea>
                             @error('content')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
@@ -89,7 +89,7 @@
     @push('scripts')
     <script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
     <script>
-    CKEDITOR.replace('content-input', {
+    CKEDITOR.replace('blog-editor', {
         height: 500,
         removePlugins: 'exportpdf',
         toolbar: [
