@@ -1,0 +1,27 @@
+- generic [ref=f23e1]:
+  - banner [ref=f23e2]:
+    - heading "Application Send Email" [level=1] [ref=f23e3]
+    - navigation [ref=f23e4]:
+      - list [ref=f23e5]:
+        - listitem [ref=f23e6]:
+          - link "Data Perjanjian" [ref=f23e7] [cursor=pointer]:
+            - /url: https://sendemail.adingsuryadi.com/perjanjian
+        - listitem [ref=f23e8]:
+          - link "History Email" [ref=f23e9] [cursor=pointer]:
+            - /url: https://sendemail.adingsuryadi.com/history-email
+  - main [ref=f23e10]:
+    - generic [ref=f23e14]:
+      - heading "Login" [level=3] [ref=f23e16]
+      - generic [ref=f23e17]:
+        - list [ref=f23e19]:
+          - listitem [ref=f23e20]: The provided credentials do not match our records.
+        - generic [ref=f23e21]:
+          - generic [ref=f23e22]:
+            - generic [ref=f23e23]: Email
+            - textbox "Email" [active] [ref=f23e24]
+          - generic [ref=f23e25]:
+            - generic [ref=f23e26]: Password
+            - textbox "Password" [ref=f23e27]
+          - button "Login" [ref=f23e29] [cursor=pointer]
+  - contentinfo [ref=f23e30]:
+    - paragraph [ref=f23e31]: © 2026 Application Send Email

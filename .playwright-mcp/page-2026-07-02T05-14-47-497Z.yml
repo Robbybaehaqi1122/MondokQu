@@ -1,0 +1,57 @@
+- generic [ref=f10e2]:
+  - generic [ref=f10e5]:
+    - generic [ref=f10e9]:
+      - link "Ignition docs" [ref=f10e10] [cursor=pointer]:
+        - /url: http://flareapp.io/docs/ignition-for-laravel/introduction
+        - img [ref=f10e11]
+      - generic [ref=f10e17]:
+        - generic [ref=f10e18]: /
+        - generic [ref=f10e19]: home/
+        - generic [ref=f10e20]: adiw5138/
+        - generic [ref=f10e21]: laravel/
+    - generic [ref=f10e24]:
+      - generic [ref=f10e25]:
+        - generic [ref=f10e26]:
+          - generic [ref=f10e27]: Symfony\
+          - generic [ref=f10e28]: Component\
+          - generic [ref=f10e29]: HttpKernel\
+          - generic [ref=f10e30]: Exception\
+          - generic [ref=f10e31]: MethodNotAllowedHttpException
+        - generic [ref=f10e32]: "The GET method is not supported for this route. Supported methods: POST."
+      - link "https://sendemail.adingsuryadi.com/_ignition/execute-solution" [ref=f10e34] [cursor=pointer]:
+        - /url: https://sendemail.adingsuryadi.com/_ignition/execute-solution
+  - generic [ref=f10e36]:
+    - navigation [ref=f10e37]:
+      - list [ref=f10e38]:
+        - listitem [ref=f10e39]:
+          - button "Stack trace" [ref=f10e40] [cursor=pointer]
+        - listitem [ref=f10e41]:
+          - button "Request" [ref=f10e42] [cursor=pointer]
+        - listitem [ref=f10e43]:
+          - button "App" [ref=f10e44] [cursor=pointer]
+        - listitem [ref=f10e45]:
+          - button "User" [ref=f10e46] [cursor=pointer]
+        - listitem [ref=f10e47]:
+          - button "Context" [active] [ref=f10e48] [cursor=pointer]
+        - listitem [ref=f10e49]:
+          - button "Debug" [ref=f10e50] [cursor=pointer]
+      - generic [ref=f10e52]:
+        - button "Share" [ref=f10e53] [cursor=pointer]:
+          - text: Share
+          - img [ref=f10e54]
+        - text: ✓ ✓ ✓ ✓ ✓ ✓
+    - generic [ref=f10e452]:
+      - generic [ref=f10e453]:
+        - heading "Environment information" [level=3] [ref=f10e454]
+        - generic [ref=f10e455]:
+          - term [ref=f10e456]: Laravel version
+          - definition [ref=f10e457]: 8.83.29
+          - term [ref=f10e458]: Laravel locale
+          - definition [ref=f10e459]: en
+          - term [ref=f10e460]: Laravel config cached
+          - definition [ref=f10e461]: "false"
+          - term [ref=f10e462]: PHP version
+          - definition [ref=f10e463]: 8.2.31
+      - generic [ref=f10e464]:
+        - heading "Generic context" [level=3] [ref=f10e465]
+        - generic [ref=f10e467]: —

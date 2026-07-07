@@ -16,6 +16,7 @@ class UpdateBlogRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:blogs,slug,'.$this->route('blog')?->id],
+            'category_id' => ['nullable', 'integer', 'exists:blog_categories,id'],
             'content' => ['required', 'string'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'featured_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],

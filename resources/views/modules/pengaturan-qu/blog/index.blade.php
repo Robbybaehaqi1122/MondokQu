@@ -42,6 +42,7 @@
                             <tr>
                                 <th>Judul</th>
                                 <th>Penulis</th>
+                                <th>Kategori</th>
                                 <th>Status</th>
                                 <th>Dibuat</th>
                                 <th>Aksi</th>
@@ -63,6 +64,13 @@
                                         </div>
                                     </td>
                                     <td>{{ $blog->author?->name ?? '-' }}</td>
+                                    <td>
+                                        @if ($blog->category)
+                                            <span class="badge bg-secondary-lt">{{ $blog->category->name }}</span>
+                                        @else
+                                            <span class="text-secondary">-</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if ($blog->is_published)
                                             <span class="badge bg-success">Published</span>

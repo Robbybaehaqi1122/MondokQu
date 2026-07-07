@@ -1,0 +1,64 @@
+- generic [ref=f10e2]:
+  - generic [ref=f10e5]:
+    - generic [ref=f10e9]:
+      - link "Ignition docs" [ref=f10e10] [cursor=pointer]:
+        - /url: http://flareapp.io/docs/ignition-for-laravel/introduction
+        - img [ref=f10e11]
+      - generic [ref=f10e17]:
+        - generic [ref=f10e18]: /
+        - generic [ref=f10e19]: home/
+        - generic [ref=f10e20]: adiw5138/
+        - generic [ref=f10e21]: laravel/
+    - generic [ref=f10e24]:
+      - generic [ref=f10e25]:
+        - generic [ref=f10e26]:
+          - generic [ref=f10e27]: Symfony\
+          - generic [ref=f10e28]: Component\
+          - generic [ref=f10e29]: HttpKernel\
+          - generic [ref=f10e30]: Exception\
+          - generic [ref=f10e31]: MethodNotAllowedHttpException
+        - generic [ref=f10e32]: "The GET method is not supported for this route. Supported methods: POST."
+      - link "https://sendemail.adingsuryadi.com/_ignition/execute-solution" [ref=f10e34] [cursor=pointer]:
+        - /url: https://sendemail.adingsuryadi.com/_ignition/execute-solution
+  - generic [ref=f10e36]:
+    - navigation [ref=f10e37]:
+      - list [ref=f10e38]:
+        - listitem [ref=f10e39]:
+          - button "Stack trace" [ref=f10e40] [cursor=pointer]
+        - listitem [ref=f10e41]:
+          - button "Request" [ref=f10e42] [cursor=pointer]
+        - listitem [ref=f10e43]:
+          - button "App" [active] [ref=f10e44] [cursor=pointer]
+        - listitem [ref=f10e45]:
+          - button "User" [ref=f10e46] [cursor=pointer]
+        - listitem [ref=f10e47]:
+          - button "Context" [ref=f10e48] [cursor=pointer]
+        - listitem [ref=f10e49]:
+          - button "Debug" [ref=f10e50] [cursor=pointer]
+      - generic [ref=f10e52]:
+        - button "Share" [ref=f10e53] [cursor=pointer]:
+          - text: Share
+          - img [ref=f10e54]
+        - text: ✓ ✓ ✓ ✓ ✓ ✓
+    - generic [ref=f10e423]:
+      - generic [ref=f10e424]:
+        - heading "Routing" [level=3] [ref=f10e425]
+        - generic [ref=f10e426]:
+          - term [ref=f10e427]: Controller
+          - definition [ref=f10e428]: —
+          - term [ref=f10e429]: Route name
+          - definition [ref=f10e430]: unknown
+          - term [ref=f10e431]: Route parameters
+          - definition [ref=f10e432]:
+            - generic [ref=f10e435]: —
+          - term [ref=f10e436]: Middleware
+          - definition [ref=f10e437]:
+            - generic [ref=f10e440]: —
+      - generic [ref=f10e441]:
+        - heading "View" [level=3] [ref=f10e442]
+        - generic [ref=f10e443]:
+          - term [ref=f10e444]: View name
+          - definition [ref=f10e445]: —
+          - term [ref=f10e446]: View data
+          - definition [ref=f10e447]:
+            - generic [ref=f10e450]: —

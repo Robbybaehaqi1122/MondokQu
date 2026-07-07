@@ -16,6 +16,7 @@ class Blog extends Model
         'tenant_id',
         'title',
         'slug',
+        'category_id',
         'content',
         'excerpt',
         'featured_image',
@@ -55,6 +56,11 @@ class Blog extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(BlogCategory::class, 'category_id');
     }
 
     public function scopePublished($query): void

@@ -4,6 +4,7 @@ namespace App\Modules\PengaturanQu\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\PengaturanQu\Models\Blog;
+use App\Modules\PengaturanQu\Models\BlogCategory;
 use App\Modules\PengaturanQu\Requests\StoreBlogRequest;
 use App\Modules\PengaturanQu\Requests\UpdateBlogRequest;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,7 @@ class BlogController extends Controller
 
         $blogs = Blog::query()
             ->visibleTo($currentUser)
-            ->with('author')
+            ->with('author', 'category')
             ->when($search !== '', fn ($q) => $q->where('title', 'like', "%{$search}%"))
             ->orderByDesc('created_at')
             ->paginate(15)
@@ -33,9 +34,12 @@ class BlogController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('modules.pengaturan-qu.blog.create');
+        $currentUser = $request->user();
+        $categories = BlogCategory::query()->visibleTo($currentUser)->orderBy('name')->get();
+
+        return view('modules.pengaturan-qu.blog.create', compact('categories'));
     }
 
     public function store(StoreBlogRequest $request): RedirectResponse
@@ -69,7 +73,9 @@ class BlogController extends Controller
         $currentUser = $request->user();
         abort_unless((int) $blog->tenant_id === (int) $currentUser->effectiveTenantId(), 403);
 
-        return view('modules.pengaturan-qu.blog.edit', compact('blog'));
+        $categories = BlogCategory::query()->visibleTo($currentUser)->orderBy('name')->get();
+
+        return view('modules.pengaturan-qu.blog.edit', compact('blog', 'categories'));
     }
 
     public function update(UpdateBlogRequest $request, Blog $blog): RedirectResponse

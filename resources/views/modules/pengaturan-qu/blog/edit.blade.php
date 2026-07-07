@@ -9,7 +9,7 @@
     </x-slot>
 
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-9">
             <form action="{{ route('pengaturan.blog.update', $blog) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
@@ -22,16 +22,28 @@
                             @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Slug</label>
-                            <input type="text" name="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug', $blog->slug) }}" placeholder="Kosongkan untuk generate otomatis">
-                            <div class="form-text">URL yang akan digunakan untuk blog ini.</div>
-                            @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Slug</label>
+                                <input type="text" name="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug', $blog->slug) }}" placeholder="Otomatis dari judul">
+                                <div class="form-text">URL blog. Kosongkan untuk generate otomatis.</div>
+                                @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Kategori</label>
+                                <select name="category_id" class="form-select @error('category_id') is-invalid @enderror">
+                                    <option value="">Tanpa Kategori</option>
+                                    @foreach ($categories as $cat)
+                                        <option value="{{ $cat->id }}" @selected(old('category_id', $blog->category_id) == $cat->id)>{{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Konten</label>
-                            <textarea name="content" class="form-control @error('content') is-invalid @enderror" rows="15" required>{{ old('content', $blog->content) }}</textarea>
+                            <label class="form-label required">Konten</label>
+                            <textarea name="content" class="form-control @error('content') is-invalid @enderror" rows="16" id="blog-editor">{{ old('content', $blog->content) }}</textarea>
                             @error('content')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
@@ -73,4 +85,27 @@
             </form>
         </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>
+    tinymce.init({
+        selector: '#blog-editor',
+        height: 500,
+        menubar: true,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic strikethrough underline | alignleft aligncenter alignright alignjustify | ' +
+            'bullist numlist outdent indent | link image media | ' +
+            'removeformat fullscreen code | help',
+        branding: false,
+        promotion: false,
+        content_style: 'body { font-family: Inter, sans-serif; font-size: 16px; line-height: 1.8; }',
+    });
+    </script>
+    @endpush
 </x-app-layout>

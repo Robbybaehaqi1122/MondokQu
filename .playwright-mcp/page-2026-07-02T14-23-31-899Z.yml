@@ -1,0 +1,44 @@
+- generic [ref=f8e1]:
+  - generic [ref=f8e3]:
+    - generic [ref=f8e7]:
+      - img "logo" [ref=f8e9]
+      - generic [ref=f8e11]:
+        - generic [ref=f8e12]: Username
+        - textbox "Username" [active] [ref=f8e14]:
+          - /placeholder: Enter your username.
+        - generic [ref=f8e15]: Password
+        - textbox "Password" [ref=f8e17]:
+          - /placeholder: Enter your account password.
+        - button "Log in" [ref=f8e20] [cursor=pointer]
+    - list [ref=f8e23]:
+      - listitem [ref=f8e24]:
+        - link "العربية" [ref=f8e25] [cursor=pointer]:
+          - /url: /?locale=ar
+      - listitem [ref=f8e26]:
+        - link "čeština" [ref=f8e27] [cursor=pointer]:
+          - /url: /?locale=cs
+      - listitem [ref=f8e28]:
+        - link "dansk" [ref=f8e29] [cursor=pointer]:
+          - /url: /?locale=da
+      - listitem [ref=f8e30]:
+        - link "Deutsch" [ref=f8e31] [cursor=pointer]:
+          - /url: /?locale=de
+      - listitem [ref=f8e32]:
+        - link "Ελληνικά" [ref=f8e33] [cursor=pointer]:
+          - /url: /?locale=el
+      - listitem [ref=f8e34]:
+        - link "English" [ref=f8e35] [cursor=pointer]:
+          - /url: /?locale=en
+      - listitem [ref=f8e36]:
+        - link "español" [ref=f8e37] [cursor=pointer]:
+          - /url: /?locale=es
+      - listitem [ref=f8e38]:
+        - link "español latinoamericano" [ref=f8e39] [cursor=pointer]:
+          - /url: /?locale=es_419
+      - listitem [ref=f8e40]:
+        - link "…" [ref=f8e41] [cursor=pointer]:
+          - /url: javascript:void(0)
+  - generic [ref=f8e42]:
+    - text: Copyright© 2026 cPanel, L.L.C.
+    - link "Privacy Policy" [ref=f8e43] [cursor=pointer]:
+      - /url: https://go.cpanel.net/privacy

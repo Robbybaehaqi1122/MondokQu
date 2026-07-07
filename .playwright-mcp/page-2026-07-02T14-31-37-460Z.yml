@@ -1,0 +1,45 @@
+- generic [ref=f12e1]:
+  - generic [ref=f12e3]:
+    - generic [ref=f12e10]: Your session cookie is invalid. Please log in again.
+    - generic [ref=f12e13]:
+      - img "logo" [ref=f12e15]
+      - generic [ref=f12e17]:
+        - generic [ref=f12e18]: Username
+        - textbox "Username" [active] [ref=f12e20]:
+          - /placeholder: Enter your username.
+        - generic [ref=f12e21]: Password
+        - textbox "Password" [ref=f12e23]:
+          - /placeholder: Enter your account password.
+        - button "Log in" [ref=f12e26] [cursor=pointer]
+    - list [ref=f12e29]:
+      - listitem [ref=f12e30]:
+        - link "العربية" [ref=f12e31] [cursor=pointer]:
+          - /url: /?locale=ar
+      - listitem [ref=f12e32]:
+        - link "čeština" [ref=f12e33] [cursor=pointer]:
+          - /url: /?locale=cs
+      - listitem [ref=f12e34]:
+        - link "dansk" [ref=f12e35] [cursor=pointer]:
+          - /url: /?locale=da
+      - listitem [ref=f12e36]:
+        - link "Deutsch" [ref=f12e37] [cursor=pointer]:
+          - /url: /?locale=de
+      - listitem [ref=f12e38]:
+        - link "Ελληνικά" [ref=f12e39] [cursor=pointer]:
+          - /url: /?locale=el
+      - listitem [ref=f12e40]:
+        - link "English" [ref=f12e41] [cursor=pointer]:
+          - /url: /?locale=en
+      - listitem [ref=f12e42]:
+        - link "español" [ref=f12e43] [cursor=pointer]:
+          - /url: /?locale=es
+      - listitem [ref=f12e44]:
+        - link "español latinoamericano" [ref=f12e45] [cursor=pointer]:
+          - /url: /?locale=es_419
+      - listitem [ref=f12e46]:
+        - link "…" [ref=f12e47] [cursor=pointer]:
+          - /url: javascript:void(0)
+  - generic [ref=f12e48]:
+    - text: Copyright© 2026 cPanel, L.L.C.
+    - link "Privacy Policy" [ref=f12e49] [cursor=pointer]:
+      - /url: https://go.cpanel.net/privacy

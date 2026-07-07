@@ -1,0 +1,324 @@
+- generic [ref=f5e2]:
+  - generic [ref=f5e5]:
+    - generic [ref=f5e9]:
+      - link "Ignition docs" [ref=f5e10] [cursor=pointer]:
+        - /url: http://flareapp.io/docs/ignition-for-laravel/introduction
+        - img [ref=f5e11]
+      - generic [ref=f5e17]:
+        - generic [ref=f5e18]: /
+        - generic [ref=f5e19]: home/
+        - generic [ref=f5e20]: adiw5138/
+        - generic [ref=f5e21]: laravel/
+    - generic [ref=f5e24]:
+      - generic [ref=f5e25]:
+        - generic [ref=f5e26]:
+          - generic [ref=f5e27]: Symfony\
+          - generic [ref=f5e28]: Component\
+          - generic [ref=f5e29]: HttpKernel\
+          - generic [ref=f5e30]: Exception\
+          - generic [ref=f5e31]: MethodNotAllowedHttpException
+        - generic [ref=f5e32]: "The GET method is not supported for this route. Supported methods: POST."
+      - link "https://sendemail.adingsuryadi.com/_ignition/execute-solution" [ref=f5e34] [cursor=pointer]:
+        - /url: https://sendemail.adingsuryadi.com/_ignition/execute-solution
+  - generic [ref=f5e36]:
+    - navigation [ref=f5e37]:
+      - list [ref=f5e38]:
+        - listitem [ref=f5e39]:
+          - button "Stack trace" [ref=f5e40] [cursor=pointer]
+        - listitem [ref=f5e41]:
+          - button "Request" [ref=f5e42] [cursor=pointer]
+        - listitem [ref=f5e43]:
+          - button "App" [ref=f5e44] [cursor=pointer]
+        - listitem [ref=f5e45]:
+          - button "User" [ref=f5e46] [cursor=pointer]
+        - listitem [ref=f5e47]:
+          - button "Context" [ref=f5e48] [cursor=pointer]
+        - listitem [ref=f5e49]:
+          - button "Debug" [ref=f5e50] [cursor=pointer]
+      - generic [ref=f5e52]:
+        - button "Share" [ref=f5e53] [cursor=pointer]:
+          - text: Share
+          - img [ref=f5e54]
+        - text: ✓ ✓ ✓ ✓ ✓ ✓
+    - generic [ref=f5e57]:
+      - generic [ref=f5e58]:
+        - generic [ref=f5e59]:
+          - generic [ref=f5e60]:
+            - button "Frame up (Key:K)" [ref=f5e61] [cursor=pointer]:
+              - img [ref=f5e62]
+            - button "Frame down (Key:J)" [ref=f5e64] [cursor=pointer]:
+              - img [ref=f5e65]
+          - button "Expand vendor frames" [ref=f5e68] [cursor=pointer]
+        - list [ref=f5e70]:
+          - listitem [ref=f5e71]:
+            - list [ref=f5e72]:
+              - listitem [ref=f5e73] [cursor=pointer]:
+                - generic [ref=f5e74]: "27"
+                - generic [ref=f5e75]:
+                  - banner [ref=f5e76]:
+                    - generic [ref=f5e78]:
+                      - generic [ref=f5e79]: vendor/
+                      - generic [ref=f5e80]: laravel/
+                      - generic [ref=f5e81]: framework/
+                      - generic [ref=f5e82]: src/
+                      - generic [ref=f5e83]: Illuminate/
+                      - generic [ref=f5e84]: Routing/
+                      - text: AbstractRouteCollection.php
+                  - generic [ref=f5e86]:
+                    - generic [ref=f5e87]: Illuminate\
+                    - generic [ref=f5e88]: Routing\
+                    - generic [ref=f5e89]: AbstractRouteCollection
+                - generic [ref=f5e91]: :117
+              - listitem [ref=f5e92] [cursor=pointer]:
+                - generic [ref=f5e93]: "26"
+                - generic [ref=f5e96]:
+                  - generic [ref=f5e97]: Illuminate\
+                  - generic [ref=f5e98]: Routing\
+                  - generic [ref=f5e99]: AbstractRouteCollection
+                - generic [ref=f5e101]: :103
+              - listitem [ref=f5e102] [cursor=pointer]:
+                - generic [ref=f5e103]: "25"
+                - generic [ref=f5e106]:
+                  - generic [ref=f5e107]: Illuminate\
+                  - generic [ref=f5e108]: Routing\
+                  - generic [ref=f5e109]: AbstractRouteCollection
+                - generic [ref=f5e111]: :40
+          - listitem [ref=f5e112]:
+            - generic [ref=f5e113] [cursor=pointer]:
+              - button [ref=f5e114]:
+                - img [ref=f5e115]
+              - button "23 vendor frames…" [ref=f5e118]
+          - listitem [ref=f5e119]:
+            - list [ref=f5e120]:
+              - listitem [ref=f5e121] [cursor=pointer]:
+                - generic [ref=f5e122]: "1"
+                - banner [ref=f5e124]:
+                  - generic [ref=f5e126]:
+                    - generic [ref=f5e127]: /
+                    - generic [ref=f5e128]: home/
+                    - generic [ref=f5e129]: adiw5138/
+                    - generic [ref=f5e130]: public_html/
+                    - generic [ref=f5e131]: sendemail.adingsuryadi.com/
+                    - text: index.php
+                - generic [ref=f5e133]: :56
+      - generic [ref=f5e134]:
+        - generic [ref=f5e135]:
+          - generic [ref=f5e137]:
+            - generic [ref=f5e138]: Illuminate\
+            - generic [ref=f5e139]: Routing\
+            - generic [ref=f5e140]: AbstractRouteCollection
+            - text: ::methodNotAllowed
+          - generic [ref=f5e141]:
+            - generic [ref=f5e142]:
+              - generic [ref=f5e143]: vendor/
+              - generic [ref=f5e144]: laravel/
+              - generic [ref=f5e145]: framework/
+              - generic [ref=f5e146]: src/
+              - generic [ref=f5e147]: Illuminate/
+              - generic [ref=f5e148]: Routing/
+              - text: AbstractRouteCollection.php:117
+            - link [ref=f5e149] [cursor=pointer]:
+              - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=117
+              - img [ref=f5e150]
+        - generic [ref=f5e153]:
+          - generic [ref=f5e155]:
+            - paragraph [ref=f5e156] [cursor=pointer]: "102"
+            - paragraph [ref=f5e157] [cursor=pointer]: "103"
+            - paragraph [ref=f5e158] [cursor=pointer]: "104"
+            - paragraph [ref=f5e159] [cursor=pointer]: "105"
+            - paragraph [ref=f5e160] [cursor=pointer]: "106"
+            - paragraph [ref=f5e161] [cursor=pointer]: "107"
+            - paragraph [ref=f5e162] [cursor=pointer]: "108"
+            - paragraph [ref=f5e163] [cursor=pointer]: "109"
+            - paragraph [ref=f5e164] [cursor=pointer]: "110"
+            - paragraph [ref=f5e165] [cursor=pointer]: "111"
+            - paragraph [ref=f5e166] [cursor=pointer]: "112"
+            - paragraph [ref=f5e167] [cursor=pointer]: "113"
+            - paragraph [ref=f5e168] [cursor=pointer]: "114"
+            - paragraph [ref=f5e169] [cursor=pointer]: "115"
+            - paragraph [ref=f5e170] [cursor=pointer]: "116"
+            - paragraph [ref=f5e171] [cursor=pointer]: "117"
+            - paragraph [ref=f5e172] [cursor=pointer]: "118"
+            - paragraph [ref=f5e173] [cursor=pointer]: "119"
+            - paragraph [ref=f5e174] [cursor=pointer]: "120"
+            - paragraph [ref=f5e175] [cursor=pointer]: "121"
+            - paragraph [ref=f5e176] [cursor=pointer]: "122"
+            - paragraph [ref=f5e177] [cursor=pointer]: "123"
+            - paragraph [ref=f5e178] [cursor=pointer]: "124"
+            - paragraph [ref=f5e179] [cursor=pointer]: "125"
+            - paragraph [ref=f5e180] [cursor=pointer]: "126"
+            - paragraph [ref=f5e181] [cursor=pointer]: "127"
+            - paragraph [ref=f5e182] [cursor=pointer]: "128"
+            - paragraph [ref=f5e183] [cursor=pointer]: "129"
+            - paragraph [ref=f5e184] [cursor=pointer]: "130"
+            - paragraph [ref=f5e185] [cursor=pointer]: "131"
+            - paragraph [ref=f5e186] [cursor=pointer]: "132"
+          - generic [ref=f5e187]:
+            - paragraph [ref=f5e188]:
+              - link [ref=f5e189] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=102
+                - img [ref=f5e190]
+            - paragraph [ref=f5e192]:
+              - generic [ref=f5e193]:
+                - generic [ref=f5e194]:
+                  - text: $this->methodNotAllowed(
+                  - generic [ref=f5e195]:
+                    - text: $methods, $request->method(
+                    - text: )
+                  - text: )
+                - text: ;
+              - link [ref=f5e196] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=103
+                - img [ref=f5e197]
+            - paragraph [ref=f5e199]:
+              - text: "}"
+              - link [ref=f5e200] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=104
+                - img [ref=f5e201]
+            - paragraph [ref=f5e203]:
+              - link [ref=f5e204] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=105
+                - img [ref=f5e205]
+            - paragraph [ref=f5e207]:
+              - generic [ref=f5e208]: /**
+              - link [ref=f5e209] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=106
+                - img [ref=f5e210]
+            - paragraph [ref=f5e212]:
+              - generic [ref=f5e213]: "* Throw a method not allowed HTTP exception."
+              - link [ref=f5e214] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=107
+                - img [ref=f5e215]
+            - paragraph [ref=f5e217]:
+              - generic [ref=f5e218]: "*"
+              - link [ref=f5e219] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=108
+                - img [ref=f5e220]
+            - paragraph [ref=f5e222]:
+              - generic [ref=f5e224]: "* @param array $others"
+              - link [ref=f5e225] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=109
+                - img [ref=f5e226]
+            - paragraph [ref=f5e228]:
+              - generic [ref=f5e230]: "* @param string $method"
+              - link [ref=f5e231] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=110
+                - img [ref=f5e232]
+            - paragraph [ref=f5e234]:
+              - generic [ref=f5e236]: "* @return void"
+              - link [ref=f5e237] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=111
+                - img [ref=f5e238]
+            - paragraph [ref=f5e240]:
+              - generic [ref=f5e241]: "*"
+              - link [ref=f5e242] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=112
+                - img [ref=f5e243]
+            - paragraph [ref=f5e245]:
+              - generic [ref=f5e247]: "* @throws \\Symfony\\Component\\HttpKernel\\Exception\\MethodNotAllowedHttpException"
+              - link [ref=f5e248] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=113
+                - img [ref=f5e249]
+            - paragraph [ref=f5e251]:
+              - generic [ref=f5e252]: "*/"
+              - link [ref=f5e253] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=114
+                - img [ref=f5e254]
+            - paragraph [ref=f5e256]:
+              - generic [ref=f5e257]:
+                - text: protected
+                - generic [ref=f5e258]:
+                  - text: function methodNotAllowed(
+                  - generic [ref=f5e259]: array $others, $method
+                  - text: )
+              - link [ref=f5e260] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=115
+                - img [ref=f5e261]
+            - paragraph [ref=f5e263]:
+              - generic [ref=f5e264]: "{"
+              - link [ref=f5e265] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=116
+                - img [ref=f5e266]
+            - paragraph [ref=f5e268]:
+              - generic [ref=f5e269]: throw new MethodNotAllowedHttpException(
+              - link [ref=f5e270] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=117
+                - img [ref=f5e271]
+            - paragraph [ref=f5e273]:
+              - generic [ref=f5e274]: $others,
+              - link [ref=f5e275] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=118
+                - img [ref=f5e276]
+            - paragraph [ref=f5e278]:
+              - text: sprintf(
+              - link [ref=f5e279] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=119
+                - img [ref=f5e280]
+            - paragraph [ref=f5e282]:
+              - generic [ref=f5e283]: "'The %s method is not supported for this route. Supported methods: %s.',"
+              - link [ref=f5e284] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=120
+                - img [ref=f5e285]
+            - paragraph [ref=f5e287]:
+              - generic [ref=f5e288]: $method,
+              - link [ref=f5e289] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=121
+                - img [ref=f5e290]
+            - paragraph [ref=f5e292]:
+              - generic [ref=f5e293]: implode(', ', $others)
+              - link [ref=f5e294] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=122
+                - img [ref=f5e295]
+            - paragraph [ref=f5e297]:
+              - text: )
+              - link [ref=f5e298] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=123
+                - img [ref=f5e299]
+            - paragraph [ref=f5e301]:
+              - text: );
+              - link [ref=f5e302] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=124
+                - img [ref=f5e303]
+            - paragraph [ref=f5e305]:
+              - text: "}"
+              - link [ref=f5e306] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=125
+                - img [ref=f5e307]
+            - paragraph [ref=f5e309]:
+              - link [ref=f5e310] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=126
+                - img [ref=f5e311]
+            - paragraph [ref=f5e313]:
+              - generic [ref=f5e314]: /**
+              - link [ref=f5e315] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=127
+                - img [ref=f5e316]
+            - paragraph [ref=f5e318]:
+              - generic [ref=f5e319]: "* Compile the routes for caching."
+              - link [ref=f5e320] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=128
+                - img [ref=f5e321]
+            - paragraph [ref=f5e323]:
+              - generic [ref=f5e324]: "*"
+              - link [ref=f5e325] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=129
+                - img [ref=f5e326]
+            - paragraph [ref=f5e328]:
+              - generic [ref=f5e330]: "* @return array"
+              - link [ref=f5e331] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=130
+                - img [ref=f5e332]
+            - paragraph [ref=f5e334]:
+              - generic [ref=f5e335]: "*/"
+              - link [ref=f5e336] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=131
+                - img [ref=f5e337]
+            - paragraph [ref=f5e339]:
+              - generic [ref=f5e340]:
+                - text: public
+                - generic [ref=f5e341]:
+                  - text: function compile(
+                  - text: )
+              - link [ref=f5e342] [cursor=pointer]:
+                - /url: phpstorm://open?file=%2Fhome%2Fadiw5138%2Flaravel%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FRouting%2FAbstractRouteCollection.php&line=132
+                - img [ref=f5e343]

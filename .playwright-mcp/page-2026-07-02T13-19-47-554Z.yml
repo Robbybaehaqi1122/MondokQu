@@ -1,0 +1,24 @@
+- generic [ref=f27e1]:
+  - banner [ref=f27e2]:
+    - heading "Application Send Email" [level=1] [ref=f27e3]
+    - navigation [ref=f27e4]:
+      - list [ref=f27e5]:
+        - listitem [ref=f27e6]:
+          - link "Data Perjanjian" [ref=f27e7] [cursor=pointer]:
+            - /url: https://sendemail.adingsuryadi.com/perjanjian
+        - listitem [ref=f27e8]:
+          - link "History Email" [ref=f27e9] [cursor=pointer]:
+            - /url: https://sendemail.adingsuryadi.com/history-email
+  - main [ref=f27e10]:
+    - generic [ref=f27e14]:
+      - heading "Login" [level=3] [ref=f27e16]
+      - generic [ref=f27e18]:
+        - generic [ref=f27e19]:
+          - generic [ref=f27e20]: Email
+          - textbox "Email" [active] [ref=f27e21]
+        - generic [ref=f27e22]:
+          - generic [ref=f27e23]: Password
+          - textbox "Password" [ref=f27e24]
+        - button "Login" [ref=f27e26] [cursor=pointer]
+  - contentinfo [ref=f27e27]:
+    - paragraph [ref=f27e28]: © 2026 Application Send Email

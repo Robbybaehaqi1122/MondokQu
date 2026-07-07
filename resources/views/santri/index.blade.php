@@ -125,11 +125,11 @@
                         <thead>
                             <tr>
                                 <th>Santri</th>
-                                <th>Jenis Kelamin</th>
-                                <th>Wali / Penanggung Jawab</th>
-                                <th>Tanggal Masuk</th>
+                                <th class="d-none d-md-table-cell">Jenis Kelamin</th>
+                                <th class="d-none d-lg-table-cell">Wali / Penanggung Jawab</th>
+                                <th class="d-none d-md-table-cell">Tanggal Masuk</th>
                                 <th>Status</th>
-                                <th>Dokumen</th>
+                                <th class="d-none d-md-table-cell">Dokumen</th>
                                 <th class="w-1">Aksi</th>
                             </tr>
                         </thead>
@@ -137,20 +137,23 @@
                             @forelse ($santris as $managedSantri)
                                 <tr>
                                     <td>
-                                        <div class="d-flex align-items-center gap-3">
+                                        <div class="d-flex align-items-center gap-2 gap-md-3">
                                             @if ($managedSantri->photoUrl())
                                                 <img src="{{ $managedSantri->photoUrl() }}" alt="Foto {{ $managedSantri->full_name }}" class="user-inline-avatar" loading="lazy">
                                             @else
-                                                <span class="user-detail-avatar" style="width: 3rem; height: 3rem; border-radius: 999px; font-size: 1rem;">
+                                                <span class="user-detail-avatar d-none d-sm-inline-flex" style="width: 2.5rem; height: 2.5rem; border-radius: 999px; font-size: 0.875rem;">
                                                     {{ strtoupper(substr($managedSantri->full_name, 0, 1)) }}
                                                 </span>
                                             @endif
 
                                             <div>
                                                 <div class="fw-semibold">{{ $managedSantri->full_name }}</div>
-                                                <div class="text-secondary small mt-1">NIS: {{ $managedSantri->nis }}</div>
-                                                <div class="text-secondary small mt-1">
+                                                <div class="text-secondary small">NIS: {{ $managedSantri->nis }}</div>
+                                                <div class="text-secondary small d-none d-sm-block">
                                                     {{ $managedSantri->birth_place }}, {{ optional($managedSantri->birth_date)->translatedFormat('d M Y') }}
+                                                </div>
+                                                <div class="text-secondary small d-sm-none">
+                                                    {{ $managedSantri->genderLabel() }} • {{ $managedSantri->statusLabel() }}
                                                 </div>
                                                 <div class="text-secondary small mt-1">
                                                     {{ $managedSantri->displayRoomName('Kamar belum diatur') }} • Angkatan {{ $managedSantri->entry_year ?? '-' }}
@@ -158,12 +161,12 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <span class="badge {{ $genderBadgeClasses[$managedSantri->gender] ?? 'bg-secondary-lt text-secondary' }}">
                                             {{ $managedSantri->genderLabel() }}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-lg-table-cell">
                                         <div class="fw-medium">{{ $managedSantri->displayGuardianName() }}</div>
                                         <div class="text-secondary small mt-1">{{ $managedSantri->displayGuardianPhone('Belum diisi') }}</div>
                                         @if ($managedSantri->guardians->isNotEmpty())
@@ -174,7 +177,7 @@
                                             </div>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <div>{{ optional($managedSantri->entry_date)->translatedFormat('d M Y') }}</div>
                                         <div class="text-secondary small mt-1">Input oleh {{ $managedSantri->creator?->name ?? 'System' }}</div>
                                     </td>
@@ -183,7 +186,7 @@
                                             {{ $managedSantri->statusLabel() }}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         @if ($managedSantri->isDocumentComplete())
                                             <span class="badge bg-success-lt text-success">Lengkap</span>
                                         @else
@@ -280,7 +283,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-secondary">Belum ada data santri yang tersimpan.</td>
+                                    <td colspan="7" class="text-secondary">Belum ada data santri yang tersimpan.</td>
                                 </tr>
                             @endforelse
                         </tbody>
