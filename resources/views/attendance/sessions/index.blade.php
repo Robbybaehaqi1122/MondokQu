@@ -55,17 +55,30 @@
                     <div class="text-secondary small mt-2">Menampilkan {{ $sessions->total() }} sesi berdasarkan filter aktif.</div>
                 </div>
 
-                <button
-                    type="button"
-                    class="btn btn-primary"
-                    id="open-create-attendance-session-modal"
-                    data-bs-toggle="modal"
-                    data-bs-target="#createAttendanceSessionModal"
-                    @disabled($activityOptions->isEmpty())
-                >
-                    <i class="ti ti-plus me-1"></i>
-                    Tambah Sesi
-                </button>
+                <div class="d-flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        id="open-create-attendance-session-modal"
+                        data-bs-toggle="modal"
+                        data-bs-target="#createAttendanceSessionModal"
+                        @disabled($activityOptions->isEmpty())
+                    >
+                        <i class="ti ti-plus me-1"></i>
+                        Tambah Sesi
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary"
+                        id="open-generate-sessions-modal"
+                        data-bs-toggle="modal"
+                        data-bs-target="#generateSessionsModal"
+                        @disabled($activityOptions->isEmpty())
+                    >
+                        <i class="ti ti-calendar-plus me-1"></i>
+                        Generate
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -259,6 +272,59 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="ti ti-device-floppy me-1"></i>
                             Simpan Sesi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal modal-blur fade" id="generateSessionsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('attendance.sessions.generate') }}">
+                    @csrf
+
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title">Generate Sesi Absensi</h5>
+                            <div class="text-secondary small mt-1">Buat sesi otomatis berdasarkan jadwal hari aktif kegiatan.</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="generate_attendance_activity_id" class="form-label">Kegiatan Absensi</label>
+                                <select id="generate_attendance_activity_id" name="attendance_activity_id" class="form-select" required>
+                                    <option value="">Pilih kegiatan</option>
+                                    @foreach ($activityOptions as $activityOption)
+                                        <option value="{{ $activityOption->id }}">
+                                            {{ $activityOption->name }} - {{ $activityOption->timeRangeLabel() }}
+                                            @if ($activityOption->active_days)
+                                                ({{ $activityOption->activeDayLabels() }})
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="generate_date_from" class="form-label">Dari Tanggal</label>
+                                <input id="generate_date_from" name="date_from" type="date" class="form-control" value="{{ now()->toDateString() }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="generate_date_to" class="form-label">Sampai Tanggal</label>
+                                <input id="generate_date_to" name="date_to" type="date" class="form-control" value="{{ now()->addMonth()->toDateString() }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-calendar-plus me-1"></i>
+                            Generate Sessions
                         </button>
                     </div>
                 </form>

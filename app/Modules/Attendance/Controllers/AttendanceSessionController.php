@@ -9,6 +9,7 @@ use App\Models\AttendanceSession;
 use App\Modules\Attendance\Requests\StoreAttendanceSessionRequest;
 use App\Modules\Attendance\Requests\UpdateAttendanceSessionRequest;
 use App\Services\ActivityLogger;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -188,6 +189,73 @@ class AttendanceSessionController extends Controller
         return redirect()
             ->route('attendance.sessions.index')
             ->with('success', 'Sesi absensi berhasil dihapus.');
+    }
+
+    public function generate(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'attendance_activity_id' => ['required', 'exists:attendance_activities,id'],
+            'date_from' => ['required', 'date'],
+            'date_to' => ['required', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $currentUser = $request->user();
+
+        $activity = AttendanceActivity::query()
+            ->visibleTo($currentUser)
+            ->findOrFail($validated['attendance_activity_id']);
+
+        $activeDays = $activity->active_days ?? [];
+
+        if (empty($activeDays)) {
+            return back()->with('error', "Kegiatan \"{$activity->name}\" tidak memiliki jadwal hari aktif.");
+        }
+
+        $dateFrom = Carbon::parse($validated['date_from']);
+        $dateTo = Carbon::parse($validated['date_to']);
+        $created = 0;
+        $skipped = 0;
+
+        $date = $dateFrom->copy();
+        while ($date->lte($dateTo)) {
+            $dayName = strtolower($date->format('l'));
+
+            if (in_array($dayName, $activeDays)) {
+                $exists = AttendanceSession::query()
+                    ->where('tenant_id', $activity->tenant_id)
+                    ->where('attendance_activity_id', $activity->id)
+                    ->whereDate('session_date', $date->toDateString())
+                    ->exists();
+
+                if (! $exists) {
+                    AttendanceSession::query()->create([
+                        'tenant_id' => $activity->tenant_id,
+                        'attendance_activity_id' => $activity->id,
+                        'session_date' => $date->toDateString(),
+                        'status' => AttendanceSession::STATUS_DRAFT,
+                        'created_by' => $currentUser->id,
+                    ]);
+                    $created++;
+                } else {
+                    $skipped++;
+                }
+            }
+
+            $date->addDay();
+        }
+
+        $parts = [];
+        if ($created > 0) {
+            $parts[] = "{$created} sesi berhasil dibuat";
+        }
+        if ($skipped > 0) {
+            $parts[] = "{$skipped} sesi sudah ada";
+        }
+        $message = implode(', ', $parts) ?: 'Tidak ada sesi yang dibuat (hari aktif tidak sesuai rentang tanggal).';
+
+        return redirect()
+            ->route('attendance.sessions.index')
+            ->with('success', "Generate session untuk {$activity->name}: {$message}.");
     }
 
     protected function applyFilters(Builder $builder, string $selectedActivityId, string $selectedStatus, string $dateFrom, string $dateTo): void

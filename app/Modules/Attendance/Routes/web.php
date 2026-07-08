@@ -28,6 +28,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::get('/sesi/{attendanceSession}/input', [AttendanceRecordController::class, 'edit'])->name('sessions.records.edit');
         Route::put('/sesi/{attendanceSession}/input', [AttendanceRecordController::class, 'update'])->name('sessions.records.update');
         Route::patch('/sesi/{attendanceSession}', [AttendanceSessionController::class, 'update'])->name('sessions.update');
+        Route::post('/sesi/generate', [AttendanceSessionController::class, 'generate'])->name('sessions.generate');
         Route::delete('/sesi/{attendanceSession}', [AttendanceSessionController::class, 'destroy'])->name('sessions.destroy');
 
         Route::get('/scan', [AttendanceScanController::class, 'index'])->name('scan.index');
