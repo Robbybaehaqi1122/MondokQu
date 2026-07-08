@@ -663,30 +663,6 @@
                     </details>
                 @endif
 
-                @if ($canOpenPengaturanQuModule)
-                    <details class="sidebar-dropdown" @if (request()->routeIs('pengaturan.*')) open @endif>
-                        <summary class="sidebar-link {{ request()->routeIs('pengaturan.*') ? 'active' : '' }}">
-                            <span class="sidebar-link-icon">
-                                <i class="ti ti-settings"></i>
-                            </span>
-                            <span class="flex-grow-1">Pengaturan</span>
-                            <span class="sidebar-dropdown-arrow">
-                                <i class="ti ti-chevron-down"></i>
-                            </span>
-                        </summary>
-                        <div class="sidebar-submenu">
-                            <a class="sidebar-sublink {{ request()->routeIs('pengaturan.dashboard') ? 'active' : '' }}" href="{{ route('pengaturan.dashboard') }}">
-                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
-                                <span>Dashboard Pengaturan</span>
-                            </a>
-                            <a class="sidebar-sublink {{ request()->routeIs('pengaturan.blog.*') ? 'active' : '' }}" href="{{ route('pengaturan.blog.index') }}">
-                                <span class="sidebar-link-icon"><i class="ti ti-article"></i></span>
-                                <span>Blog</span>
-                            </a>
-                        </div>
-                    </details>
-                @endif
-
                 @if ($canOpenSantriModule)
                     <details class="sidebar-dropdown" @if (request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.import.*')) open @endif>
                         <summary class="sidebar-link {{ request()->routeIs('santri.index') || request()->routeIs('santri.show') || request()->routeIs('pengurus.santri') || request()->routeIs('rooms.*') || request()->routeIs('pengurus.izin.*') || request()->routeIs('pengurus.reports.*') || request()->routeIs('santri.import.*') ? 'active' : '' }}">
@@ -746,6 +722,30 @@
                             @endif
 
 
+                        </div>
+                    </details>
+                @endif
+
+                @if ($canOpenPengaturanQuModule)
+                    <details class="sidebar-dropdown" @if (request()->routeIs('pengaturan.*')) open @endif>
+                        <summary class="sidebar-link {{ request()->routeIs('pengaturan.*') ? 'active' : '' }}">
+                            <span class="sidebar-link-icon">
+                                <i class="ti ti-settings"></i>
+                            </span>
+                            <span class="flex-grow-1">Pengaturan</span>
+                            <span class="sidebar-dropdown-arrow">
+                                <i class="ti ti-chevron-down"></i>
+                            </span>
+                        </summary>
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-sublink {{ request()->routeIs('pengaturan.dashboard') ? 'active' : '' }}" href="{{ route('pengaturan.dashboard') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-dashboard"></i></span>
+                                <span>Dashboard Pengaturan</span>
+                            </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('pengaturan.blog.*') ? 'active' : '' }}" href="{{ route('pengaturan.blog.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-article"></i></span>
+                                <span>Blog</span>
+                            </a>
                         </div>
                     </details>
                 @endif
