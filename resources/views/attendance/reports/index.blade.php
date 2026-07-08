@@ -300,15 +300,25 @@
                                 {{ $records->links() }}
                             @endif
                         </div>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('attendance.reports.export-detail', ['xlsx'] + request()->query()) }}" class="btn btn-outline-success">
-                                <i class="ti ti-file-spreadsheet me-1"></i>
-                                Excel
-                            </a>
-                            <a href="{{ route('attendance.reports.export-detail', ['csv'] + request()->query()) }}" class="btn btn-outline-secondary">
-                                <i class="ti ti-file-text me-1"></i>
-                                CSV
-                            </a>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ti ti-file-download me-1"></i>
+                                Export
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('attendance.reports.export-detail', ['xlsx'] + request()->query()) }}">
+                                        <i class="ti ti-file-spreadsheet me-2 text-success"></i>
+                                        Excel (.xlsx)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('attendance.reports.export-detail', ['csv'] + request()->query()) }}">
+                                        <i class="ti ti-file-text me-2 text-secondary"></i>
+                                        CSV (.csv)
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -392,18 +402,32 @@
                         <i class="ti ti-printer me-1"></i>
                         Cetak
                     </button>
-                    <a href="{{ route('attendance.reports.export-rekap', ['xlsx'] + request()->query()) }}" class="btn btn-outline-success">
-                        <i class="ti ti-file-spreadsheet me-1"></i>
-                        Excel
-                    </a>
-                    <a href="{{ route('attendance.reports.export-rekap', ['csv'] + request()->query()) }}" class="btn btn-outline-secondary">
-                        <i class="ti ti-file-text me-1"></i>
-                        CSV
-                    </a>
-                    <a href="{{ route('attendance.reports.pdf', request()->query()) }}" class="btn btn-primary">
-                        <i class="ti ti-file-download me-1"></i>
-                        Export PDF
-                    </a>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ti ti-file-download me-1"></i>
+                            Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ route('attendance.reports.export-rekap', ['xlsx'] + request()->query()) }}">
+                                    <i class="ti ti-file-spreadsheet me-2 text-success"></i>
+                                    Excel (.xlsx)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('attendance.reports.export-rekap', ['csv'] + request()->query()) }}">
+                                    <i class="ti ti-file-text me-2 text-secondary"></i>
+                                    CSV (.csv)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('attendance.reports.pdf', request()->query()) }}">
+                                    <i class="ti ti-file-type-pdf me-2 text-danger"></i>
+                                    PDF
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
