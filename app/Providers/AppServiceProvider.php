@@ -41,7 +41,6 @@ use App\Modules\KeuanganQu\Models\CoaAccount;
 use App\Modules\KeuanganQu\Models\JournalEntry;
 use App\Modules\KeuanganQu\Models\Budget;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -62,10 +61,6 @@ class AppServiceProvider extends ServiceProvider
     {
         if (app()->isProduction()) {
             URL::forceScheme('https');
-
-            if (empty(env('SAAS_ADMIN_WHATSAPP'))) {
-                Log::warning('Env SAAS_ADMIN_WHATSAPP not set — using fallback from config/saas.php');
-            }
         }
 
         Gate::before(function ($user, $ability) {
