@@ -388,35 +388,31 @@ class AttendanceReportController extends Controller
 
         $santriIds = $santriQuery->pluck('id');
 
+        $monthlyCounts = AttendanceRecord::query()
+            ->visibleTo($currentUser)
+            ->select(
+                DB::raw('MONTH(attendance_sessions.session_date) as month'),
+                DB::raw("SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) as present"),
+                DB::raw("SUM(CASE WHEN attendance_records.status IN ('permission','sick','absent','late') THEN 1 ELSE 0 END) as issues"),
+            )
+            ->join('attendance_sessions', function (JoinClause $join): void {
+                $join
+                    ->on('attendance_records.attendance_session_id', '=', 'attendance_sessions.id')
+                    ->on('attendance_records.tenant_id', '=', 'attendance_sessions.tenant_id');
+            })
+            ->whereIn('attendance_records.santri_id', $santriIds)
+            ->whereYear('attendance_sessions.session_date', $year)
+            ->groupBy(DB::raw('MONTH(attendance_sessions.session_date)'))
+            ->get()
+            ->keyBy('month');
+
         $presentData = [];
         $issueData = [];
 
         foreach ($months as $m) {
-            $dateFrom = Carbon::create($year, $m, 1)->toDateString();
-            $dateTo = Carbon::create($year, $m, 1)->endOfMonth()->toDateString();
-
-            $counts = AttendanceRecord::query()
-                ->visibleTo($currentUser)
-                ->select('attendance_records.status', DB::raw('COUNT(*) as count'))
-                ->join('attendance_sessions', function (JoinClause $join): void {
-                    $join
-                        ->on('attendance_records.attendance_session_id', '=', 'attendance_sessions.id')
-                        ->on('attendance_records.tenant_id', '=', 'attendance_sessions.tenant_id');
-                })
-                ->whereIn('attendance_records.santri_id', $santriIds)
-                ->whereDate('attendance_sessions.session_date', '>=', $dateFrom)
-                ->whereDate('attendance_sessions.session_date', '<=', $dateTo)
-                ->groupBy('attendance_records.status')
-                ->pluck('count', 'status');
-
-            $present = (int) ($counts[AttendanceRecord::STATUS_PRESENT] ?? 0);
-            $issues = (int) ($counts[AttendanceRecord::STATUS_SICK] ?? 0)
-                + (int) ($counts[AttendanceRecord::STATUS_PERMISSION] ?? 0)
-                + (int) ($counts[AttendanceRecord::STATUS_ABSENT] ?? 0)
-                + (int) ($counts[AttendanceRecord::STATUS_LATE] ?? 0);
-
-            $presentData[] = $present;
-            $issueData[] = $issues;
+            $row = $monthlyCounts->get($m);
+            $presentData[] = (int) ($row?->present ?? 0);
+            $issueData[] = (int) ($row?->issues ?? 0);
         }
 
         return [
