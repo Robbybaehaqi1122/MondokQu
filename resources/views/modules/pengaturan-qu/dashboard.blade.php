@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="page-title mb-0">PengaturanQu</h2>
+            <h2 class="page-title mb-0">Pengaturan</h2>
         </div>
     </x-slot>
 

@@ -120,7 +120,7 @@ class PendaftaranController extends Controller
             abort(403);
         }
 
-        $ppdbPendaftaran->load(['gelombang', 'seleksis.penguji']);
+        $ppdbPendaftaran->loadMissing(['gelombang', 'seleksis.penguji']);
 
         return view('modules.ppdb-qu.pendaftaran.show', [
             'pendaftaran' => $ppdbPendaftaran,

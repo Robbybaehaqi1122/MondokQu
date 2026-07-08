@@ -375,7 +375,7 @@ class TenantManagementController extends Controller
     {
         abort_unless($request->user()?->isSuperAdmin(), 403);
 
-        $tenant->load(['owner', 'users.roles']);
+        $tenant->loadMissing(['owner', 'users.roles']);
         $tenant->loadCount(['users', 'santris', 'activityLogs']);
 
         return view('modules.saas.tenants.show', [

@@ -669,7 +669,7 @@
                             <span class="sidebar-link-icon">
                                 <i class="ti ti-settings"></i>
                             </span>
-                            <span class="flex-grow-1">PengaturanQu</span>
+                            <span class="flex-grow-1">Pengaturan</span>
                             <span class="sidebar-dropdown-arrow">
                                 <i class="ti ti-chevron-down"></i>
                             </span>

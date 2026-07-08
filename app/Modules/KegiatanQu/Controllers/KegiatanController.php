@@ -93,7 +93,7 @@ class KegiatanController extends Controller
             abort(403);
         }
 
-        $kegiatan->load(['pembina', 'pendaftarans.santri', 'pertemuans' => function ($q) {
+        $kegiatan->loadMissing(['pembina', 'pendaftarans.santri', 'pertemuans' => function ($q) {
             $q->orderByDesc('tanggal')->limit(10);
         }]);
 

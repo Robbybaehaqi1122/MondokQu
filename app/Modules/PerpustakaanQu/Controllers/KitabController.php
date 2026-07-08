@@ -77,7 +77,7 @@ class KitabController extends Controller
             abort(403);
         }
 
-        $perpustakaanKitab->load(['kategori', 'peminjamans' => function ($q) {
+        $perpustakaanKitab->loadMissing(['kategori', 'peminjamans' => function ($q) {
             $q->with('santri')->orderByDesc('created_at')->limit(20);
         }]);
 

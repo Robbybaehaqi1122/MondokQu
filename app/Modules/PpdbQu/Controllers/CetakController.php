@@ -15,7 +15,7 @@ class CetakController extends Controller
             abort(403);
         }
 
-        $ppdbPendaftaran->load('gelombang');
+        $ppdbPendaftaran->loadMissing('gelombang');
         $tenant = auth()->user()->tenant;
 
         $pdf = Pdf::loadView('modules.ppdb-qu.cetak.formulir', [
@@ -32,7 +32,7 @@ class CetakController extends Controller
             abort(403);
         }
 
-        $ppdbPendaftaran->load('gelombang');
+        $ppdbPendaftaran->loadMissing('gelombang');
         $tenant = auth()->user()->tenant;
 
         $pdf = Pdf::loadView('modules.ppdb-qu.cetak.kartu-peserta', [
@@ -53,7 +53,7 @@ class CetakController extends Controller
             abort(403, 'Pendaftar belum diterima.');
         }
 
-        $ppdbPendaftaran->load('gelombang');
+        $ppdbPendaftaran->loadMissing('gelombang');
         $tenant = auth()->user()->tenant;
 
         $pdf = Pdf::loadView('modules.ppdb-qu.cetak.surat-terima', [

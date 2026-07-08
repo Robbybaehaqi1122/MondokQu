@@ -91,7 +91,7 @@ class PertemuanController extends Controller
             abort(403);
         }
 
-        $kegiatanPertemuan->load(['kegiatan', 'creator', 'presensis.santri']);
+        $kegiatanPertemuan->loadMissing(['kegiatan', 'creator', 'presensis.santri']);
 
         return view('modules.kegiatan-qu.pertemuan.show', [
             'pertemuan' => $kegiatanPertemuan,

@@ -292,7 +292,6 @@ class Tenant extends Model
     public function getCurrentStorageBytes(): int
     {
         $tenantId = $this->id;
-
         $bytes = 0;
 
         $bytes += (int) SantriDocument::query()
@@ -303,45 +302,37 @@ class Tenant extends Model
             ->where('tenant_id', $tenantId)
             ->sum('size_bytes');
 
-        $userAvatarPaths = $this->users()
-            ->whereNotNull('avatar_path')
-            ->pluck('avatar_path');
+        $paths = collect();
 
-        foreach ($userAvatarPaths as $path) {
-            if (Storage::disk('public')->exists($path)) {
-                $bytes += Storage::disk('public')->size($path);
-            }
-        }
+        $paths = $paths->merge(
+            $this->users()->whereNotNull('avatar_path')->pluck('avatar_path')
+        );
 
-        $santriPhotoPaths = $this->santris()
-            ->whereNotNull('photo_path')
-            ->pluck('photo_path');
+        $paths = $paths->merge(
+            $this->santris()->whereNotNull('photo_path')->pluck('photo_path')
+        );
 
-        foreach ($santriPhotoPaths as $path) {
-            if (Storage::disk('public')->exists($path)) {
-                $bytes += Storage::disk('public')->size($path);
-            }
-        }
-
-        $proofPaths = SantriPaymentConfirmation::query()
-            ->where('tenant_id', $tenantId)
-            ->whereNotNull('proof_path')
-            ->pluck('proof_path');
-
-        foreach ($proofPaths as $path) {
-            if (Storage::disk('public')->exists($path)) {
-                $bytes += Storage::disk('public')->size($path);
-            }
-        }
+        $paths = $paths->merge(
+            SantriPaymentConfirmation::query()
+                ->where('tenant_id', $tenantId)
+                ->whereNotNull('proof_path')
+                ->pluck('proof_path')
+        );
 
         $branding = $this->settings['logo_path'] ?? null;
-        if ($branding && Storage::disk('public')->exists($branding)) {
-            $bytes += Storage::disk('public')->size($branding);
+        if ($branding) {
+            $paths->push($branding);
         }
 
         $favicon = $this->settings['favicon_path'] ?? null;
-        if ($favicon && Storage::disk('public')->exists($favicon)) {
-            $bytes += Storage::disk('public')->size($favicon);
+        if ($favicon) {
+            $paths->push($favicon);
+        }
+
+        foreach ($paths as $path) {
+            if (Storage::disk('public')->exists($path)) {
+                $bytes += Storage::disk('public')->size($path);
+            }
         }
 
         return $bytes;

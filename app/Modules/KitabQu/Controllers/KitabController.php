@@ -71,7 +71,7 @@ class KitabController extends Controller
             abort(403);
         }
 
-        $kitab->load(['kategori', 'setorans' => function ($q) {
+        $kitab->loadMissing(['kategori', 'setorans' => function ($q) {
             $q->with('santri')->latest()->limit(20);
         }]);
 

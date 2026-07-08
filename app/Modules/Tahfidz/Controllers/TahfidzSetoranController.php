@@ -119,7 +119,7 @@ class TahfidzSetoranController extends Controller
 
         $santriName = $session->santri?->full_name ?? "Santri #{$session->santri_id}";
 
-        $session->load('records');
+        $session->loadMissing('records');
         $this->notifyGuardians($santri, new NewTahfidzSessionNotification($session));
 
         $this->activityLogger->log(

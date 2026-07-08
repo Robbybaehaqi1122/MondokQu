@@ -69,7 +69,7 @@ class SantriService
                 ]);
                 $this->syncGuardianUsers($santri, $guardianUserIds);
 
-                return $santri->load('room');
+                return $santri->loadMissing('room');
             });
         } catch (Throwable $exception) {
             $this->santriPhotoUploader->deleteIfManaged($photoPath);
@@ -176,7 +176,7 @@ class SantriService
             throw $exception;
         }
 
-        $santri->refresh()->load('room');
+        $santri->refresh()->loadMissing('room');
 
         $afterValues = $santri->only([
             'nis', 'full_name', 'gender', 'birth_place', 'birth_date',

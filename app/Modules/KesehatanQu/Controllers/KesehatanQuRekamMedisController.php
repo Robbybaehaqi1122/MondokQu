@@ -45,7 +45,7 @@ class KesehatanQuRekamMedisController extends Controller
     {
         $currentUser = $request->user();
 
-        $santri->load(['rekamMedis']);
+        $santri->loadMissing(['rekamMedis']);
 
         return view('modules.kesehatan-qu.rekam-medis.show', [
             'santri' => $santri,

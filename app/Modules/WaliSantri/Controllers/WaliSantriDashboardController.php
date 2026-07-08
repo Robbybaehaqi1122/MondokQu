@@ -315,7 +315,7 @@ class WaliSantriDashboardController extends Controller
     public function profilSantri(Request $request, Santri $santri): View
     {
         $santri = $this->resolveLinkedSantri($request, $santri);
-        $santri->load(['room', 'guardians']);
+        $santri->loadMissing(['room', 'guardians']);
 
         return view('wali-santri.profil-santri', [
             'santri' => $santri,
@@ -332,7 +332,7 @@ class WaliSantriDashboardController extends Controller
         abort_if($santriIds->isEmpty(), 404);
         abort_unless($santriIds->contains($santri->id), 404);
 
-        return $santri->load('room');
+        return $santri->loadMissing('room');
     }
 
     protected function resolveLinkedInvoice(Request $request, SantriInvoice $invoice): SantriInvoice

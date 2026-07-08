@@ -129,7 +129,7 @@ class BillingNoteController extends Controller
                 'recorded_by' => $request->user()?->id,
             ]);
 
-            $billingNote->load('tenant');
+            $billingNote->loadMissing('tenant');
 
             if ($request->boolean('apply_subscription') && $billingNote->tenant) {
                 $previousSubscriptionSnapshot = $billingNote->tenant->only([

@@ -159,7 +159,7 @@ class NilaiSantriController extends Controller
         $semesters = $this->availableSemesters();
 
         return view('modules.akademik.nilai.edit', [
-            'nilai' => $nilaiSantri->load(['santri', 'mataPelajaran']),
+            'nilai' => $nilaiSantri->loadMissing(['santri', 'mataPelajaran']),
             'mapels' => $mapels,
             'santris' => $santris,
             'semesters' => $semesters,

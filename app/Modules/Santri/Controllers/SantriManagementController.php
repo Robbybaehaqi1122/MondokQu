@@ -138,7 +138,7 @@ class SantriManagementController extends Controller
     {
         $this->authorize('view', $santri);
 
-        $santri->load(['creator', 'guardians', 'room', 'documents']);
+        $santri->loadMissing(['creator', 'guardians', 'room', 'documents']);
 
         $currentUser = request()->user();
 
@@ -613,7 +613,7 @@ class SantriManagementController extends Controller
         $this->authorize('view', $santri);
 
         return view('attendance.scan.card', [
-            'santri' => $santri->load('room'),
+            'santri' => $santri->loadMissing('room'),
         ]);
     }
 

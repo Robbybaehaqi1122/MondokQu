@@ -77,7 +77,7 @@ class PengumumanController extends Controller
             abort(403);
         }
 
-        $ppdbPengumuman->load(['gelombang', 'creator']);
+        $ppdbPengumuman->loadMissing(['gelombang', 'creator']);
 
         $pendaftarans = PpdbPendaftaran::withoutTenantScope()
             ->where('tenant_id', $ppdbPengumuman->tenant_id)

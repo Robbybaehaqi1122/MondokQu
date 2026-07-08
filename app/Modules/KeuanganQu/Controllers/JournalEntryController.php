@@ -98,7 +98,7 @@ class JournalEntryController extends Controller
     {
         abort_if($journalEntry->tenant_id !== auth()->user()->tenant_id, 403);
 
-        $journalEntry->load(['details.coaAccount', 'creator', 'approver']);
+        $journalEntry->loadMissing(['details.coaAccount', 'creator', 'approver']);
 
         return view('modules.keuangan-qu.jurnal.show', compact('journalEntry'));
     }

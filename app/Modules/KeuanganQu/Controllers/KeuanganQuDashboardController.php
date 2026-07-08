@@ -67,19 +67,20 @@ class KeuanganQuDashboardController extends Controller
             ->where('period_month', $month)
             ->count();
 
-        $kasAccounts = CoaAccount::withoutTenantScope()
-            ->where('tenant_id', $tenantId)
-            ->where('code', 'like', '1-1%')
-            ->where('is_active', true)
-            ->pluck('id');
-
-        $entryIds = JournalEntry::withoutTenantScope()
-            ->where('tenant_id', $tenantId)
-            ->where('status', 'posted')
-            ->pluck('id');
-
-        $saldoKas = JournalEntryDetail::whereIn('journal_entry_id', $entryIds)
-            ->whereIn('coa_account_id', $kasAccounts)
+        $saldoKas = JournalEntryDetail::query()
+            ->whereIn('journal_entry_id', function ($q) use ($tenantId) {
+                $q->select('id')
+                    ->from('journal_entries')
+                    ->where('tenant_id', $tenantId)
+                    ->where('status', 'posted');
+            })
+            ->whereIn('coa_account_id', function ($q) use ($tenantId) {
+                $q->select('id')
+                    ->from('coa_accounts')
+                    ->where('tenant_id', $tenantId)
+                    ->where('code', 'like', '1-1%')
+                    ->where('is_active', true);
+            })
             ->get()
             ->sum(fn ($d) => $d->debit - $d->kredit);
 

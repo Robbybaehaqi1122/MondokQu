@@ -37,7 +37,7 @@ class ReceiptController extends Controller
             return back()->with('error', 'Kwitansi hanya bisa dicetak untuk jurnal yang sudah diposting.');
         }
 
-        $journalEntry->load(['details.coaAccount', 'creator', 'approver']);
+        $journalEntry->loadMissing(['details.coaAccount', 'creator', 'approver']);
 
         $pdf = Pdf::loadView('exports.pdf.keuangan-qu.kwitansi', [
             'entry' => $journalEntry,
@@ -54,7 +54,7 @@ class ReceiptController extends Controller
             return back()->with('error', 'Kwitansi hanya bisa dicetak untuk jurnal yang sudah diposting.');
         }
 
-        $journalEntry->load(['details.coaAccount', 'creator', 'approver']);
+        $journalEntry->loadMissing(['details.coaAccount', 'creator', 'approver']);
 
         $pdf = Pdf::loadView('exports.pdf.keuangan-qu.kwitansi', [
             'entry' => $journalEntry,

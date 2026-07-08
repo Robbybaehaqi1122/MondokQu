@@ -119,7 +119,7 @@ class UserManagementController extends Controller
         $this->authorize('view', $user);
 
         $currentUser = $request->user();
-        $user->load(['roles', 'creator', 'tenant', 'guardianSantris.room']);
+        $user->loadMissing(['roles', 'creator', 'tenant', 'guardianSantris.room']);
         $canManageTargetUser = $currentUser?->can('update', $user) ?? false;
 
         $guardianSantriOptions = collect();

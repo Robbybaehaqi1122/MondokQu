@@ -93,7 +93,7 @@ class AsetController extends Controller
     {
         abort_if($aset->tenant_id !== auth()->user()->tenant_id, 403);
 
-        $aset->load(['kategori', 'lokasi', 'peminjaman' => function ($q) {
+        $aset->loadMissing(['kategori', 'lokasi', 'peminjaman' => function ($q) {
             $q->orderByDesc('created_at')->limit(10);
         }]);
 

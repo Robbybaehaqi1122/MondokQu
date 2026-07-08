@@ -59,7 +59,7 @@ class PengajarController extends Controller
             abort(403);
         }
 
-        $pengajar->load('jadwals');
+        $pengajar->loadMissing('jadwals');
 
         return view('modules.kepengurusan-qu.pengajar.show', compact('pengajar'));
     }
