@@ -7,6 +7,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\Room;
 use App\Models\Santri;
+use App\Services\AttendanceService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
@@ -15,6 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class AttendanceDashboardController extends Controller
 {
+    public function __construct(
+        protected AttendanceService $attendanceService
+    ) {}
+
     public function index(Request $request): View
     {
         $currentUser = $request->user();
@@ -78,26 +83,13 @@ class AttendanceDashboardController extends Controller
             ->groupBy('attendance_records.status')
             ->pluck('total', 'attendance_records.status');
 
-        $attentionSantris = $this->recordBaseQuery($currentUser)
-            ->whereDate('attendance_sessions.session_date', '>=', $today->copy()->subDays(6)->toDateString())
-            ->whereDate('attendance_sessions.session_date', '<=', $today->toDateString())
-            ->whereIn('attendance_records.status', $issueStatuses)
-            ->join('santris as attention_santris', function (JoinClause $join): void {
-                $join
-                    ->on('attendance_records.santri_id', '=', 'attention_santris.id')
-                    ->on('attendance_records.tenant_id', '=', 'attention_santris.tenant_id');
-            })
-            ->select('attention_santris.id', 'attention_santris.full_name', 'attention_santris.nis')
-            ->selectRaw('COUNT(*) as issue_total')
-            ->selectRaw('SUM(CASE WHEN attendance_records.status = ? THEN 1 ELSE 0 END) as permission_count', [AttendanceRecord::STATUS_PERMISSION])
-            ->selectRaw('SUM(CASE WHEN attendance_records.status = ? THEN 1 ELSE 0 END) as sick_count', [AttendanceRecord::STATUS_SICK])
-            ->selectRaw('SUM(CASE WHEN attendance_records.status = ? THEN 1 ELSE 0 END) as absent_count', [AttendanceRecord::STATUS_ABSENT])
-            ->selectRaw('SUM(CASE WHEN attendance_records.status = ? THEN 1 ELSE 0 END) as late_count', [AttendanceRecord::STATUS_LATE])
-            ->groupBy('attention_santris.id', 'attention_santris.full_name', 'attention_santris.nis')
-            ->orderByDesc('issue_total')
-            ->orderByDesc('absent_count')
-            ->limit(8)
-            ->get();
+        $attentionSantris = $this->attendanceService->attentionSantris(
+            query: $this->recordBaseQuery($currentUser)
+                ->whereDate('attendance_sessions.session_date', '>=', $today->copy()->subDays(6)->toDateString())
+                ->whereDate('attendance_sessions.session_date', '<=', $today->toDateString()),
+            issueStatuses: $issueStatuses,
+            limit: 8,
+        );
 
         $sessionsNeedingInput = $todaySessions->filter(
             fn (AttendanceSession $session): bool => $session->status !== AttendanceSession::STATUS_COMPLETED
