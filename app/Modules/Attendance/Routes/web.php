@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage absensi', 'throttle:60,1'])->group(function () {
     Route::prefix('absen')->name('attendance.')->group(function () {
         Route::get('/', [AttendanceDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/api/dashboard', [AttendanceDashboardController::class, 'api'])->name('api.dashboard');
 
         Route::get('/kegiatan', [AttendanceActivityController::class, 'index'])->name('activities.index');
         Route::post('/kegiatan', [AttendanceActivityController::class, 'store'])->name('activities.store');

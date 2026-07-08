@@ -68,7 +68,7 @@
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <div>
                         <div class="text-uppercase text-secondary small">Total Santri</div>
-                        <div class="fs-2 fw-bold">{{ number_format($activeSantriCount) }}</div>
+                        <div class="fs-2 fw-bold" id="stat-total-santri">{{ number_format($activeSantriCount) }}</div>
                     </div>
                     <span class="avatar bg-primary-lt text-primary">
                         <i class="ti ti-users"></i>
@@ -81,7 +81,7 @@
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <div>
                         <div class="text-uppercase text-secondary small">Sudah Absen</div>
-                        <div class="fs-2 fw-bold text-success">{{ number_format($attendedCount) }}</div>
+                        <div class="fs-2 fw-bold text-success" id="stat-sudah-absen">{{ number_format($attendedCount) }}</div>
                     </div>
                     <span class="avatar bg-success-lt text-success">
                         <i class="ti ti-check"></i>
@@ -94,7 +94,7 @@
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <div>
                         <div class="text-uppercase text-secondary small">Belum Absen</div>
-                        <div class="fs-2 fw-bold {{ $notAttendedCount > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($notAttendedCount) }}</div>
+                        <div class="fs-2 fw-bold {{ $notAttendedCount > 0 ? 'text-danger' : 'text-success' }}" id="stat-belum-absen">{{ number_format($notAttendedCount) }}</div>
                     </div>
                     <span class="avatar bg-warning-lt text-warning">
                         <i class="ti ti-clock"></i>
@@ -107,7 +107,7 @@
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <div>
                         <div class="text-uppercase text-secondary small">% Kehadiran</div>
-                        <div class="fs-2 fw-bold {{ $attendancePercentage >= 90 ? 'text-success' : ($attendancePercentage >= 75 ? 'text-warning' : 'text-danger') }}">
+                        <div class="fs-2 fw-bold {{ $attendancePercentage >= 90 ? 'text-success' : ($attendancePercentage >= 75 ? 'text-warning' : 'text-danger') }}" id="stat-kehadiran">
                             {{ number_format($attendancePercentage, 1) }}%
                         </div>
                     </div>
@@ -126,7 +126,7 @@
                     <div class="d-flex align-items-center justify-content-between gap-3">
                         <div>
                             <div class="text-uppercase text-secondary small">{{ $statusItem['label'] }}</div>
-                            <div class="fs-2 fw-bold">{{ number_format($statusItem['count']) }}</div>
+                            <div class="fs-2 fw-bold" id="status-count-{{ $statusItem['value'] }}">{{ number_format($statusItem['count']) }}</div>
                         </div>
                         <span class="badge {{ $recordBadgeClasses[$statusItem['value']] ?? 'bg-secondary-lt text-secondary' }}">
                             {{ $statusItem['label'] }}
@@ -146,9 +146,11 @@
                             <h3 class="card-title">Sesi Hari Ini</h3>
                             <div class="text-secondary small mt-2">
                                 Pantau progres input absensi untuk semua sesi hari ini.
+                                <span id="dashboard-stats-info">
                                 @if ($dashboardStats['open_sessions'] > 0 || $dashboardStats['needs_input'] > 0)
                                     <span class="badge bg-blue-lt text-blue ms-1">{{ $dashboardStats['open_sessions'] }} dibuka, {{ $dashboardStats['needs_input'] }} perlu input</span>
                                 @endif
+                                </span>
                             </div>
                         </div>
                         <a href="{{ route('attendance.sessions.index', ['date_from' => $today->toDateString(), 'date_to' => $today->toDateString()]) }}" class="btn btn-outline-secondary btn-sm">
@@ -168,7 +170,7 @@
                                 <th class="w-1">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="today-sessions-tbody">
                             @forelse ($todaySessions as $session)
                                 @php
                                     $recordsCount = (int) $session->records_count;
@@ -221,7 +223,7 @@
                 <div class="card-header">
                     <div>
                         <h3 class="card-title">Santri Belum Absen</h3>
-                        <div class="text-secondary small mt-2">
+                        <div class="text-secondary small mt-2" id="not-attended-desc">
                             @if ($notAttendedCount > 0)
                                 {{ number_format($notAttendedCount) }} santri belum tercatat hari ini.
                             @else
@@ -230,7 +232,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="list-group list-group-flush" style="max-height: 320px; overflow-y: auto;">
+                <div class="list-group list-group-flush" style="max-height: 320px; overflow-y: auto;" id="not-attended-list">
                     @forelse ($notAttendedSantris as $santri)
                         <div class="list-group-item">
                             <div class="d-flex align-items-start justify-content-between gap-3">
@@ -284,7 +286,7 @@
                         <th>Total</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="attention-santris-tbody">
                     @forelse ($attentionSantris as $attentionSantri)
                         <tr>
                             <td>
@@ -314,18 +316,145 @@
         if (!indicator) return;
 
         let countdown = 30;
-        indicator.textContent = 'Live \u2022 ' + countdown + 's';
 
         setInterval(function () {
             countdown--;
             if (countdown <= 0) {
                 countdown = 30;
-                indicator.textContent = 'Memperbarui\u2026';
-                indicator.className = 'badge bg-yellow-lt text-yellow ms-1';
-                location.reload();
+                refreshDashboard();
             } else {
                 indicator.textContent = 'Live \u2022 ' + countdown + 's';
             }
         }, 1000);
+
+        const sessionBadgeClasses = {
+            draft: 'bg-secondary-lt text-secondary',
+            open: 'bg-primary-lt text-primary',
+            completed: 'bg-success-lt text-success',
+        };
+
+        const recordBadgeClasses = {
+            present: 'bg-success-lt text-success',
+            permission: 'bg-azure-lt text-azure',
+            sick: 'bg-warning-lt text-warning',
+            absent: 'bg-danger-lt text-danger',
+            late: 'bg-orange-lt text-orange',
+        };
+
+        function nf(n) {
+            return n.toLocaleString('en-US');
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        async function refreshDashboard() {
+            indicator.textContent = 'Memperbarui\u2026';
+            indicator.className = 'badge bg-yellow-lt text-yellow ms-1';
+
+            try {
+                var params = new URLSearchParams(location.search);
+                var room = params.get('room');
+                var url = '/absen/api/dashboard' + (room ? '?room=' + encodeURIComponent(room) : '');
+                var res = await fetch(url);
+                var data = await res.json();
+
+                updateDashboard(data);
+
+                indicator.textContent = 'Live \u2022 30s';
+                indicator.className = 'badge bg-green-lt text-green ms-1';
+            } catch (e) {
+                indicator.textContent = 'Gagal memperbarui';
+                indicator.className = 'badge bg-red-lt text-red ms-1';
+            }
+        }
+
+        function updateDashboard(data) {
+            document.getElementById('stat-total-santri').textContent = nf(data.activeSantriCount);
+            document.getElementById('stat-sudah-absen').textContent = nf(data.attendedCount);
+
+            var belumEl = document.getElementById('stat-belum-absen');
+            belumEl.textContent = nf(data.notAttendedCount);
+            belumEl.className = 'fs-2 fw-bold ' + (data.notAttendedCount > 0 ? 'text-danger' : 'text-success');
+
+            var pct = data.attendancePercentage;
+            var persenEl = document.getElementById('stat-kehadiran');
+            persenEl.textContent = pct.toFixed(1) + '%';
+            persenEl.className = 'fs-2 fw-bold ' + (pct >= 90 ? 'text-success' : (pct >= 75 ? 'text-warning' : 'text-danger'));
+
+            data.statusSummary.forEach(function (item) {
+                var el = document.getElementById('status-count-' + item.value);
+                if (el) el.textContent = nf(item.count);
+            });
+
+            var ds = data.dashboardStats;
+            var infoEl = document.getElementById('dashboard-stats-info');
+            if (infoEl) {
+                infoEl.innerHTML = (ds.open_sessions > 0 || ds.needs_input > 0)
+                    ? '<span class="badge bg-blue-lt text-blue ms-1">' + ds.open_sessions + ' dibuka, ' + ds.needs_input + ' perlu input</span>'
+                    : '';
+            }
+
+            var tbody = document.getElementById('today-sessions-tbody');
+            if (tbody) {
+                if (data.todaySessions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-secondary">Belum ada sesi absensi untuk hari ini.</td></tr>';
+                } else {
+                    tbody.innerHTML = data.todaySessions.map(function (s) {
+                        var progress = Math.min(100, Math.round((s.records_count / data.activeSantriCount) * 100));
+                        var badgeClass = sessionBadgeClasses[s.status] || 'bg-secondary-lt text-secondary';
+                        var issueBadge = s.issue_records_count > 0
+                            ? '<span class="badge bg-warning-lt text-warning">' + nf(s.issue_records_count) + ' catatan</span>'
+                            : '<span class="text-secondary small">-</span>';
+                        return '<tr>' +
+                            '<td><div class="fw-semibold">' + escapeHtml(s.activity_name || '-') + '</div><div class="text-secondary small">' + escapeHtml(s.activity_time_range || '-') + '</div></td>' +
+                            '<td><span class="badge ' + badgeClass + '">' + escapeHtml(s.status_label) + '</span></td>' +
+                            '<td><div class="d-flex align-items-center gap-2"><div class="progress flex-fill" style="height: 0.45rem;"><div class="progress-bar" style="width: ' + progress + '%"></div></div><span class="small text-secondary text-nowrap">' + s.records_count + '/' + data.activeSantriCount + '</span></div></td>' +
+                            '<td>' + issueBadge + '</td>' +
+                            '<td><a href="' + s.edit_url + '" class="btn btn-outline-primary btn-sm btn-icon" aria-label="Input absensi"><i class="ti ti-clipboard-check"></i></a></td>' +
+                            '</tr>';
+                    }).join('');
+                }
+            }
+
+            var naList = document.getElementById('not-attended-list');
+            if (naList) {
+                if (data.notAttendedSantris.length === 0) {
+                    naList.innerHTML = '<div class="list-group-item text-secondary"><div class="d-flex align-items-center gap-2"><i class="ti ti-check text-success"></i> Semua santri sudah absen hari ini.</div></div>';
+                } else {
+                    naList.innerHTML = data.notAttendedSantris.map(function (s) {
+                        return '<div class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-3"><div class="min-width-0"><div class="fw-semibold text-truncate">' + escapeHtml(s.full_name) + '</div><div class="text-secondary small">NIS ' + (s.nis || '-') + (s.room_name ? ' &middot; ' + escapeHtml(s.room_name) : '') + '</div></div><span class="badge bg-warning-lt text-warning">Belum</span></div></div>';
+                    }).join('');
+                }
+            }
+
+            var naDesc = document.getElementById('not-attended-desc');
+            if (naDesc) {
+                naDesc.textContent = data.notAttendedCount > 0
+                    ? nf(data.notAttendedCount) + ' santri belum tercatat hari ini.'
+                    : 'Semua santri sudah absen hari ini.';
+            }
+
+            var atTbody = document.getElementById('attention-santris-tbody');
+            if (atTbody) {
+                if (data.attentionSantris.length === 0) {
+                    atTbody.innerHTML = '<tr><td colspan="6" class="text-secondary">Belum ada santri yang perlu perhatian dalam 7 hari terakhir.</td></tr>';
+                } else {
+                    atTbody.innerHTML = data.attentionSantris.map(function (s) {
+                        return '<tr>' +
+                            '<td><div class="fw-semibold">' + escapeHtml(s.full_name) + '</div><div class="text-secondary small">NIS ' + (s.nis || '-') + '</div></td>' +
+                            '<td>' + nf(s.permission_count) + '</td>' +
+                            '<td>' + nf(s.sick_count) + '</td>' +
+                            '<td>' + nf(s.absent_count) + '</td>' +
+                            '<td>' + nf(s.late_count) + '</td>' +
+                            '<td class="fw-semibold">' + nf(s.issue_total) + '</td>' +
+                            '</tr>';
+                    }).join('');
+                }
+            }
+        }
     });
 </script>

@@ -12,6 +12,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class AttendanceDashboardController extends Controller
@@ -21,6 +22,57 @@ class AttendanceDashboardController extends Controller
     ) {}
 
     public function index(Request $request): View
+    {
+        return view('attendance.dashboard', $this->getDashboardData($request));
+    }
+
+    public function api(Request $request): JsonResponse
+    {
+        $data = $this->getDashboardData($request);
+
+        return response()->json([
+            'activeSantriCount' => $data['activeSantriCount'],
+            'attendedCount' => $data['attendedCount'],
+            'notAttendedCount' => $data['notAttendedCount'],
+            'attendancePercentage' => $data['attendancePercentage'],
+            'dashboardStats' => $data['dashboardStats'],
+            'statusSummary' => $data['statusSummary']->values(),
+            'todaySessions' => $data['todaySessions']->map(function (AttendanceSession $session): array {
+                return [
+                    'id' => $session->id,
+                    'activity_name' => $session->activity?->name,
+                    'activity_time_range' => $session->activity?->timeRangeLabel(),
+                    'status' => $session->status,
+                    'status_label' => $session->statusLabel(),
+                    'records_count' => (int) $session->records_count,
+                    'issue_records_count' => (int) $session->issue_records_count,
+                    'edit_url' => route('attendance.sessions.records.edit', $session),
+                ];
+            }),
+            'notAttendedSantris' => $data['notAttendedSantris']->map(function (Santri $santri): array {
+                return [
+                    'id' => $santri->id,
+                    'full_name' => $santri->full_name,
+                    'nis' => $santri->nis,
+                    'room_name' => $santri->room?->name,
+                ];
+            }),
+            'attentionSantris' => $data['attentionSantris']->map(function ($santri): array {
+                return [
+                    'full_name' => $santri->full_name,
+                    'nis' => $santri->nis,
+                    'permission_count' => (int) $santri->permission_count,
+                    'sick_count' => (int) $santri->sick_count,
+                    'absent_count' => (int) $santri->absent_count,
+                    'late_count' => (int) $santri->late_count,
+                    'issue_total' => (int) $santri->issue_total,
+                ];
+            }),
+            'sessionsNeedingInput' => $data['sessionsNeedingInput']->map(fn (AttendanceSession $session): int => $session->id)->values(),
+        ]);
+    }
+
+    protected function getDashboardData(Request $request): array
     {
         $currentUser = $request->user();
         $today = today();
@@ -96,7 +148,7 @@ class AttendanceDashboardController extends Controller
                 && (int) $session->records_count < $activeSantriCount
         );
 
-        return view('attendance.dashboard', [
+        return [
             'activeSantriCount' => $activeSantriCount,
             'attendedCount' => $attendedCount,
             'notAttendedCount' => $notAttendedCount,
@@ -121,7 +173,7 @@ class AttendanceDashboardController extends Controller
             ]),
             'today' => $today,
             'todaySessions' => $todaySessions,
-        ]);
+        ];
     }
 
     protected function recordBaseQuery($currentUser): Builder
