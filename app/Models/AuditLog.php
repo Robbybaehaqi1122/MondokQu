@@ -13,6 +13,8 @@ class AuditLog extends Model
 
     public $timestamps = false;
 
+    protected $guarded = [];
+
     protected $fillable = [
         'tenant_id',
         'user_id',
