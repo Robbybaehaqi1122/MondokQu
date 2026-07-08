@@ -89,7 +89,7 @@
             Kami senang mendengar dari Anda  baik tentang fitur, harga, maupun proses aktivasi akun pondok.
         </p>
         <div class="flex flex-wrap gap-3 justify-center">
-            <a href="https://wa.me/6285117511220" target="_blank" rel="noopener"
+            <a href="https://wa.me/{{ config('saas.admin_whatsapp') }}" target="_blank" rel="noopener"
                class="inline-flex items-center gap-2 px-5 py-2.5 text-[.9rem] font-semibold rounded-lg border btn-primary">
                 <i class="ti ti-brand-whatsapp"></i> Hubungi Kami
             </a>

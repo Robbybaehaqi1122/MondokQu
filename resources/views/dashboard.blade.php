@@ -69,7 +69,7 @@
                     </ul>
 
                     <div class="mt-4">
-                        <a href="https://wa.me/6285117511220?text=Halo%20admin%20MondokQu,%20saya%20tertarik%20menggunakan%20aplikasi%20MondokQu.%20Mohon%20informasi%20paket%20langganan." target="_blank" class="btn btn-success">
+                        <a href="https://wa.me/{{ config('saas.admin_whatsapp') }}?text=Halo%20admin%20MondokQu,%20saya%20tertarik%20menggunakan%20aplikasi%20MondokQu.%20Mohon%20informasi%20paket%20langganan." target="_blank" class="btn btn-success">
                             Hubungi Admin via WhatsApp
                         </a>
                     </div>

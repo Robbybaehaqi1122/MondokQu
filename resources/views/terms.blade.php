@@ -106,7 +106,7 @@
             ['num' => '10', 'title' => 'Hubungi Kami', 'content' => '
                 <p>Jika Anda memiliki pertanyaan terkait syarat dan ketentuan ini, silakan hubungi kami melalui:</p>
                 <ul class="list-disc pl-5 mt-3 flex flex-col gap-1">
-                    <li>WhatsApp: <a href="https://wa.me/6285117511220" target="_blank" rel="noopener" style="color:var(--c-accent);">+62 851-1751-1220</a></li>
+                    <li>WhatsApp: <a href="https://wa.me/{{ config('saas.admin_whatsapp') }}" target="_blank" rel="noopener" style="color:var(--c-accent);">+62 851-1751-1220</a></li>
                 </ul>
             '],
         ];

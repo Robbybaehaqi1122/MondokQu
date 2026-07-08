@@ -655,7 +655,7 @@
                     </a>
                 @endif
                 @if (! $currentUser)
-                    <a href="https://wa.me/6285117511220" target="_blank" rel="noopener"
+                    <a href="https://wa.me/{{ config('saas.admin_whatsapp') }}" target="_blank" rel="noopener"
                        class="inline-flex items-center gap-1.5 px-[1.4rem] py-[.65rem] text-[.925rem] font-semibold rounded-lg border-transparent transition-all duration-150"
                        style="color:var(--c-ink-2);"
                        onmouseover="this.style.background='var(--c-bg-3)';this.style.color='var(--c-ink)'"

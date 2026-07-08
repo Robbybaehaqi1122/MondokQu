@@ -54,6 +54,6 @@ class NotificationController extends Controller
             return route('dashboard', absolute: false);
         }
 
-        return $url;
+        return url($url);
     }
 }

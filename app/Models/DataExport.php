@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Support\Carbon;
 
 class DataExport extends Model
 {
+    use BelongsToTenant;
     public const TYPE_SANTRI = 'santri';
 
     public const TYPE_SANTRI_INVOICES = 'santri_invoices';

@@ -412,7 +412,7 @@
                         @endif
                     @endauth
                     <li>
-                        <a href="https://wa.me/6285117511220" target="_blank" rel="noopener"
+                        <a href="https://wa.me/{{ config('saas.admin_whatsapp') }}" target="_blank" rel="noopener"
                            class="text-[.84rem] transition-colors duration-150"
                            style="color:var(--c-ink-3);"
                            onmouseover="this.style.color='var(--c-accent)'" onmouseout="this.style.color='var(--c-ink-3)'">

@@ -117,7 +117,7 @@
         <p class="text-[.875rem] leading-[1.8] mb-6" style="color:var(--c-ink-3);">
             Tim kami siap membantu. Hubungi kami langsung dan dapatkan jawaban yang sesuai dengan kebutuhan pondok Anda.
         </p>
-        <a href="https://wa.me/6285117511220" target="_blank" rel="noopener"
+        <a href="https://wa.me/{{ config('saas.admin_whatsapp') }}" target="_blank" rel="noopener"
            class="inline-flex items-center gap-2 px-5 py-2.5 text-[.9rem] font-semibold rounded-lg border btn-primary">
             <i class="ti ti-brand-whatsapp"></i> Chat via WhatsApp
         </a>
