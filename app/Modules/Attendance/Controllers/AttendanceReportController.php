@@ -137,6 +137,8 @@ class AttendanceReportController extends Controller
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'activity' => ['nullable', 'integer'],
+            'status' => ['nullable', 'string', Rule::in(AttendanceRecord::availableStatuses())],
+            'santri' => ['nullable', 'integer'],
             'room' => ['nullable', 'integer'],
         ]);
 
@@ -146,6 +148,8 @@ class AttendanceReportController extends Controller
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
             'activity' => filled($validated['activity'] ?? null) ? (string) $validated['activity'] : '',
+            'status' => filled($validated['status'] ?? null) ? (string) $validated['status'] : '',
+            'santri' => filled($validated['santri'] ?? null) ? (string) $validated['santri'] : '',
             'room' => filled($validated['room'] ?? null) ? (string) $validated['room'] : '',
         ];
 
@@ -170,6 +174,8 @@ class AttendanceReportController extends Controller
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'activity' => ['nullable', 'integer'],
+            'status' => ['nullable', 'string', Rule::in(AttendanceRecord::availableStatuses())],
+            'santri' => ['nullable', 'integer'],
             'room' => ['nullable', 'integer'],
         ]);
 
@@ -179,6 +185,8 @@ class AttendanceReportController extends Controller
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
             'activity' => filled($validated['activity'] ?? null) ? (string) $validated['activity'] : '',
+            'status' => filled($validated['status'] ?? null) ? (string) $validated['status'] : '',
+            'santri' => filled($validated['santri'] ?? null) ? (string) $validated['santri'] : '',
             'room' => filled($validated['room'] ?? null) ? (string) $validated['room'] : '',
         ];
 
@@ -262,6 +270,11 @@ class AttendanceReportController extends Controller
             $santriQuery->where('room_id', $roomId);
         }
 
+        $santriId = filled($filters['santri'] ?? null) ? (int) $filters['santri'] : null;
+        if ($santriId) {
+            $santriQuery->where('id', $santriId);
+        }
+
         $santris = $santriQuery->get(['id', 'full_name', 'nis', 'room_id']);
         $santriIds = $santris->pluck('id');
 
@@ -277,6 +290,7 @@ class AttendanceReportController extends Controller
             ->whereDate('attendance_sessions.session_date', '>=', $dateFrom)
             ->whereDate('attendance_sessions.session_date', '<=', $dateTo)
             ->when(filled($filters['activity'] ?? null), fn ($q) => $q->where('attendance_sessions.attendance_activity_id', (int) $filters['activity']))
+            ->when(filled($filters['status'] ?? null), fn ($q) => $q->where('attendance_records.status', $filters['status']))
             ->groupBy('attendance_records.santri_id', 'attendance_records.status')
             ->get()
             ->groupBy('santri_id');
