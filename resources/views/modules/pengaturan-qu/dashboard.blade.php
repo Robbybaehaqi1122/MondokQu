@@ -67,17 +67,6 @@
                             </a>
                         </div>
                         <div class="col-md-4">
-                            <a href="{{ route('branding.edit') }}" class="card card-link card-hover">
-                                <div class="card-body text-center p-4">
-                                    <span class="avatar avatar-lg mb-3 bg-warning-lt">
-                                        <i class="ti ti-palette fs-2"></i>
-                                    </span>
-                                    <h4>Branding</h4>
-                                    <p class="text-secondary mb-0 small">Ubah logo, favicon, warna tema</p>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
                             <a href="#" class="card card-link card-hover disabled" style="opacity: 0.5; pointer-events: none;">
                                 <div class="card-body text-center p-4">
                                     <span class="avatar avatar-lg mb-3 bg-secondary-lt">

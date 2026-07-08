@@ -683,10 +683,6 @@
                                 <span class="sidebar-link-icon"><i class="ti ti-article"></i></span>
                                 <span>Blog</span>
                             </a>
-                            <a class="sidebar-sublink {{ request()->routeIs('branding.*') ? 'active' : '' }}" href="{{ route('branding.edit') }}">
-                                <span class="sidebar-link-icon"><i class="ti ti-palette"></i></span>
-                                <span>Branding</span>
-                            </a>
                         </div>
                     </details>
                 @endif
