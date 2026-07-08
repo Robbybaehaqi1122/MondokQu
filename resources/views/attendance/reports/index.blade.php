@@ -292,9 +292,25 @@
                 </table>
             </div>
 
-            @if ($records->hasPages())
+            @if ($records->hasPages() || true)
                 <div class="card-footer">
-                    {{ $records->links() }}
+                    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                        <div>
+                            @if ($records->hasPages())
+                                {{ $records->links() }}
+                            @endif
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('attendance.reports.export-detail', ['xlsx'] + request()->query()) }}" class="btn btn-outline-success">
+                                <i class="ti ti-file-spreadsheet me-1"></i>
+                                Excel
+                            </a>
+                            <a href="{{ route('attendance.reports.export-detail', ['csv'] + request()->query()) }}" class="btn btn-outline-secondary">
+                                <i class="ti ti-file-text me-1"></i>
+                                CSV
+                            </a>
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>
@@ -376,6 +392,14 @@
                         <i class="ti ti-printer me-1"></i>
                         Cetak
                     </button>
+                    <a href="{{ route('attendance.reports.export-rekap', ['xlsx'] + request()->query()) }}" class="btn btn-outline-success">
+                        <i class="ti ti-file-spreadsheet me-1"></i>
+                        Excel
+                    </a>
+                    <a href="{{ route('attendance.reports.export-rekap', ['csv'] + request()->query()) }}" class="btn btn-outline-secondary">
+                        <i class="ti ti-file-text me-1"></i>
+                        CSV
+                    </a>
                     <a href="{{ route('attendance.reports.pdf', request()->query()) }}" class="btn btn-primary">
                         <i class="ti ti-file-download me-1"></i>
                         Export PDF

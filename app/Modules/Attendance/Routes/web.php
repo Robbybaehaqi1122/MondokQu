@@ -19,6 +19,8 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 
         Route::get('/laporan', [AttendanceReportController::class, 'index'])->name('reports.index');
         Route::get('/laporan/pdf', [AttendanceReportController::class, 'exportPdf'])->name('reports.pdf');
+        Route::get('/laporan/rekap/export/{format}', [AttendanceReportController::class, 'exportRekap'])->name('reports.export-rekap')->whereIn('format', ['xlsx', 'csv']);
+        Route::get('/laporan/detail/export/{format}', [AttendanceReportController::class, 'exportDetail'])->name('reports.export-detail')->whereIn('format', ['xlsx', 'csv']);
 
         Route::get('/sesi', [AttendanceSessionController::class, 'index'])->name('sessions.index');
         Route::post('/sesi', [AttendanceSessionController::class, 'store'])->name('sessions.store');

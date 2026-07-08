@@ -2,6 +2,8 @@
 
 namespace App\Modules\Attendance\Controllers;
 
+use App\Exports\AttendanceDetailExport;
+use App\Exports\AttendanceRekapExport;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceActivity;
 use App\Models\AttendanceRecord;
@@ -17,6 +19,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Excel as ExcelWriter;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceReportController extends Controller
 {
@@ -153,6 +157,68 @@ class AttendanceReportController extends Controller
         ]);
 
         return $pdf->download("rekap-absensi-{$monthName}.pdf");
+    }
+
+    public function exportRekap(Request $request, string $format)
+    {
+        $currentUser = $request->user();
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'activity' => ['nullable', 'integer'],
+            'room' => ['nullable', 'integer'],
+        ]);
+
+        $dateTo = $validated['date_to'] ?? ($validated['date_from'] ?? now()->toDateString());
+        $dateFrom = $validated['date_from'] ?? Carbon::parse($dateTo)->startOfMonth()->toDateString();
+        $filters = [
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'activity' => filled($validated['activity'] ?? null) ? (string) $validated['activity'] : '',
+            'room' => filled($validated['room'] ?? null) ? (string) $validated['room'] : '',
+        ];
+
+        $rekapData = $this->getRekapData($currentUser, $filters);
+
+        $export = new AttendanceRekapExport($currentUser, $rekapData['rekap'], $dateFrom, $dateTo);
+        $writerType = $format === 'csv' ? ExcelWriter::CSV : ExcelWriter::XLSX;
+        $extension = $format === 'csv' ? '.csv' : '.xlsx';
+
+        return Excel::download($export, $export->filename().$extension, $writerType);
+    }
+
+    public function exportDetail(Request $request, string $format)
+    {
+        $currentUser = $request->user();
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'activity' => ['nullable', 'integer'],
+            'status' => ['nullable', 'string', Rule::in(AttendanceRecord::availableStatuses())],
+            'santri' => ['nullable', 'integer'],
+            'room' => ['nullable', 'integer'],
+        ]);
+
+        $dateTo = $validated['date_to'] ?? ($validated['date_from'] ?? now()->toDateString());
+        $dateFrom = $validated['date_from'] ?? Carbon::parse($dateTo)->startOfMonth()->toDateString();
+        $filters = [
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'activity' => filled($validated['activity'] ?? null) ? (string) $validated['activity'] : '',
+            'status' => filled($validated['status'] ?? null) ? (string) $validated['status'] : '',
+            'santri' => filled($validated['santri'] ?? null) ? (string) $validated['santri'] : '',
+            'room' => filled($validated['room'] ?? null) ? (string) $validated['room'] : '',
+        ];
+
+        $query = $this->filteredRecordsQuery($currentUser, $filters)
+            ->orderByDesc('attendance_sessions.session_date')
+            ->orderBy('attendance_records.id');
+
+        $export = new AttendanceDetailExport($currentUser, $query);
+        $writerType = $format === 'csv' ? ExcelWriter::CSV : ExcelWriter::XLSX;
+        $extension = $format === 'csv' ? '.csv' : '.xlsx';
+
+        return Excel::download($export, $export->filename().$extension, $writerType);
     }
 
     protected function renderRekapView($currentUser, array $filters, $activityOptions, $santriOptions, $roomOptions, string $viewMode): View
