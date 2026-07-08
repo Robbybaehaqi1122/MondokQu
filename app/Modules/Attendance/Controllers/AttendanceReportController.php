@@ -275,7 +275,7 @@ class AttendanceReportController extends Controller
             $santriQuery->where('id', $santriId);
         }
 
-        $santris = $santriQuery->get(['id', 'full_name', 'nis', 'room_id']);
+        $santris = $santriQuery->with('room')->get(['id', 'full_name', 'nis', 'room_id']);
         $santriIds = $santris->pluck('id');
 
         $records = AttendanceRecord::query()
