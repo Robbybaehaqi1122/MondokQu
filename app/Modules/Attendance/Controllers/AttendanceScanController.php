@@ -28,7 +28,7 @@ class AttendanceScanController extends Controller
             ->visibleTo($currentUser)
             ->with('activity')
             ->whereDate('session_date', now())
-            ->where('status', '!=', AttendanceSession::STATUS_COMPLETED)
+            ->where('status', AttendanceSession::STATUS_OPEN)
             ->orderBy('session_date')
             ->get();
 
@@ -128,8 +128,8 @@ class AttendanceScanController extends Controller
             ->visibleTo($currentUser)
             ->findOrFail($validated['session_id']);
 
-        if ($session->status === AttendanceSession::STATUS_COMPLETED) {
-            return back()->with('error', 'Sesi absensi sudah selesai, tidak bisa menambahkan data.');
+        if ($session->status !== AttendanceSession::STATUS_OPEN) {
+            return back()->with('error', 'Sesi absensi belum dibuka atau sudah selesai.');
         }
 
         $santri = Santri::query()
