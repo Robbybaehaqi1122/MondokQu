@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
+use Stevebauman\Purify\Casts\PurifyHtmlOnSet;
 
 class Blog extends Model
 {
@@ -30,6 +31,7 @@ class Blog extends Model
         return [
             'is_published' => 'boolean',
             'published_at' => 'datetime',
+            'content' => PurifyHtmlOnSet::class.':blog',
         ];
     }
 

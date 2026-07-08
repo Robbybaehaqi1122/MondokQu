@@ -44,7 +44,7 @@
                         @endif
 
                         <div class="blog-content fs-5" style="line-height: 1.8; color: var(--c-ink);">
-                            {!! $blog->content !!}
+                            {!! \Purify::config('blog')->clean($blog->content) !!}
                         </div>
                     </article>
 

@@ -258,25 +258,47 @@ class TenantBackupService
 
         $total = count($insertStatements);
         $restored = 0;
+        $validTables = $this->getTenantTables();
 
         Log::info('Starting restore', [
             'backup_id' => $backup->id,
             'statements_total' => count($statements),
             'insert_statements' => $total,
             'setup_statements' => count($setupStatements),
+            'valid_tables' => $validTables,
         ]);
 
+        $allowedSetup = [
+            'SET FOREIGN_KEY_CHECKS = 0',
+            'SET FOREIGN_KEY_CHECKS = 1',
+            "SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO'",
+        ];
+
         foreach ($setupStatements as $statement) {
+            if (! in_array(trim($statement), $allowedSetup, true)) {
+                Log::warning('Blocked unrecognized setup statement during restore', [
+                    'backup_id' => $backup->id,
+                    'statement' => substr($statement, 0, 200),
+                ]);
+                throw new \RuntimeException('Setup statement tidak dikenal: '.substr($statement, 0, 100));
+            }
             DB::unprepared($statement);
         }
 
         foreach ($insertStatements as $index => $statement) {
-            preg_match("/INSERT INTO `(\w+)`/", $statement, $matches);
-            if (! isset($matches[1])) {
+            if (! preg_match("/INSERT INTO `(\w+)`/", $statement, $matches)) {
                 continue;
             }
 
             $table = $matches[1];
+
+            if (! in_array($table, $validTables, true)) {
+                Log::warning('Blocked INSERT into unknown table during restore', [
+                    'backup_id' => $backup->id,
+                    'table' => $table,
+                ]);
+                throw new \RuntimeException("Tabel '{$table}' tidak dikenal dalam skema tenant.");
+            }
 
             if ($onProgress) {
                 $progress = $total > 0 ? (int) round(($index + 1) / $total * 100) : 100;
