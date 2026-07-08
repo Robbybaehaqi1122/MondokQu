@@ -216,7 +216,15 @@ function cariBarcode() {
                 tampilkanSantri(data.santri);
                 document.getElementById('scan-result').innerHTML = '<div class="alert alert-success py-2 mb-0"><i class="ti ti-check"></i> Santri ditemukan!</div>';
             } else {
-                document.getElementById('scan-result').innerHTML = '<div class="alert alert-danger py-2 mb-0"><i class="ti ti-alert-triangle"></i> ' + data.message + '</div>';
+                var resultEl = document.getElementById('scan-result');
+                resultEl.innerHTML = '';
+                var alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger py-2 mb-0';
+                var icon = document.createElement('i');
+                icon.className = 'ti ti-alert-triangle';
+                alertDiv.appendChild(icon);
+                alertDiv.appendChild(document.createTextNode(' ' + data.message));
+                resultEl.appendChild(alertDiv);
                 sembunyikanPanel();
             }
         })
@@ -239,27 +247,50 @@ document.getElementById('input-nama').addEventListener('input', function() {
                     fetch('{{ route("attendance.scan.search-name") }}?q=' + encodeURIComponent(q))
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
-                            var html = '';
+                            var container = document.getElementById('search-results');
+                            container.innerHTML = '';
                             if (data.santris.length === 0) {
-                                html = '<div class="text-secondary small mt-2">Tidak ada santri ditemukan.</div>';
+                                var emptyDiv = document.createElement('div');
+                                emptyDiv.className = 'text-secondary small mt-2';
+                                emptyDiv.textContent = 'Tidak ada santri ditemukan.';
+                                container.appendChild(emptyDiv);
                             } else {
-                                html = '<div class="list-group mt-2" style="max-height:250px;overflow-y:auto;">';
+                                var listGroup = document.createElement('div');
+                                listGroup.className = 'list-group mt-2';
+                                listGroup.style.maxHeight = '250px';
+                                listGroup.style.overflowY = 'auto';
                                 data.santris.forEach(function(s) {
-                                    var initial = s.full_name.charAt(0).toUpperCase();
-                                    html += '<a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3" data-santri=\'' + JSON.stringify(s).replace(/'/g, "&#39;") + '\'>';
-                                    html += '<span class="avatar avatar-sm" style="background:var(--tblr-primary);color:#fff;">' + initial + '</span>';
-                                    html += '<div><div class="fw-semibold">' + s.full_name + '</div><div class="text-secondary small">' + (s.nis ? 'NIS: ' + s.nis : '') + (s.room ? ' &middot; ' + s.room : '') + '</div></div>';
-                                    html += '</a>';
+                                    var link = document.createElement('a');
+                                    link.href = '#';
+                                    link.className = 'list-group-item list-group-item-action d-flex align-items-center gap-3';
+                                    link.setAttribute('data-santri', JSON.stringify(s));
+                                    link.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        tampilkanSantri(JSON.parse(this.getAttribute('data-santri')));
+                                    });
+                                    var avatar = document.createElement('span');
+                                    avatar.className = 'avatar avatar-sm';
+                                    avatar.style.background = 'var(--tblr-primary)';
+                                    avatar.style.color = '#fff';
+                                    avatar.textContent = s.full_name.charAt(0).toUpperCase();
+                                    link.appendChild(avatar);
+                                    var textDiv = document.createElement('div');
+                                    var nameDiv = document.createElement('div');
+                                    nameDiv.className = 'fw-semibold';
+                                    nameDiv.textContent = s.full_name;
+                                    textDiv.appendChild(nameDiv);
+                                    var detailDiv = document.createElement('div');
+                                    detailDiv.className = 'text-secondary small';
+                                    var parts = [];
+                                    if (s.nis) parts.push('NIS: ' + s.nis);
+                                    if (s.room) parts.push(s.room);
+                                    detailDiv.textContent = parts.join(' \u00B7 ');
+                                    textDiv.appendChild(detailDiv);
+                                    link.appendChild(textDiv);
+                                    listGroup.appendChild(link);
                                 });
-                                html += '</div>';
+                                container.appendChild(listGroup);
                             }
-                            document.getElementById('search-results').innerHTML = html;
-                            document.querySelectorAll('[data-santri]').forEach(function(el) {
-                                el.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    tampilkanSantri(JSON.parse(this.dataset.santri));
-                                });
-                            });
                         });
                 }, 300);
 });
@@ -277,16 +308,33 @@ function tampilkanSantri(data) {
 
     var photoUrl = data.photo_url;
     var avatarEl = document.getElementById('santri-avatar');
+    avatarEl.innerHTML = '';
+    avatarEl.style.background = 'transparent';
     if (photoUrl) {
-        avatarEl.style.background = 'transparent';
-        avatarEl.innerHTML = '<img src="' + photoUrl + '" alt="' + data.full_name + '" style="width:96px;height:96px;border-radius:50%;object-fit:cover;">';
+        var img = document.createElement('img');
+        img.src = photoUrl;
+        img.alt = data.full_name;
+        img.style.cssText = 'width:96px;height:96px;border-radius:50%;object-fit:cover;';
+        avatarEl.appendChild(img);
     } else {
         avatarEl.style.background = 'var(--tblr-primary)';
-        avatarEl.innerHTML = data.full_name.charAt(0).toUpperCase();
+        avatarEl.textContent = data.full_name.charAt(0).toUpperCase();
     }
 
     document.getElementById('santri-name').textContent = data.full_name;
-    document.getElementById('santri-detail').innerHTML = (data.nis ? 'NIS: ' + data.nis + '<br>' : '') + (data.room ? 'Kamar: ' + data.room : '') + (data.gender_label ? '<br>' + data.gender_label : '');
+    var detailEl = document.getElementById('santri-detail');
+    detailEl.innerHTML = '';
+    if (data.nis) {
+        detailEl.appendChild(document.createTextNode('NIS: ' + data.nis));
+        detailEl.appendChild(document.createElement('br'));
+    }
+    if (data.room) {
+        detailEl.appendChild(document.createTextNode('Kamar: ' + data.room));
+        detailEl.appendChild(document.createElement('br'));
+    }
+    if (data.gender_label) {
+        detailEl.appendChild(document.createTextNode(data.gender_label));
+    }
 
     var sessionRadio = document.querySelector('.session-radio:checked');
     if (sessionRadio) {
