@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class Backup extends Model
@@ -99,32 +98,26 @@ class Backup extends Model
 
     public function markProcessing(): void
     {
-        DB::table('backups')->where('id', $this->id)->update([
+        $this->forceFill([
             'status' => self::STATUS_PROCESSING,
             'progress' => 0,
             'error_message' => null,
-        ]);
-
-        $this->status = self::STATUS_PROCESSING;
-        $this->progress = 0;
+        ])->saveQuietly();
     }
 
     public function markProgress(int $progress, ?string $currentTable = null): void
     {
         $clamped = min(max($progress, 0), 100);
 
-        DB::table('backups')->where('id', $this->id)->update([
+        $this->forceFill([
             'progress' => $clamped,
             'current_table' => $currentTable,
-        ]);
-
-        $this->progress = $clamped;
-        $this->current_table = $currentTable;
+        ])->saveQuietly();
     }
 
     public function markCompleted(int $sizeBytes, int $tablesCount, int $totalRows): void
     {
-        DB::table('backups')->where('id', $this->id)->update([
+        $this->forceFill([
             'status' => self::STATUS_COMPLETED,
             'filename' => $this->filename,
             'size_bytes' => $sizeBytes,
@@ -133,24 +126,15 @@ class Backup extends Model
             'progress' => 100,
             'completed_at' => Carbon::now(),
             'error_message' => null,
-        ]);
-
-        $this->status = self::STATUS_COMPLETED;
-        $this->progress = 100;
-        $this->size_bytes = $sizeBytes;
-        $this->tables_count = $tablesCount;
-        $this->total_rows = $totalRows;
-        $this->completed_at = Carbon::now();
+        ])->saveQuietly();
     }
 
     public function markFailed(string $message): void
     {
-        DB::table('backups')->where('id', $this->id)->update([
+        $this->forceFill([
             'status' => self::STATUS_FAILED,
             'error_message' => str($message)->limit(2000)->toString(),
-        ]);
-
-        $this->status = self::STATUS_FAILED;
+        ])->saveQuietly();
     }
 
     public function getFilePath(): string
@@ -197,7 +181,7 @@ class Backup extends Model
             if ($backup->fileExists()) {
                 Storage::disk($backup->disk)->delete($backup->getFilePath());
             }
-            DB::table('backups')->where('id', $backup->id)->delete();
+            $backup->delete();
             $count++;
         }
 

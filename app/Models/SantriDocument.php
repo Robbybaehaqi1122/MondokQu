@@ -23,7 +23,7 @@ class SantriDocument extends Model
 
     public const TYPE_AKTA = 'akta';
 
-    public const TYPE_IjazAH = 'ijazah';
+    public const TYPE_IJAZAH = 'ijazah';
 
     public const TYPE_KTP_AYAH = 'ktp_ayah';
 
@@ -36,7 +36,7 @@ class SantriDocument extends Model
         return [
             self::TYPE_KK => 'Kartu Keluarga',
             self::TYPE_AKTA => 'Akta Kelahiran',
-            self::TYPE_IjazAH => 'Ijazah',
+            self::TYPE_IJAZAH => 'Ijazah',
             self::TYPE_KTP_AYAH => 'KTP Ayah',
             self::TYPE_KTP_IBU => 'KTP Ibu',
             self::TYPE_FOTO => 'Foto Formal',
@@ -48,7 +48,7 @@ class SantriDocument extends Model
         return [
             self::TYPE_KK,
             self::TYPE_AKTA,
-            self::TYPE_IjazAH,
+            self::TYPE_IJAZAH,
         ];
     }
 
