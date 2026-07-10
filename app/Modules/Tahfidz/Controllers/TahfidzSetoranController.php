@@ -191,6 +191,8 @@ class TahfidzSetoranController extends Controller
             ->visibleTo($currentUser)
             ->findOrFail($tahfidzSession->id);
 
+        $this->authorize('update', $session);
+
         DB::transaction(function () use ($session, $validated) {
             $session->update([
                 'session_date' => $validated['session_date'],
@@ -242,6 +244,8 @@ class TahfidzSetoranController extends Controller
         $session = TahfidzSession::query()
             ->visibleTo($currentUser)
             ->findOrFail($tahfidzSession->id);
+
+        $this->authorize('delete', $session);
 
         $santriName = $session->santri?->full_name ?? "Santri #{$session->santri_id}";
 

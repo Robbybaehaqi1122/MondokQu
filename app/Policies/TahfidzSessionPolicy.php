@@ -32,6 +32,34 @@ class TahfidzSessionPolicy
             return Response::deny('Akun Anda belum terhubung ke tenant pondok.');
         }
 
+        return $user->can('manage tahfidz')
+            ? Response::allow()
+            : Response::deny('Anda tidak memiliki akses untuk membuat setoran hafalan.');
+    }
+
+    public function update(User $user, TahfidzSession $session): Response
+    {
+        if (! $user->can('manage tahfidz')) {
+            return Response::deny('Anda tidak memiliki akses untuk mengubah setoran hafalan.');
+        }
+
+        if (! $user->isSuperAdmin() && (! $user->tenant_id || ! $session->tenant_id || $user->tenant_id !== $session->tenant_id)) {
+            return Response::deny('Anda tidak dapat mengubah setoran hafalan dari tenant pondok lain.');
+        }
+
+        return Response::allow();
+    }
+
+    public function delete(User $user, TahfidzSession $session): Response
+    {
+        if (! $user->can('manage tahfidz')) {
+            return Response::deny('Anda tidak memiliki akses untuk menghapus setoran hafalan.');
+        }
+
+        if (! $user->isSuperAdmin() && (! $user->tenant_id || ! $session->tenant_id || $user->tenant_id !== $session->tenant_id)) {
+            return Response::deny('Anda tidak dapat menghapus setoran hafalan dari tenant pondok lain.');
+        }
+
         return Response::allow();
     }
 }
