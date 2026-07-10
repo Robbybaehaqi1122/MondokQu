@@ -26,7 +26,7 @@ class TahfidzDashboardController extends Controller
         $totalSantriWithSetoran = (clone $sessionQuery)->distinct('santri_id')->count('santri_id');
 
         $recentSessions = (clone $sessionQuery)
-            ->with(['santri', 'musyrif'])
+            ->with(['santri', 'musyrif', 'records'])
             ->orderBy('session_date', 'desc')
             ->orderBy('id', 'desc')
             ->limit(10)
