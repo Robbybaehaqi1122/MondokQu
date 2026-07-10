@@ -7,7 +7,7 @@ use App\Modules\Tahfidz\Controllers\TahfidzSetoranController;
 use App\Modules\Tahfidz\Controllers\TahfidzTargetController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage tahfidz'])->prefix('tahfidz')->name('tahfidz.')->group(function () {
+Route::middleware(['auth', 'password_change_required', 'subscription_active', 'verified', 'permission:manage tahfidz', 'throttle:60,1'])->prefix('tahfidz')->name('tahfidz.')->group(function () {
     Route::get('/dashboard', TahfidzDashboardController::class)->name('dashboard');
     Route::get('/setoran', [TahfidzSetoranController::class, 'index'])->name('setoran.index');
     Route::get('/setoran/create', [TahfidzSetoranController::class, 'create'])->name('setoran.create');
