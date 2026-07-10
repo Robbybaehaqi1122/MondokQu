@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class TahfidzTarget extends Model
 {
@@ -78,10 +79,13 @@ class TahfidzTarget extends Model
             ->where('evaluation', TahfidzRecord::EVALUATION_LANCAR);
 
         return match ($this->target_type) {
-            self::TYPE_JUZ => TahfidzSurah::whereIn('id', (clone $recordsQuery)
-                ->select('surah_id')
-                ->distinct()
-            )->distinct('juz')->count('juz'),
+            self::TYPE_JUZ => DB::table('tahfidz_surah_juz')
+                ->whereIn('tahfidz_surah_id', (clone $recordsQuery)
+                    ->select('surah_id')
+                    ->distinct()
+                )
+                ->distinct('juz')
+                ->count('juz'),
 
             self::TYPE_SURAH => (clone $recordsQuery)
                 ->distinct('surah_id')

@@ -4,6 +4,7 @@ namespace Database\Seeders\Tahfidz;
 
 use App\Models\TahfidzSurah;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class TahfidzSurahSeeder extends Seeder
 {
@@ -127,10 +128,37 @@ class TahfidzSurahSeeder extends Seeder
         ];
 
         foreach ($surahs as $surah) {
-            TahfidzSurah::query()->updateOrCreate(
+            $surahModel = TahfidzSurah::query()->updateOrCreate(
                 ['number' => $surah['number']],
                 $surah
             );
+
+            $juzValues = $this->parseJuzRange($surah['juz']);
+
+            foreach ($juzValues as $juz) {
+                DB::table('tahfidz_surah_juz')->updateOrInsert(
+                    ['tahfidz_surah_id' => $surahModel->id, 'juz' => $juz],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+            }
         }
+    }
+
+    /**
+     * Parse juz range string into array of individual juz numbers.
+     *
+     * Examples: '1' => [1], '1-3' => [1, 2, 3], '21-22' => [21, 22]
+     *
+     * @return array<int>
+     */
+    private function parseJuzRange(string $juz): array
+    {
+        if (str_contains($juz, '-')) {
+            [$start, $end] = explode('-', $juz);
+
+            return range((int) $start, (int) $end);
+        }
+
+        return [(int) $juz];
     }
 }
