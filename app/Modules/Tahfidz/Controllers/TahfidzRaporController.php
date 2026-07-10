@@ -6,14 +6,18 @@ use App\Exports\TahfidzRaporPdfExport;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\Santri;
-use App\Models\TahfidzSession;
 use App\Models\TahfidzTarget;
+use App\Services\TahfidzRaporService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class TahfidzRaporController extends Controller
 {
+    public function __construct(
+        protected TahfidzRaporService $raporService
+    ) {}
+
     public function index(Request $request): View
     {
         $currentUser = $request->user();
@@ -41,33 +45,11 @@ class TahfidzRaporController extends Controller
 
         $raporData = null;
         if ($selectedSantri) {
-            $sessions = TahfidzSession::query()
-                ->visibleTo($currentUser)
-                ->with(['records.surah'])
-                ->where('santri_id', $selectedSantri->id)
-                ->when($dateFrom !== '', fn ($query) => $query->whereDate('session_date', '>=', $dateFrom))
-                ->when($dateTo !== '', fn ($query) => $query->whereDate('session_date', '<=', $dateTo))
-                ->orderBy('session_date', 'desc')
-                ->get();
-
-            $totalAyat = 0;
-            $totalLancar = 0;
-            $totalPerluPengulangan = 0;
-            $totalBelumLancar = 0;
-
-            foreach ($sessions as $session) {
-                foreach ($session->records as $record) {
-                    $ayatCount = ($record->verse_end - $record->verse_start) + 1;
-                    $totalAyat += $ayatCount;
-
-                    match ($record->evaluation) {
-                        'lancar' => $totalLancar += $ayatCount,
-                        'perlu_pengulangan' => $totalPerluPengulangan += $ayatCount,
-                        'belum_lancar' => $totalBelumLancar += $ayatCount,
-                        default => null,
-                    };
-                }
-            }
+            $raporStats = $this->raporService->buildRaporForSantri(
+                santriId: $selectedSantri->id,
+                dateFrom: $dateFrom,
+                dateTo: $dateTo
+            );
 
             $targets = TahfidzTarget::query()
                 ->visibleTo($currentUser)
@@ -77,12 +59,12 @@ class TahfidzRaporController extends Controller
 
             $raporData = (object) [
                 'santri' => $selectedSantri,
-                'sessions' => $sessions,
-                'total_sessions' => $sessions->count(),
-                'total_ayat' => $totalAyat,
-                'total_lancar' => $totalLancar,
-                'total_perlu_pengulangan' => $totalPerluPengulangan,
-                'total_belum_lancar' => $totalBelumLancar,
+                'sessions' => $raporStats['sessions'],
+                'total_sessions' => $raporStats['total_sessions'],
+                'total_ayat' => $raporStats['total_ayat'],
+                'total_lancar' => $raporStats['total_lancar'],
+                'total_perlu_pengulangan' => $raporStats['total_perlu_pengulangan'],
+                'total_belum_lancar' => $raporStats['total_belum_lancar'],
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'targets' => $targets,

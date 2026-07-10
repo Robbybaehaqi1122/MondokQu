@@ -4,9 +4,9 @@ namespace App\Exports;
 
 use App\Models\Room;
 use App\Models\Santri;
-use App\Models\TahfidzSession;
 use App\Models\TahfidzTarget;
 use App\Models\User;
+use App\Services\TahfidzRaporService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 
@@ -18,7 +18,10 @@ class TahfidzRaporPdfExport
         protected ?int $roomId = null,
         protected string $dateFrom = '',
         protected string $dateTo = '',
-    ) {}
+        protected ?TahfidzRaporService $raporService = null,
+    ) {
+        $this->raporService = $raporService ?? new TahfidzRaporService;
+    }
 
     public function download(): Response
     {
@@ -89,33 +92,11 @@ class TahfidzRaporPdfExport
             ->with(['guardians', 'room'])
             ->findOrFail($this->santriId);
 
-        $sessions = TahfidzSession::query()
-            ->visibleTo($this->currentUser)
-            ->with(['records.surah', 'musyrif'])
-            ->where('santri_id', $santri->id)
-            ->when($this->dateFrom !== '', fn ($q) => $q->whereDate('session_date', '>=', $this->dateFrom))
-            ->when($this->dateTo !== '', fn ($q) => $q->whereDate('session_date', '<=', $this->dateTo))
-            ->orderBy('session_date', 'desc')
-            ->get();
-
-        $totalAyat = 0;
-        $totalLancar = 0;
-        $totalPerluPengulangan = 0;
-        $totalBelumLancar = 0;
-
-        foreach ($sessions as $session) {
-            foreach ($session->records as $record) {
-                $ayatCount = ($record->verse_end - $record->verse_start) + 1;
-                $totalAyat += $ayatCount;
-
-                match ($record->evaluation) {
-                    'lancar' => $totalLancar += $ayatCount,
-                    'perlu_pengulangan' => $totalPerluPengulangan += $ayatCount,
-                    'belum_lancar' => $totalBelumLancar += $ayatCount,
-                    default => null,
-                };
-            }
-        }
+        $raporStats = $this->raporService->buildRaporForSantri(
+            santriId: $santri->id,
+            dateFrom: $this->dateFrom,
+            dateTo: $this->dateTo
+        );
 
         $targets = TahfidzTarget::query()
             ->visibleTo($this->currentUser)
@@ -125,12 +106,12 @@ class TahfidzRaporPdfExport
 
         return [
             'santri' => $santri,
-            'sessions' => $sessions,
-            'total_sessions' => $sessions->count(),
-            'total_ayat' => $totalAyat,
-            'total_lancar' => $totalLancar,
-            'total_perlu_pengulangan' => $totalPerluPengulangan,
-            'total_belum_lancar' => $totalBelumLancar,
+            'sessions' => $raporStats['sessions'],
+            'total_sessions' => $raporStats['total_sessions'],
+            'total_ayat' => $raporStats['total_ayat'],
+            'total_lancar' => $raporStats['total_lancar'],
+            'total_perlu_pengulangan' => $raporStats['total_perlu_pengulangan'],
+            'total_belum_lancar' => $raporStats['total_belum_lancar'],
             'targets' => $targets,
             'dateFrom' => $this->dateFrom,
             'dateTo' => $this->dateTo,
@@ -153,42 +134,20 @@ class TahfidzRaporPdfExport
         $santriRapors = [];
 
         foreach ($santris as $santri) {
-            $sessions = TahfidzSession::query()
-                ->visibleTo($this->currentUser)
-                ->with(['records.surah'])
-                ->where('santri_id', $santri->id)
-                ->when($this->dateFrom !== '', fn ($q) => $q->whereDate('session_date', '>=', $this->dateFrom))
-                ->when($this->dateTo !== '', fn ($q) => $q->whereDate('session_date', '<=', $this->dateTo))
-                ->orderBy('session_date', 'desc')
-                ->get();
-
-            $totalAyat = 0;
-            $totalLancar = 0;
-            $totalPerluPengulangan = 0;
-            $totalBelumLancar = 0;
-
-            foreach ($sessions as $session) {
-                foreach ($session->records as $record) {
-                    $ayatCount = ($record->verse_end - $record->verse_start) + 1;
-                    $totalAyat += $ayatCount;
-
-                    match ($record->evaluation) {
-                        'lancar' => $totalLancar += $ayatCount,
-                        'perlu_pengulangan' => $totalPerluPengulangan += $ayatCount,
-                        'belum_lancar' => $totalBelumLancar += $ayatCount,
-                        default => null,
-                    };
-                }
-            }
+            $raporStats = $this->raporService->buildRaporForSantri(
+                santriId: $santri->id,
+                dateFrom: $this->dateFrom,
+                dateTo: $this->dateTo
+            );
 
             $santriRapors[] = [
                 'santri' => $santri,
-                'sessions' => $sessions,
-                'total_sessions' => $sessions->count(),
-                'total_ayat' => $totalAyat,
-                'total_lancar' => $totalLancar,
-                'total_perlu_pengulangan' => $totalPerluPengulangan,
-                'total_belum_lancar' => $totalBelumLancar,
+                'sessions' => $raporStats['sessions'],
+                'total_sessions' => $raporStats['total_sessions'],
+                'total_ayat' => $raporStats['total_ayat'],
+                'total_lancar' => $raporStats['total_lancar'],
+                'total_perlu_pengulangan' => $raporStats['total_perlu_pengulangan'],
+                'total_belum_lancar' => $raporStats['total_belum_lancar'],
             ];
         }
 
