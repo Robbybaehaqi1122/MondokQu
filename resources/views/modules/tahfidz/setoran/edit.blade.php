@@ -201,8 +201,16 @@
         const container = document.getElementById('recordsContainer');
         const addBtn = document.getElementById('addRecordBtn');
 
-        const surahOptionsHtml = `@foreach ($surahOptions as $surah)<option value="{{ $surah->id }}">{{ $surah->number }}. {{ $surah->name }}</option>@endforeach`;
-        const evalOptionsHtml = `@foreach ($evaluationOptions as $eval)<option value="{{ $eval }}">{{ ucfirst(str_replace('_', ' ', $eval)) }}</option>@endforeach`;
+        const surahData = @json($surahOptions->map(fn($s) => ['id' => $s->id, 'number' => $s->number, 'name' => $s->name]));
+        const evalData = @json($evaluationOptions);
+
+        function buildSurahOptions() {
+            return surahData.map(s => `<option value="${s.id}">${s.number}. ${s.name}</option>`).join('');
+        }
+
+        function buildEvalOptions() {
+            return evalData.map(e => `<option value="${e}">${e.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>`).join('');
+        }
 
         addBtn.addEventListener('click', () => {
             const div = document.createElement('div');
@@ -213,7 +221,7 @@
                         <label class="form-label">Surah</label>
                         <select name="records[${recordIndex}][surah_id]" class="form-select" required>
                             <option value="">Pilih Surah</option>
-                            ${surahOptionsHtml}
+                            ${buildSurahOptions()}
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -228,7 +236,7 @@
                         <label class="form-label">Penilaian</label>
                         <select name="records[${recordIndex}][evaluation]" class="form-select" required>
                             <option value="">Pilih</option>
-                            ${evalOptionsHtml}
+                            ${buildEvalOptions()}
                         </select>
                     </div>
                 </div>
