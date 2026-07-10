@@ -20,6 +20,8 @@ class MemorizationScheduleController extends Controller
 
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', MemorizationSchedule::class);
+
         $currentUser = $request->user();
         $search = trim((string) $request->string('q'));
         $selectedMusyrif = trim((string) $request->string('musyrif'));
@@ -66,6 +68,8 @@ class MemorizationScheduleController extends Controller
 
     public function create(Request $request): View
     {
+        $this->authorize('create', MemorizationSchedule::class);
+
         $currentUser = $request->user();
 
         $roomOptions = Room::query()
@@ -95,6 +99,8 @@ class MemorizationScheduleController extends Controller
 
     public function store(StoreMemorizationScheduleRequest $request): RedirectResponse
     {
+        $this->authorize('create', MemorizationSchedule::class);
+
         $currentUser = $request->user();
         $validated = $request->validated();
 
@@ -138,6 +144,8 @@ class MemorizationScheduleController extends Controller
             ->visibleTo($currentUser)
             ->findOrFail($memorizationSchedule->id);
 
+        $this->authorize('update', $schedule);
+
         $roomOptions = Room::query()
             ->visibleTo($currentUser)
             ->where('status', Room::STATUS_ACTIVE)
@@ -172,6 +180,8 @@ class MemorizationScheduleController extends Controller
         $schedule = MemorizationSchedule::query()
             ->visibleTo($currentUser)
             ->findOrFail($memorizationSchedule->id);
+
+        $this->authorize('update', $schedule);
 
         $schedule->update([
             'musyrif_id' => $validated['musyrif_id'],
@@ -211,6 +221,8 @@ class MemorizationScheduleController extends Controller
             ->visibleTo($currentUser)
             ->findOrFail($memorizationSchedule->id);
 
+        $this->authorize('update', $schedule);
+
         $schedule->update([
             'is_active' => ! $schedule->is_active,
         ]);
@@ -239,6 +251,8 @@ class MemorizationScheduleController extends Controller
         $schedule = MemorizationSchedule::query()
             ->visibleTo($currentUser)
             ->findOrFail($memorizationSchedule->id);
+
+        $this->authorize('delete', $schedule);
 
         $this->activityLogger->log(
             action: 'memorization_schedule_deleted',

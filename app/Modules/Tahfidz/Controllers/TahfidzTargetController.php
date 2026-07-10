@@ -19,6 +19,8 @@ class TahfidzTargetController extends Controller
 
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', TahfidzTarget::class);
+
         $currentUser = $request->user();
         $search = trim((string) $request->string('q'));
         $selectedSantriId = trim((string) $request->string('santri'));
@@ -57,6 +59,8 @@ class TahfidzTargetController extends Controller
 
     public function create(Request $request): View
     {
+        $this->authorize('create', TahfidzTarget::class);
+
         $currentUser = $request->user();
         $preselectedSantriId = $request->integer('santri_id') ?: null;
 
@@ -75,6 +79,8 @@ class TahfidzTargetController extends Controller
 
     public function store(StoreTahfidzTargetRequest $request): RedirectResponse
     {
+        $this->authorize('create', TahfidzTarget::class);
+
         $currentUser = $request->user();
         $validated = $request->validated();
 
@@ -121,6 +127,8 @@ class TahfidzTargetController extends Controller
             ->with('santri')
             ->findOrFail($tahfidzTarget->id);
 
+        $this->authorize('update', $target);
+
         $santriOptions = Santri::query()
             ->visibleTo($currentUser)
             ->where('status', Santri::STATUS_ACTIVE)
@@ -141,6 +149,8 @@ class TahfidzTargetController extends Controller
         $target = TahfidzTarget::query()
             ->visibleTo($currentUser)
             ->findOrFail($tahfidzTarget->id);
+
+        $this->authorize('update', $target);
 
         $validated = $request->validated();
 
@@ -181,6 +191,8 @@ class TahfidzTargetController extends Controller
         $target = TahfidzTarget::query()
             ->visibleTo($currentUser)
             ->findOrFail($tahfidzTarget->id);
+
+        $this->authorize('delete', $target);
 
         $santriName = $target->santri?->full_name ?? "Santri #{$target->santri_id}";
 
