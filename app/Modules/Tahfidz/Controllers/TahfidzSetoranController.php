@@ -13,6 +13,7 @@ use App\Notifications\NewTahfidzSessionNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TahfidzSetoranController extends Controller
@@ -96,26 +97,30 @@ class TahfidzSetoranController extends Controller
 
         $santri = Santri::findOrFail($validated['santri_id']);
 
-        $session = TahfidzSession::query()->create([
-            'tenant_id' => $santri->tenant_id,
-            'santri_id' => $santri->id,
-            'musyrif_id' => $currentUser->id,
-            'session_date' => $validated['session_date'],
-            'status' => $validated['status'] ?? TahfidzSession::STATUS_COMPLETED,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        foreach ($validated['records'] as $record) {
-            TahfidzRecord::query()->create([
+        $session = DB::transaction(function () use ($validated, $currentUser, $santri) {
+            $session = TahfidzSession::query()->create([
                 'tenant_id' => $santri->tenant_id,
-                'tahfidz_session_id' => $session->id,
-                'surah_id' => $record['surah_id'],
-                'verse_start' => $record['verse_start'],
-                'verse_end' => $record['verse_end'],
-                'evaluation' => $record['evaluation'],
-                'notes' => $record['notes'] ?? null,
+                'santri_id' => $santri->id,
+                'musyrif_id' => $currentUser->id,
+                'session_date' => $validated['session_date'],
+                'status' => $validated['status'] ?? TahfidzSession::STATUS_COMPLETED,
+                'notes' => $validated['notes'] ?? null,
             ]);
-        }
+
+            foreach ($validated['records'] as $record) {
+                TahfidzRecord::query()->create([
+                    'tenant_id' => $santri->tenant_id,
+                    'tahfidz_session_id' => $session->id,
+                    'surah_id' => $record['surah_id'],
+                    'verse_start' => $record['verse_start'],
+                    'verse_end' => $record['verse_end'],
+                    'evaluation' => $record['evaluation'],
+                    'notes' => $record['notes'] ?? null,
+                ]);
+            }
+
+            return $session;
+        });
 
         $santriName = $session->santri?->full_name ?? "Santri #{$session->santri_id}";
 
@@ -186,25 +191,27 @@ class TahfidzSetoranController extends Controller
             ->visibleTo($currentUser)
             ->findOrFail($tahfidzSession->id);
 
-        $session->update([
-            'session_date' => $validated['session_date'],
-            'status' => $validated['status'] ?? TahfidzSession::STATUS_COMPLETED,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        $session->records()->delete();
-
-        foreach ($validated['records'] as $record) {
-            TahfidzRecord::query()->create([
-                'tenant_id' => $session->tenant_id,
-                'tahfidz_session_id' => $session->id,
-                'surah_id' => $record['surah_id'],
-                'verse_start' => $record['verse_start'],
-                'verse_end' => $record['verse_end'],
-                'evaluation' => $record['evaluation'],
-                'notes' => $record['notes'] ?? null,
+        DB::transaction(function () use ($session, $validated) {
+            $session->update([
+                'session_date' => $validated['session_date'],
+                'status' => $validated['status'] ?? TahfidzSession::STATUS_COMPLETED,
+                'notes' => $validated['notes'] ?? null,
             ]);
-        }
+
+            $session->records()->delete();
+
+            foreach ($validated['records'] as $record) {
+                TahfidzRecord::query()->create([
+                    'tenant_id' => $session->tenant_id,
+                    'tahfidz_session_id' => $session->id,
+                    'surah_id' => $record['surah_id'],
+                    'verse_start' => $record['verse_start'],
+                    'verse_end' => $record['verse_end'],
+                    'evaluation' => $record['evaluation'],
+                    'notes' => $record['notes'] ?? null,
+                ]);
+            }
+        });
 
         $santriName = $session->santri?->full_name ?? "Santri #{$session->santri_id}";
 
