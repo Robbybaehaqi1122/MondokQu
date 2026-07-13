@@ -15,27 +15,27 @@
     </x-slot>
 
     <div class="row row-cards mb-3">
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Total Sesi</div>
+                <div class="text-uppercase text-secondary small text-truncate">Total Sesi</div>
                 <div class="fs-2 fw-bold">{{ number_format($sessionStats['total']) }}</div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Draft</div>
+                <div class="text-uppercase text-secondary small text-truncate">Draft</div>
                 <div class="fs-2 fw-bold">{{ number_format($sessionStats['draft']) }}</div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Dibuka</div>
+                <div class="text-uppercase text-secondary small text-truncate">Dibuka</div>
                 <div class="fs-2 fw-bold">{{ number_format($sessionStats['open']) }}</div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Hari Ini</div>
+                <div class="text-uppercase text-secondary small text-truncate">Hari Ini</div>
                 <div class="fs-2 fw-bold">{{ number_format($sessionStats['today']) }}</div>
             </div>
         </div>
@@ -127,14 +127,14 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>Sesi</th>
                         <th>Jadwal</th>
                         <th>Status</th>
-                        <th>Dibuat Oleh</th>
-                        <th>Catatan</th>
+                        <th class="d-none d-md-table-cell">Dibuat Oleh</th>
+                        <th class="d-none d-lg-table-cell">Catatan</th>
                         <th class="w-1">Aksi</th>
                     </tr>
                 </thead>
@@ -160,7 +160,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 @if ($session->creator)
                                     <div>{{ $session->creator->name }}</div>
                                     <div class="text-secondary small">{{ '@'.$session->creator->username }}</div>
@@ -168,7 +168,7 @@
                                     <span class="text-secondary small">-</span>
                                 @endif
                             </td>
-                            <td>
+                            <td class="d-none d-lg-table-cell">
                                 <span class="text-secondary small">{{ $session->notes ?: '-' }}</span>
                             </td>
                             <td>
