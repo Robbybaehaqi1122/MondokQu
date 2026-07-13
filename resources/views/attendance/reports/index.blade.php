@@ -41,53 +41,102 @@
 
     @if ($viewMode === 'rekap')
         <div class="row row-cards mb-3">
-            <div class="col-sm-6 col-lg-4">
-                <div class="card card-body">
-                    <div class="text-uppercase text-secondary small">Total Santri</div>
-                    <div class="fs-2 fw-bold">{{ number_format($rekapStats['total_santri']) }}</div>
+            <div class="col-6 col-lg-4">
+                <div class="card card-body stat-card">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-width-0">
+                            <div class="text-uppercase text-secondary small text-truncate">Total Santri</div>
+                            <div class="fs-2 fw-bold">{{ number_format($rekapStats['total_santri']) }}</div>
+                        </div>
+                        <span class="avatar bg-blue-lt text-blue flex-shrink-0">
+                            <i class="ti ti-users"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-lg-4">
-                <div class="card card-body">
-                    <div class="text-uppercase text-secondary small">Rata-rata Kehadiran</div>
-                    <div class="fs-2 fw-bold">{{ number_format($rekapStats['avg_percentage'], 1) }}%</div>
+            <div class="col-6 col-lg-4">
+                <div class="card card-body stat-card">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-width-0">
+                            <div class="text-uppercase text-secondary small text-truncate">Rata-rata Hadir</div>
+                            <div class="fs-2 fw-bold">{{ number_format($rekapStats['avg_percentage'], 1) }}%</div>
+                        </div>
+                        <span class="avatar bg-green-lt text-green flex-shrink-0">
+                            <i class="ti ti-chart-arcs"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-lg-4">
-                <div class="card card-body">
-                    <div class="text-uppercase text-secondary small">Periode</div>
-                    <div class="fs-2 fw-bold small">
-                        {{ \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d M Y') }}
-                        &mdash;
-                        {{ \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d M Y') }}
+            <div class="col-12 col-lg-4">
+                <div class="card card-body stat-card">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-width-0">
+                            <div class="text-uppercase text-secondary small text-truncate">Periode</div>
+                            <div class="fs-2 fw-bold small">
+                                {{ \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d M Y') }}
+                                &mdash;
+                                {{ \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d M Y') }}
+                            </div>
+                        </div>
+                        <span class="avatar bg-azure-lt text-azure flex-shrink-0">
+                            <i class="ti ti-calendar-range"></i>
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
     @else
         <div class="row row-cards mb-3">
-            <div class="col-sm-6 col-lg-3">
-                <div class="card card-body">
-                    <div class="text-uppercase text-secondary small">Total Absensi</div>
-                    <div class="fs-2 fw-bold">{{ number_format($reportStats['records']) }}</div>
+            <div class="col-6 col-lg-3">
+                <div class="card card-body stat-card">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-width-0">
+                            <div class="text-uppercase text-secondary small text-truncate">Total Absensi</div>
+                            <div class="fs-2 fw-bold">{{ number_format($reportStats['records']) }}</div>
+                        </div>
+                        <span class="avatar bg-blue-lt text-blue flex-shrink-0">
+                            <i class="ti ti-clipboard-list"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="card card-body">
-                    <div class="text-uppercase text-secondary small">Sesi Tercatat</div>
-                    <div class="fs-2 fw-bold">{{ number_format($reportStats['sessions']) }}</div>
+            <div class="col-6 col-lg-3">
+                <div class="card card-body stat-card">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-width-0">
+                            <div class="text-uppercase text-secondary small text-truncate">Sesi Tercatat</div>
+                            <div class="fs-2 fw-bold">{{ number_format($reportStats['sessions']) }}</div>
+                        </div>
+                        <span class="avatar bg-azure-lt text-azure flex-shrink-0">
+                            <i class="ti ti-calendar-event"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="card card-body">
-                    <div class="text-uppercase text-secondary small">Santri Tercatat</div>
-                    <div class="fs-2 fw-bold">{{ number_format($reportStats['santris']) }}</div>
+            <div class="col-6 col-lg-3">
+                <div class="card card-body stat-card">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-width-0">
+                            <div class="text-uppercase text-secondary small text-truncate">Santri Tercatat</div>
+                            <div class="fs-2 fw-bold">{{ number_format($reportStats['santris']) }}</div>
+                        </div>
+                        <span class="avatar bg-green-lt text-green flex-shrink-0">
+                            <i class="ti ti-user-check"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="card card-body">
-                    <div class="text-uppercase text-secondary small">Perlu Perhatian</div>
-                    <div class="fs-2 fw-bold">{{ number_format($reportStats['issues']) }}</div>
+            <div class="col-6 col-lg-3">
+                <div class="card card-body stat-card">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-width-0">
+                            <div class="text-uppercase text-secondary small text-truncate">Perlu Perhatian</div>
+                            <div class="fs-2 fw-bold {{ $reportStats['issues'] > 0 ? 'text-danger' : '' }}">{{ number_format($reportStats['issues']) }}</div>
+                        </div>
+                        <span class="avatar {{ $reportStats['issues'] > 0 ? 'bg-danger-lt text-danger' : 'bg-secondary-lt text-secondary' }} flex-shrink-0">
+                            <i class="ti ti-alert-triangle"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -175,15 +224,15 @@
     @if ($viewMode === 'detail')
         <div class="row row-cards mb-3">
             @foreach ($statusSummary as $statusItem)
-                <div class="col-sm-6 col-lg">
-                    <div class="card card-body">
-                        <div class="d-flex align-items-center justify-content-between gap-3">
-                            <div>
-                                <div class="text-uppercase text-secondary small">{{ $statusItem['label'] }}</div>
+                <div class="col-6 col-sm-4 col-lg">
+                    <div class="card card-body stat-card">
+                        <div class="d-flex align-items-center justify-content-between gap-2">
+                            <div class="min-width-0">
+                                <div class="text-uppercase text-secondary small text-truncate">{{ $statusItem['label'] }}</div>
                                 <div class="fs-2 fw-bold">{{ number_format($statusItem['count']) }}</div>
                             </div>
-                            <span class="badge {{ $recordBadgeClasses[$statusItem['value']] ?? 'bg-secondary-lt text-secondary' }}">
-                                {{ $statusItem['label'] }}
+                            <span class="avatar {{ $recordBadgeClasses[$statusItem['value']] ?? 'bg-secondary-lt text-secondary' }} flex-shrink-0">
+                                {{ strtoupper(substr($statusItem['label'], 0, 1)) }}
                             </span>
                         </div>
                     </div>
@@ -199,7 +248,7 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table table-mobile-md">
                     <thead>
                         <tr>
                             <th>Santri</th>
@@ -241,16 +290,16 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table table-mobile-md">
                     <thead>
                         <tr>
                             <th>Tanggal</th>
                             <th>Kegiatan</th>
                             <th>Santri</th>
-                            <th>Kamar</th>
+                            <th class="d-none d-md-table-cell">Kamar</th>
                             <th>Status</th>
-                            <th>Catatan</th>
-                            <th>Diinput</th>
+                            <th class="d-none d-lg-table-cell">Catatan</th>
+                            <th class="d-none d-md-table-cell">Diinput</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -265,16 +314,16 @@
                                     <div class="fw-semibold">{{ $record->santri?->full_name ?? '-' }}</div>
                                     <div class="text-secondary small">NIS {{ $record->santri?->nis ?? '-' }}</div>
                                 </td>
-                                <td>{{ $record->santri?->displayRoomName() ?? '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $record->santri?->displayRoomName() ?? '-' }}</td>
                                 <td>
                                     <span class="badge {{ $recordBadgeClasses[$record->status] ?? 'bg-secondary-lt text-secondary' }}">
                                         {{ $record->statusLabel() }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="d-none d-lg-table-cell">
                                     <span class="text-secondary small">{{ $record->notes ?: '-' }}</span>
                                 </td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     @if ($record->recorded_at)
                                         <div>{{ $record->recorded_at->translatedFormat('d M Y H:i') }}</div>
                                         <div class="text-secondary small">{{ $record->recorder?->name ?? '-' }}</div>
@@ -354,13 +403,13 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table table-mobile-md">
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Nama Santri</th>
-                            <th>NIS</th>
-                            <th>Kamar</th>
+                            <th class="d-none d-md-table-cell">NIS</th>
+                            <th class="d-none d-md-table-cell">Kamar</th>
                             <th>Hadir</th>
                             <th>Sakit</th>
                             <th>Izin</th>
@@ -378,8 +427,8 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td class="fw-semibold">{{ $item['full_name'] }}</td>
-                                <td>{{ $item['nis'] ?: '-' }}</td>
-                                <td>{{ $item['room_name'] }}</td>
+                                <td class="d-none d-md-table-cell">{{ $item['nis'] ?: '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $item['room_name'] }}</td>
                                 <td>{{ number_format($item['present']) }}</td>
                                 <td>{{ number_format($item['sick']) }}</td>
                                 <td>{{ number_format($item['permission']) }}</td>
