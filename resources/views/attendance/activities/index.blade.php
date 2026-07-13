@@ -14,28 +14,56 @@
     </x-slot>
 
     <div class="row row-cards mb-3">
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Total Kegiatan</div>
-                <div class="fs-2 fw-bold">{{ number_format($activityStats['total']) }}</div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Total Kegiatan</div>
+                        <div class="fs-2 fw-bold">{{ number_format($activityStats['total']) }}</div>
+                    </div>
+                    <span class="avatar bg-blue-lt text-blue flex-shrink-0">
+                        <i class="ti ti-calendar-event"></i>
+                    </span>
+                </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Aktif</div>
-                <div class="fs-2 fw-bold">{{ number_format($activityStats['active']) }}</div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Aktif</div>
+                        <div class="fs-2 fw-bold text-success">{{ number_format($activityStats['active']) }}</div>
+                    </div>
+                    <span class="avatar bg-success-lt text-success flex-shrink-0">
+                        <i class="ti ti-check"></i>
+                    </span>
+                </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Nonaktif</div>
-                <div class="fs-2 fw-bold">{{ number_format($activityStats['inactive']) }}</div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Nonaktif</div>
+                        <div class="fs-2 fw-bold">{{ number_format($activityStats['inactive']) }}</div>
+                    </div>
+                    <span class="avatar bg-secondary-lt text-secondary flex-shrink-0">
+                        <i class="ti ti-x"></i>
+                    </span>
+                </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Aktif Hari Ini</div>
-                <div class="fs-2 fw-bold">{{ number_format($activityStats['today']) }}</div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Hari Ini</div>
+                        <div class="fs-2 fw-bold">{{ number_format($activityStats['today']) }}</div>
+                    </div>
+                    <span class="avatar bg-green-lt text-green flex-shrink-0">
+                        <i class="ti ti-calendar-day"></i>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -50,7 +78,7 @@
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-primary flex-fill flex-md-grow-0"
                     id="open-create-attendance-activity-modal"
                     data-bs-toggle="modal"
                     data-bs-target="#createAttendanceActivityModal"
@@ -90,25 +118,25 @@
                     </select>
                 </div>
                 <div class="col-md-4 col-lg-3">
-                    <div class="d-flex flex-wrap gap-2">
+                    <div class="d-flex flex-column flex-sm-row flex-wrap gap-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="ti ti-filter me-1"></i>
                             Filter
                         </button>
-                        <a href="{{ route('attendance.activities.index') }}" class="btn btn-outline-secondary">Reset</a>
+                        <a href="{{ route('attendance.activities.index') }}" class="btn btn-outline-secondary w-100 w-md-auto">Reset</a>
                     </div>
                 </div>
             </form>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>Kegiatan</th>
                         <th>Jadwal</th>
-                        <th>Hari Aktif</th>
-                        <th>Penanggung Jawab</th>
+                        <th class="d-none d-md-table-cell">Hari Aktif</th>
+                        <th class="d-none d-md-table-cell">Penanggung Jawab</th>
                         <th>Status</th>
                         <th class="w-1">Aksi</th>
                     </tr>
@@ -123,14 +151,14 @@
                                 @endif
                             </td>
                             <td>{{ $activity->timeRangeLabel() }}</td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 <div class="d-flex flex-wrap gap-1">
                                     @foreach ($activity->active_days ?? [] as $activeDay)
                                         <span class="badge bg-blue-lt text-blue">{{ \App\Models\AttendanceActivity::dayLabels()[$activeDay] ?? ucfirst($activeDay) }}</span>
                                     @endforeach
                                 </div>
                             </td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 @if ($activity->responsibleUser)
                                     <div>{{ $activity->responsibleUser->name }}</div>
                                     <div class="text-secondary small">{{ '@'.$activity->responsibleUser->username }}</div>
