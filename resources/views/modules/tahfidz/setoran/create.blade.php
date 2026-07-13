@@ -1,8 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="page-title">Catat Setoran Hafalan</h2>
-            <div class="text-secondary mt-1">Catat setoran hafalan Al-Quran untuk santri.</div>
+        <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-3">
+            <div>
+                <h2 class="page-title">Catat Setoran Hafalan</h2>
+                <div class="text-secondary mt-1">Catat setoran hafalan Al-Quran untuk santri.</div>
+            </div>
         </div>
     </x-slot>
 
@@ -72,7 +74,7 @@
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
-                        <div class="d-flex align-items-center justify-content-between w-100">
+                        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-sm-between gap-2 w-100">
                             <div>
                                 <h3 class="card-title">Ayat yang Disetorkan</h3>
                                 <div class="text-secondary small mt-1">Tambahkan ayat yang disetorkan dalam sesi ini.</div>
@@ -88,7 +90,7 @@
                             @foreach (old('records') as $index => $record)
                                 <div class="record-item border rounded p-3 mb-3">
                                     <div class="row g-2">
-                                        <div class="col-md-5">
+                                        <div class="col-12 col-md-5">
                                             <label class="form-label">Surah</label>
                                             <select name="records[{{ $index }}][surah_id]" class="form-select" required>
                                                 <option value="">Pilih Surah</option>
@@ -102,21 +104,21 @@
                                                 <div class="text-danger small">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <label class="form-label">Ayat Dari</label>
                                             <input type="number" name="records[{{ $index }}][verse_start]" class="form-control" min="1" value="{{ $record['verse_start'] }}" required>
                                             @error("records.{$index}.verse_start")
                                                 <div class="text-danger small">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-6 col-md-2">
                                             <label class="form-label">Sampai</label>
                                             <input type="number" name="records[{{ $index }}][verse_end]" class="form-control" min="1" value="{{ $record['verse_end'] }}" required>
                                             @error("records.{$index}.verse_end")
                                                 <div class="text-danger small">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-12 col-md-3">
                                             <label class="form-label">Penilaian</label>
                                             <select name="records[{{ $index }}][evaluation]" class="form-select" required>
                                                 <option value="">Pilih</option>
@@ -132,10 +134,10 @@
                                         </div>
                                     </div>
                                     <div class="row g-2 mt-2">
-                                        <div class="col-md-10">
+                                        <div class="col">
                                             <input type="text" name="records[{{ $index }}][notes]" class="form-control" placeholder="Catatan (opsional)" value="{{ $record['notes'] ?? '' }}">
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-end">
+                                        <div class="col-auto d-flex align-items-end">
                                             <button type="button" class="btn btn-outline-danger btn-sm remove-record-btn">Hapus</button>
                                         </div>
                                     </div>
@@ -144,7 +146,7 @@
                         @else
                             <div class="record-item border rounded p-3 mb-3">
                                 <div class="row g-2">
-                                    <div class="col-md-5">
+                                    <div class="col-12 col-md-5">
                                         <label class="form-label">Surah</label>
                                         <select name="records[0][surah_id]" class="form-select" required>
                                             <option value="">Pilih Surah</option>
@@ -153,15 +155,15 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-6 col-md-2">
                                         <label class="form-label">Ayat Dari</label>
                                         <input type="number" name="records[0][verse_start]" class="form-control" min="1" value="1" required>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-6 col-md-2">
                                         <label class="form-label">Sampai</label>
                                         <input type="number" name="records[0][verse_end]" class="form-control" min="1" value="1" required>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-12 col-md-3">
                                         <label class="form-label">Penilaian</label>
                                         <select name="records[0][evaluation]" class="form-select" required>
                                             <option value="">Pilih</option>
@@ -172,10 +174,10 @@
                                     </div>
                                 </div>
                                 <div class="row g-2 mt-2">
-                                    <div class="col-md-10">
+                                    <div class="col">
                                         <input type="text" name="records[0][notes]" class="form-control" placeholder="Catatan (opsional)">
                                     </div>
-                                    <div class="col-md-2 d-flex align-items-end">
+                                    <div class="col-auto d-flex align-items-end">
                                         <button type="button" class="btn btn-outline-danger btn-sm remove-record-btn">Hapus</button>
                                     </div>
                                 </div>
@@ -186,12 +188,12 @@
             </div>
         </div>
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">
+        <div class="d-flex flex-column flex-sm-row gap-2">
+            <button type="submit" class="btn btn-primary flex-fill flex-sm-grow-0">
                 <i class="ti ti-device-floppy me-1"></i>
                 Simpan Setoran
             </button>
-            <a href="{{ route('tahfidz.setoran.index') }}" class="btn btn-outline-secondary">Batal</a>
+            <a href="{{ route('tahfidz.setoran.index') }}" class="btn btn-outline-secondary flex-fill flex-sm-grow-0">Batal</a>
         </div>
     </form>
 </x-app-layout>
@@ -218,22 +220,22 @@
             div.className = 'record-item border rounded p-3 mb-3';
             div.innerHTML = `
                 <div class="row g-2">
-                    <div class="col-md-5">
+                    <div class="col-12 col-md-5">
                         <label class="form-label">Surah</label>
                         <select name="records[${recordIndex}][surah_id]" class="form-select" required>
                             <option value="">Pilih Surah</option>
                             ${buildSurahOptions()}
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-6 col-md-2">
                         <label class="form-label">Ayat Dari</label>
                         <input type="number" name="records[${recordIndex}][verse_start]" class="form-control" min="1" value="1" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-6 col-md-2">
                         <label class="form-label">Sampai</label>
                         <input type="number" name="records[${recordIndex}][verse_end]" class="form-control" min="1" value="1" required>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-12 col-md-3">
                         <label class="form-label">Penilaian</label>
                         <select name="records[${recordIndex}][evaluation]" class="form-select" required>
                             <option value="">Pilih</option>
@@ -242,10 +244,10 @@
                     </div>
                 </div>
                 <div class="row g-2 mt-2">
-                    <div class="col-md-10">
+                    <div class="col">
                         <input type="text" name="records[${recordIndex}][notes]" class="form-control" placeholder="Catatan (opsional)">
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
+                    <div class="col-auto d-flex align-items-end">
                         <button type="button" class="btn btn-outline-danger btn-sm remove-record-btn">Hapus</button>
                     </div>
                 </div>
