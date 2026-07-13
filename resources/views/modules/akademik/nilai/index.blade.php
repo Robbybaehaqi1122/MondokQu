@@ -1,15 +1,36 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center justify-content-between gap-2">
             <div>
                 <h2 class="page-title">Daftar Nilai Santri</h2>
             </div>
-            <a href="{{ route('akademik.nilai.bulk') }}" class="btn btn-primary">
-                <i class="ti ti-table-plus me-1"></i> Bulk Input
-            </a>
-            <a href="{{ route('akademik.nilai.create') }}" class="btn btn-outline-primary">
-                <i class="ti ti-plus me-1"></i> Input Satu
-            </a>
+            <div class="d-flex gap-2">
+                <div class="d-none d-sm-flex gap-2">
+                    <a href="{{ route('akademik.nilai.bulk') }}" class="btn btn-primary">
+                        <i class="ti ti-table-plus me-1"></i> Bulk Input
+                    </a>
+                    <a href="{{ route('akademik.nilai.create') }}" class="btn btn-outline-primary">
+                        <i class="ti ti-plus me-1"></i> Input Satu
+                    </a>
+                </div>
+                <div class="dropdown d-sm-none">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-menu-2 me-1"></i> Aksi
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="{{ route('akademik.nilai.bulk') }}">
+                                <i class="ti ti-table-plus me-2 text-primary"></i> Bulk Input
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('akademik.nilai.create') }}">
+                                <i class="ti ti-plus me-2 text-success"></i> Input Satu
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </x-slot>
 
@@ -17,7 +38,7 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body">
             <form method="GET" class="row g-3">
                 <div class="col-md-4">
@@ -50,14 +71,14 @@
             </form>
         </div>
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>Santri</th>
-                        <th>Mata Pelajaran</th>
-                        <th>Semester</th>
-                        <th>Pengetahuan</th>
-                        <th>Keterampilan</th>
+                        <th>Mapel</th>
+                        <th class="d-none d-md-table-cell">Semester</th>
+                        <th class="d-none d-md-table-cell">Pengetahuan</th>
+                        <th class="d-none d-md-table-cell">Keterampilan</th>
                         <th>Nilai Akhir</th>
                         <th>Predikat</th>
                         <th>Aksi</th>
@@ -71,9 +92,9 @@
                                 <div class="text-secondary small">{{ $nilai->santri?->nis ?? '' }}</div>
                             </td>
                             <td>{{ $nilai->mataPelajaran?->nama ?? '-' }}</td>
-                            <td>{{ $nilai->semester }}</td>
-                            <td>{{ $nilai->nilai_pengetahuan }}</td>
-                            <td>{{ $nilai->nilai_keterampilan }}</td>
+                            <td class="d-none d-md-table-cell">{{ $nilai->semester }}</td>
+                            <td class="d-none d-md-table-cell">{{ $nilai->nilai_pengetahuan }}</td>
+                            <td class="d-none d-md-table-cell">{{ $nilai->nilai_keterampilan }}</td>
                             <td>
                                 <span class="fw-bold">{{ $nilai->nilai_akhir }}</span>
                                 @php
