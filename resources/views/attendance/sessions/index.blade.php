@@ -16,27 +16,55 @@
 
     <div class="row row-cards mb-3">
         <div class="col-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small text-truncate">Total Sesi</div>
-                <div class="fs-2 fw-bold">{{ number_format($sessionStats['total']) }}</div>
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Total Sesi</div>
+                        <div class="fs-2 fw-bold">{{ number_format($sessionStats['total']) }}</div>
+                    </div>
+                    <span class="avatar bg-blue-lt text-blue flex-shrink-0">
+                        <i class="ti ti-calendar-event"></i>
+                    </span>
+                </div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small text-truncate">Draft</div>
-                <div class="fs-2 fw-bold">{{ number_format($sessionStats['draft']) }}</div>
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Draft</div>
+                        <div class="fs-2 fw-bold">{{ number_format($sessionStats['draft']) }}</div>
+                    </div>
+                    <span class="avatar bg-secondary-lt text-secondary flex-shrink-0">
+                        <i class="ti ti-file-draft"></i>
+                    </span>
+                </div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small text-truncate">Dibuka</div>
-                <div class="fs-2 fw-bold">{{ number_format($sessionStats['open']) }}</div>
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Dibuka</div>
+                        <div class="fs-2 fw-bold">{{ number_format($sessionStats['open']) }}</div>
+                    </div>
+                    <span class="avatar bg-primary-lt text-primary flex-shrink-0">
+                        <i class="ti ti-lock-open"></i>
+                    </span>
+                </div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small text-truncate">Hari Ini</div>
-                <div class="fs-2 fw-bold">{{ number_format($sessionStats['today']) }}</div>
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Hari Ini</div>
+                        <div class="fs-2 fw-bold">{{ number_format($sessionStats['today']) }}</div>
+                    </div>
+                    <span class="avatar bg-green-lt text-green flex-shrink-0">
+                        <i class="ti ti-calendar-day"></i>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -58,7 +86,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     <button
                         type="button"
-                        class="btn btn-primary"
+                        class="btn btn-primary flex-fill flex-md-grow-0"
                         id="open-create-attendance-session-modal"
                         data-bs-toggle="modal"
                         data-bs-target="#createAttendanceSessionModal"
@@ -69,7 +97,7 @@
                     </button>
                     <button
                         type="button"
-                        class="btn btn-outline-primary"
+                        class="btn btn-outline-primary flex-fill flex-md-grow-0"
                         id="open-generate-sessions-modal"
                         data-bs-toggle="modal"
                         data-bs-target="#generateSessionsModal"
@@ -115,12 +143,12 @@
                     </select>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="d-flex flex-wrap gap-2">
+                    <div class="d-flex flex-column flex-sm-row flex-wrap gap-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="ti ti-filter me-1"></i>
                             Filter
                         </button>
-                        <a href="{{ route('attendance.sessions.index') }}" class="btn btn-outline-secondary">Reset</a>
+                        <a href="{{ route('attendance.sessions.index') }}" class="btn btn-outline-secondary w-100 w-md-auto">Reset</a>
                     </div>
                 </div>
             </form>

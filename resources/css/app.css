@@ -1273,6 +1273,16 @@ body {
     .table-mobile-md .d-none.d-md-table-cell {
         display: none !important;
     }
+
+    .stat-card .fs-2 {
+        font-size: 1.25rem !important;
+    }
+
+    .stat-card .avatar {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1rem;
+    }
 }
 
 .user-detail-hero-card {
