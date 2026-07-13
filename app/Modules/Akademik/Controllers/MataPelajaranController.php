@@ -58,7 +58,11 @@ class MataPelajaranController extends Controller
             'deskripsi' => ['nullable', 'string', 'max:1000'],
             'kkm' => ['required', 'integer', 'min:0', 'max:100'],
             'grade_level_ids' => ['nullable', 'array'],
-            'grade_level_ids.*' => ['exists:grade_levels,id'],
+            'grade_level_ids.*' => ['required', function ($attribute, $value, $fail) use ($tenantId) {
+                if (! GradeLevel::where('id', $value)->where('tenant_id', $tenantId)->exists()) {
+                    $fail('Grade level tidak ditemukan di tenant Anda.');
+                }
+            }],
         ]);
 
         $exists = MataPelajaran::query()
@@ -102,7 +106,11 @@ class MataPelajaranController extends Controller
             'kkm' => ['required', 'integer', 'min:0', 'max:100'],
             'is_active' => ['boolean'],
             'grade_level_ids' => ['nullable', 'array'],
-            'grade_level_ids.*' => ['exists:grade_levels,id'],
+            'grade_level_ids.*' => ['required', function ($attribute, $value, $fail) use ($tenantId) {
+                if (! GradeLevel::where('id', $value)->where('tenant_id', $tenantId)->exists()) {
+                    $fail('Grade level tidak ditemukan di tenant Anda.');
+                }
+            }],
         ]);
 
         $exists = MataPelajaran::query()
@@ -158,8 +166,16 @@ class MataPelajaranController extends Controller
         }
 
         $validated = $request->validate([
-            'from_grade_level_id' => ['required', 'exists:grade_levels,id'],
-            'to_grade_level_id' => ['required', 'exists:grade_levels,id', 'different:from_grade_level_id'],
+            'from_grade_level_id' => ['required', function ($attribute, $value, $fail) use ($tenantId) {
+                if (! GradeLevel::where('id', $value)->where('tenant_id', $tenantId)->exists()) {
+                    $fail('Grade level sumber tidak ditemukan di tenant Anda.');
+                }
+            }],
+            'to_grade_level_id' => ['required', 'different:from_grade_level_id', function ($attribute, $value, $fail) use ($tenantId) {
+                if (! GradeLevel::where('id', $value)->where('tenant_id', $tenantId)->exists()) {
+                    $fail('Grade level tujuan tidak ditemukan di tenant Anda.');
+                }
+            }],
         ]);
 
         SubjectGradeLevel::query()
