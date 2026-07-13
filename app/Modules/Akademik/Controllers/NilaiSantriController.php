@@ -6,12 +6,17 @@ use App\Models\MataPelajaran;
 use App\Models\NilaiSantri;
 use App\Models\Santri;
 use App\Http\Controllers\Controller;
+use App\Modules\Akademik\Controllers\Concerns\HasSemesterOptions;
+use App\Modules\Akademik\Requests\StoreNilaiSantriRequest;
+use App\Modules\Akademik\Requests\UpdateNilaiSantriRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class NilaiSantriController extends Controller
 {
+    use HasSemesterOptions;
 
     public function index(Request $request): View
     {
@@ -22,7 +27,8 @@ class NilaiSantriController extends Controller
             ->with(['santri', 'mataPelajaran', 'inputBy']);
 
         if ($search = $request->input('q')) {
-            $query->whereHas('santri', fn ($q) => $q->where('full_name', 'like', "%{$search}%"));
+            $sanitized = '%' . addcslashes($search, '%_') . '%';
+            $query->whereHas('santri', fn ($q) => $q->where('full_name', 'like', $sanitized));
         }
         if ($mapelId = $request->input('mata_pelajaran_id')) {
             $query->where('mata_pelajaran_id', $mapelId);
@@ -90,19 +96,11 @@ class NilaiSantriController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreNilaiSantriRequest $request): RedirectResponse
     {
         $this->authorize('create', NilaiSantri::class);
         $currentUser = $request->user();
-
-        $validated = $request->validate([
-            'santri_id' => ['required', 'exists:santris,id'],
-            'mata_pelajaran_id' => ['required', 'exists:mata_pelajarans,id'],
-            'semester' => ['required', 'string', 'max:50'],
-            'nilai_pengetahuan' => ['required', 'integer', 'min:0', 'max:100'],
-            'nilai_keterampilan' => ['required', 'integer', 'min:0', 'max:100'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         $tenantId = $currentUser->effectiveTenantId();
 
@@ -166,16 +164,10 @@ class NilaiSantriController extends Controller
         ]);
     }
 
-    public function update(Request $request, NilaiSantri $nilaiSantri): RedirectResponse
+    public function update(UpdateNilaiSantriRequest $request, NilaiSantri $nilaiSantri): RedirectResponse
     {
         $this->authorize('update', $nilaiSantri);
-        $currentUser = $request->user();
-
-        $validated = $request->validate([
-            'nilai_pengetahuan' => ['required', 'integer', 'min:0', 'max:100'],
-            'nilai_keterampilan' => ['required', 'integer', 'min:0', 'max:100'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         $nilaiSantri->update([
             'nilai_pengetahuan' => $validated['nilai_pengetahuan'],
@@ -190,24 +182,10 @@ class NilaiSantriController extends Controller
     public function destroy(Request $request, NilaiSantri $nilaiSantri): RedirectResponse
     {
         $this->authorize('delete', $nilaiSantri);
-        $currentUser = $request->user();
 
         $nilaiSantri->delete();
 
         return redirect()->route('akademik.nilai.index')
             ->with('success', 'Nilai berhasil dihapus.');
-    }
-
-    protected function availableSemesters(): array
-    {
-        $year = now()->year;
-        $nextYear = $year + 1;
-
-        return [
-            "{$year}/{$nextYear} Ganjil",
-            "{$year}/{$nextYear} Genap",
-            (($year - 1)."/{$year} Ganjil"),
-            (($year - 1)."/{$year} Genap"),
-        ];
     }
 }

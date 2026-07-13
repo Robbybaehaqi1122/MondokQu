@@ -6,6 +6,7 @@ use App\Models\GradeLevel;
 use App\Models\MataPelajaran;
 use App\Models\SubjectGradeLevel;
 use App\Http\Controllers\Controller;
+use App\Modules\Akademik\Requests\StoreMataPelajaranRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -42,28 +43,17 @@ class MataPelajaranController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreMataPelajaranRequest $request): RedirectResponse
     {
         $this->authorize('create', MataPelajaran::class);
         $currentUser = $request->user();
-
         $tenantId = $currentUser->effectiveTenantId();
 
         if (! $tenantId) {
             return back()->withErrors(['nama' => 'Tidak ada tenant yang tersedia. Hubungi administrator.'])->withInput();
         }
 
-        $validated = $request->validate([
-            'nama' => ['required', 'string', 'max:255'],
-            'deskripsi' => ['nullable', 'string', 'max:1000'],
-            'kkm' => ['required', 'integer', 'min:0', 'max:100'],
-            'grade_level_ids' => ['nullable', 'array'],
-            'grade_level_ids.*' => ['required', function ($attribute, $value, $fail) use ($tenantId) {
-                if (! GradeLevel::where('id', $value)->where('tenant_id', $tenantId)->exists()) {
-                    $fail('Grade level tidak ditemukan di tenant Anda.');
-                }
-            }],
-        ]);
+        $validated = $request->validated();
 
         $exists = MataPelajaran::query()
             ->visibleTo($currentUser)

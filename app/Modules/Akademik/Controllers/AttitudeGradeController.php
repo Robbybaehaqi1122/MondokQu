@@ -5,12 +5,14 @@ namespace App\Modules\Akademik\Controllers;
 use App\Models\AttitudeGrade;
 use App\Models\Santri;
 use App\Http\Controllers\Controller;
+use App\Modules\Akademik\Controllers\Concerns\HasSemesterOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AttitudeGradeController extends Controller
 {
+    use HasSemesterOptions;
 
     public function index(Request $request): View
     {
@@ -135,18 +137,5 @@ class AttitudeGradeController extends Controller
             'semester' => $validated['semester'],
             'grades' => $grades,
         ]);
-    }
-
-    protected function availableSemesters(): array
-    {
-        $year = now()->year;
-        $nextYear = $year + 1;
-
-        return [
-            "{$year}/{$nextYear} Ganjil",
-            "{$year}/{$nextYear} Genap",
-            (($year - 1)."/{$year} Ganjil"),
-            (($year - 1)."/{$year} Genap"),
-        ];
     }
 }
