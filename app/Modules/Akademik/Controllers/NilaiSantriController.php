@@ -122,7 +122,7 @@ class NilaiSantriController extends Controller
             return back()->withErrors(['santri_id' => 'Nilai untuk santri, mata pelajaran, dan semester ini sudah ada.'])->withInput();
         }
 
-        NilaiSantri::query()->create([
+        $nilai = NilaiSantri::query()->create([
             'tenant_id' => $tenantId,
             'santri_id' => $validated['santri_id'],
             'mata_pelajaran_id' => $validated['mata_pelajaran_id'],
@@ -132,6 +132,18 @@ class NilaiSantriController extends Controller
             'notes' => $validated['notes'],
             'input_by' => $currentUser->id,
         ]);
+
+        activity('nilai')
+            ->causedBy($currentUser)
+            ->performedOn($nilai)
+            ->withProperties([
+                'nilai_pengetahuan' => $validated['nilai_pengetahuan'],
+                'nilai_keterampilan' => $validated['nilai_keterampilan'],
+                'semester' => $validated['semester'],
+                'santri_id' => $validated['santri_id'],
+                'mata_pelajaran_id' => $validated['mata_pelajaran_id'],
+            ])
+            ->log('Membuat nilai baru');
 
         return redirect()->route('akademik.nilai.index')
             ->with('success', 'Nilai berhasil dicatat.');
@@ -170,13 +182,29 @@ class NilaiSantriController extends Controller
     public function update(UpdateNilaiSantriRequest $request, NilaiSantri $nilaiSantri): RedirectResponse
     {
         $this->authorize('update', $nilaiSantri);
+        $currentUser = $request->user();
         $validated = $request->validated();
+
+        $oldValues = $nilaiSantri->only(['nilai_pengetahuan', 'nilai_keterampilan', 'notes']);
 
         $nilaiSantri->update([
             'nilai_pengetahuan' => $validated['nilai_pengetahuan'],
             'nilai_keterampilan' => $validated['nilai_keterampilan'],
             'notes' => $validated['notes'],
         ]);
+
+        activity('nilai')
+            ->causedBy($currentUser)
+            ->performedOn($nilaiSantri)
+            ->withProperties([
+                'old' => $oldValues,
+                'new' => [
+                    'nilai_pengetahuan' => $validated['nilai_pengetahuan'],
+                    'nilai_keterampilan' => $validated['nilai_keterampilan'],
+                    'notes' => $validated['notes'],
+                ],
+            ])
+            ->log('Mengubah nilai');
 
         return redirect()->route('akademik.nilai.index')
             ->with('success', 'Nilai berhasil diperbarui.');
@@ -185,8 +213,16 @@ class NilaiSantriController extends Controller
     public function destroy(Request $request, NilaiSantri $nilaiSantri): RedirectResponse
     {
         $this->authorize('delete', $nilaiSantri);
+        $currentUser = $request->user();
+
+        $oldValues = $nilaiSantri->only(['nilai_pengetahuan', 'nilai_keterampilan', 'notes', 'santri_id', 'mata_pelajaran_id', 'semester']);
 
         $nilaiSantri->delete();
+
+        activity('nilai')
+            ->causedBy($currentUser)
+            ->withProperties(['deleted' => $oldValues])
+            ->log('Menghapus nilai');
 
         return redirect()->route('akademik.nilai.index')
             ->with('success', 'Nilai berhasil dihapus.');
@@ -273,26 +309,57 @@ class NilaiSantriController extends Controller
             return back()->withErrors(['room_id' => 'Tidak ada tenant yang tersedia. Hubungi administrator.'])->withInput();
         }
 
-        $saved = 0;
+        $created = 0;
+        $updated = 0;
         foreach ($validated['grades'] as $grade) {
-            NilaiSantri::query()->updateOrCreate(
-                [
-                    'tenant_id' => $tenantId,
-                    'santri_id' => $grade['santri_id'],
-                    'mata_pelajaran_id' => $validated['mata_pelajaran_id'],
-                    'semester' => $validated['semester'],
-                ],
-                [
+            $existing = NilaiSantri::query()
+                ->visibleTo($currentUser)
+                ->where('santri_id', $grade['santri_id'])
+                ->where('mata_pelajaran_id', $validated['mata_pelajaran_id'])
+                ->where('semester', $validated['semester'])
+                ->first();
+
+            if ($existing) {
+                $oldValues = $existing->only(['nilai_pengetahuan', 'nilai_keterampilan', 'notes']);
+                $existing->update([
                     'nilai_pengetahuan' => $grade['nilai_pengetahuan'],
                     'nilai_keterampilan' => $grade['nilai_keterampilan'],
                     'notes' => $grade['notes'] ?? null,
                     'input_by' => $currentUser->id,
-                ]
-            );
-            $saved++;
+                ]);
+                $updated++;
+            } else {
+                NilaiSantri::query()->create([
+                    'tenant_id' => $tenantId,
+                    'santri_id' => $grade['santri_id'],
+                    'mata_pelajaran_id' => $validated['mata_pelajaran_id'],
+                    'semester' => $validated['semester'],
+                    'nilai_pengetahuan' => $grade['nilai_pengetahuan'],
+                    'nilai_keterampilan' => $grade['nilai_keterampilan'],
+                    'notes' => $grade['notes'] ?? null,
+                    'input_by' => $currentUser->id,
+                ]);
+                $created++;
+            }
         }
 
+        $total = $created + $updated;
+        $parts = [];
+        if ($created > 0) $parts[] = "{$created} baru";
+        if ($updated > 0) $parts[] = "{$updated} diperbarui";
+
+        activity('nilai')
+            ->causedBy($currentUser)
+            ->withProperties([
+                'mata_pelajaran_id' => $validated['mata_pelajaran_id'],
+                'semester' => $validated['semester'],
+                'room_id' => $validated['room_id'],
+                'created' => $created,
+                'updated' => $updated,
+            ])
+            ->log("Bulk input nilai: " . implode(', ', $parts));
+
         return redirect()->route('akademik.nilai.index')
-            ->with('success', "Berhasil menyimpan nilai untuk {$saved} santri.");
+            ->with('success', "Berhasil menyimpan nilai untuk {$total} santri (" . implode(', ', $parts) . ").");
     }
 }
