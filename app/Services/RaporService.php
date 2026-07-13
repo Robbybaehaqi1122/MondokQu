@@ -58,7 +58,7 @@ class RaporService
             ->groupBy('mata_pelajaran_id')
             ->pluck('avg', 'mata_pelajaran_id');
 
-        $peringkatKelas = $this->hitungPeringkatKelas($semester, $santri->id, $user);
+        $peringkatKelas = $this->hitungPeringkatKelas($semester, $santri, $user);
 
         $semesters = NilaiSantri::query()
             ->visibleTo($user)
@@ -78,11 +78,25 @@ class RaporService
         ];
     }
 
-    private function hitungPeringkatKelas(string $semester, int $santriId, User $user): array
+    private function hitungPeringkatKelas(string $semester, Santri $santri, User $user): array
     {
+        $roomId = $santri->room_id;
+
+        if (! $roomId) {
+            return [
+                'peringkat' => null,
+                'total' => 0,
+                'rata_rata' => null,
+                'ruangan' => null,
+            ];
+        }
+
         $rataRataSantris = NilaiSantri::query()
             ->visibleTo($user)
             ->where('semester', $semester)
+            ->whereIn('santri_id', function ($query) use ($roomId) {
+                $query->select('id')->from('santris')->where('room_id', $roomId);
+            })
             ->selectRaw('santri_id, COALESCE(ROUND(AVG((nilai_pengetahuan + nilai_keterampilan) / 2)), 0) as rata_rata')
             ->groupBy('santri_id')
             ->orderByDesc('rata_rata')
@@ -94,7 +108,7 @@ class RaporService
         $rataSaya = null;
 
         foreach ($rataRataSantris as $i => $item) {
-            if ((int) $item->santri_id === $santriId) {
+            if ((int) $item->santri_id === $santri->id) {
                 $peringkat = $i + 1;
                 $rataSaya = (int) $item->rata_rata;
                 break;
@@ -105,6 +119,7 @@ class RaporService
             'peringkat' => $peringkat,
             'total' => $totalSantri,
             'rata_rata' => $rataSaya,
+            'ruangan' => $santri->room?->name,
         ];
     }
 }

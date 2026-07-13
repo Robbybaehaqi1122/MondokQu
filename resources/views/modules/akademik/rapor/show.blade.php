@@ -227,6 +227,9 @@
                         <div class="text-secondary small">Peringkat dari {{ $peringkatKelas['total'] }} Santri</div>
                         <div class="fs-2 fw-bold mt-1 text-primary">{{ $peringkatKelas['peringkat'] }}</div>
                         <div class="text-secondary small mt-2">Rata-rata Nilai: <strong>{{ $peringkatKelas['rata_rata'] }}</strong></div>
+                        @if ($peringkatKelas['ruangan'])
+                            <div class="text-secondary small mt-1">di <strong>{{ $peringkatKelas['ruangan'] }}</strong></div>
+                        @endif
                     @else
                         <div class="text-secondary">Belum tersedia</div>
                     @endif

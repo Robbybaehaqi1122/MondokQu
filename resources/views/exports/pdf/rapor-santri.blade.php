@@ -104,6 +104,9 @@
         <div class="peringkat-box">
             Peringkat Kelas: <strong>{{ $peringkatKelas['peringkat'] }}</strong> dari {{ $peringkatKelas['total'] }} santri
             &middot; Rata-rata Nilai: <strong>{{ $peringkatKelas['rata_rata'] }}</strong>
+            @if ($peringkatKelas['ruangan'])
+                &middot; di <strong>{{ $peringkatKelas['ruangan'] }}</strong>
+            @endif
         </div>
     @endif
 
