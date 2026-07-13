@@ -4,8 +4,11 @@
             <div>
                 <h2 class="page-title">Daftar Nilai Santri</h2>
             </div>
-            <a href="{{ route('akademik.nilai.create') }}" class="btn btn-primary">
-                <i class="ti ti-plus me-1"></i> Input Nilai
+            <a href="{{ route('akademik.nilai.bulk') }}" class="btn btn-primary">
+                <i class="ti ti-table-plus me-1"></i> Bulk Input
+            </a>
+            <a href="{{ route('akademik.nilai.create') }}" class="btn btn-outline-primary">
+                <i class="ti ti-plus me-1"></i> Input Satu
             </a>
         </div>
     </x-slot>

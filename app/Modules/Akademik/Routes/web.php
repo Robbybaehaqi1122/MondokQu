@@ -28,6 +28,9 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::get('/nilai', [NilaiSantriController::class, 'index'])->name('nilai.index');
         Route::get('/nilai/create', [NilaiSantriController::class, 'create'])->name('nilai.create');
         Route::post('/nilai', [NilaiSantriController::class, 'store'])->name('nilai.store');
+        Route::get('/nilai/bulk', [NilaiSantriController::class, 'bulkCreate'])->name('nilai.bulk');
+        Route::get('/nilai/bulk/students', [NilaiSantriController::class, 'bulkStudents'])->name('nilai.bulk-students');
+        Route::post('/nilai/bulk', [NilaiSantriController::class, 'bulkStore'])->name('nilai.bulk-store');
         Route::get('/nilai/{nilaiSantri}/edit', [NilaiSantriController::class, 'edit'])->name('nilai.edit');
         Route::put('/nilai/{nilaiSantri}', [NilaiSantriController::class, 'update'])->name('nilai.update');
         Route::delete('/nilai/{nilaiSantri}', [NilaiSantriController::class, 'destroy'])->name('nilai.destroy');

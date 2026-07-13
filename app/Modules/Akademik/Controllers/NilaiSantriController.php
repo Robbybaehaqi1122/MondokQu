@@ -4,11 +4,14 @@ namespace App\Modules\Akademik\Controllers;
 
 use App\Models\MataPelajaran;
 use App\Models\NilaiSantri;
+use App\Models\Room;
 use App\Models\Santri;
 use App\Http\Controllers\Controller;
 use App\Modules\Akademik\Controllers\Concerns\HasSemesterOptions;
+use App\Modules\Akademik\Requests\BulkStoreNilaiSantriRequest;
 use App\Modules\Akademik\Requests\StoreNilaiSantriRequest;
 use App\Modules\Akademik\Requests\UpdateNilaiSantriRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -187,5 +190,109 @@ class NilaiSantriController extends Controller
 
         return redirect()->route('akademik.nilai.index')
             ->with('success', 'Nilai berhasil dihapus.');
+    }
+
+    public function bulkCreate(Request $request): View
+    {
+        $currentUser = $request->user();
+
+        $mapels = MataPelajaran::query()
+            ->visibleTo($currentUser)
+            ->active()
+            ->with('gradeLevels')
+            ->orderBy('nama')
+            ->get();
+
+        $rooms = Room::query()
+            ->visibleTo($currentUser)
+            ->where('status', 'active')
+            ->with('gradeLevel')
+            ->orderBy('name')
+            ->get();
+
+        $semesters = $this->availableSemesters();
+
+        return view('modules.akademik.nilai.bulk', [
+            'mapels' => $mapels,
+            'rooms' => $rooms,
+            'semesters' => $semesters,
+        ]);
+    }
+
+    public function bulkStudents(Request $request): JsonResponse
+    {
+        $currentUser = $request->user();
+
+        $validated = $request->validate([
+            'room_id' => ['required', 'exists:rooms,id'],
+            'mata_pelajaran_id' => ['required', 'exists:mata_pelajarans,id'],
+            'semester' => ['required', 'string'],
+        ]);
+
+        $santris = Santri::query()
+            ->visibleTo($currentUser)
+            ->where('room_id', $validated['room_id'])
+            ->active()
+            ->orderBy('full_name')
+            ->get();
+
+        $existingNilais = NilaiSantri::query()
+            ->visibleTo($currentUser)
+            ->where('mata_pelajaran_id', $validated['mata_pelajaran_id'])
+            ->where('semester', $validated['semester'])
+            ->whereIn('santri_id', $santris->pluck('id'))
+            ->get()
+            ->keyBy('santri_id');
+
+        $data = $santris->map(function ($santri) use ($existingNilais) {
+            $existing = $existingNilais->get($santri->id);
+
+            return [
+                'santri_id' => $santri->id,
+                'full_name' => $santri->full_name,
+                'nis' => $santri->nis,
+                'existing_id' => $existing?->id,
+                'nilai_pengetahuan' => $existing?->nilai_pengetahuan ?? '',
+                'nilai_keterampilan' => $existing?->nilai_keterampilan ?? '',
+                'notes' => $existing?->notes ?? '',
+            ];
+        });
+
+        return response()->json(['santris' => $data]);
+    }
+
+    public function bulkStore(BulkStoreNilaiSantriRequest $request): RedirectResponse
+    {
+        $this->authorize('create', NilaiSantri::class);
+        $currentUser = $request->user();
+        $validated = $request->validated();
+
+        $tenantId = $currentUser->effectiveTenantId();
+
+        if (! $tenantId) {
+            return back()->withErrors(['room_id' => 'Tidak ada tenant yang tersedia. Hubungi administrator.'])->withInput();
+        }
+
+        $saved = 0;
+        foreach ($validated['grades'] as $grade) {
+            NilaiSantri::query()->updateOrCreate(
+                [
+                    'tenant_id' => $tenantId,
+                    'santri_id' => $grade['santri_id'],
+                    'mata_pelajaran_id' => $validated['mata_pelajaran_id'],
+                    'semester' => $validated['semester'],
+                ],
+                [
+                    'nilai_pengetahuan' => $grade['nilai_pengetahuan'],
+                    'nilai_keterampilan' => $grade['nilai_keterampilan'],
+                    'notes' => $grade['notes'] ?? null,
+                    'input_by' => $currentUser->id,
+                ]
+            );
+            $saved++;
+        }
+
+        return redirect()->route('akademik.nilai.index')
+            ->with('success', "Berhasil menyimpan nilai untuk {$saved} santri.");
     }
 }
