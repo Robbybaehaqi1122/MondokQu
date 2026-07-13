@@ -63,55 +63,55 @@
     </div>
 
     <div class="row row-cards mb-3">
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Total Santri</div>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Total Santri</div>
                         <div class="fs-2 fw-bold" id="stat-total-santri">{{ number_format($activeSantriCount) }}</div>
                     </div>
-                    <span class="avatar bg-primary-lt text-primary">
+                    <span class="avatar bg-primary-lt text-primary flex-shrink-0">
                         <i class="ti ti-users"></i>
                     </span>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Sudah Absen</div>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Sudah Absen</div>
                         <div class="fs-2 fw-bold text-success" id="stat-sudah-absen">{{ number_format($attendedCount) }}</div>
                     </div>
-                    <span class="avatar bg-success-lt text-success">
+                    <span class="avatar bg-success-lt text-success flex-shrink-0">
                         <i class="ti ti-check"></i>
                     </span>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Belum Absen</div>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Belum Absen</div>
                         <div class="fs-2 fw-bold {{ $notAttendedCount > 0 ? 'text-danger' : 'text-success' }}" id="stat-belum-absen">{{ number_format($notAttendedCount) }}</div>
                     </div>
-                    <span class="avatar bg-warning-lt text-warning">
+                    <span class="avatar bg-warning-lt text-warning flex-shrink-0">
                         <i class="ti ti-clock"></i>
                     </span>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-6 col-lg-3">
             <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">% Kehadiran</div>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">% Kehadiran</div>
                         <div class="fs-2 fw-bold {{ $attendancePercentage >= 90 ? 'text-success' : ($attendancePercentage >= 75 ? 'text-warning' : 'text-danger') }}" id="stat-kehadiran">
                             {{ number_format($attendancePercentage, 1) }}%
                         </div>
                     </div>
-                    <span class="avatar bg-azure-lt text-azure">
+                    <span class="avatar bg-azure-lt text-azure flex-shrink-0">
                         <i class="ti ti-chart-arcs"></i>
                     </span>
                 </div>
@@ -121,14 +121,14 @@
 
     <div class="row row-cards mb-3">
         @foreach ($statusSummary as $statusItem)
-            <div class="col-sm-6 col-lg">
+            <div class="col-6 col-sm-4 col-lg">
                 <div class="card card-body">
-                    <div class="d-flex align-items-center justify-content-between gap-3">
-                        <div>
-                            <div class="text-uppercase text-secondary small">{{ $statusItem['label'] }}</div>
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="min-width-0">
+                            <div class="text-uppercase text-secondary small text-truncate">{{ $statusItem['label'] }}</div>
                             <div class="fs-2 fw-bold" id="status-count-{{ $statusItem['value'] }}">{{ number_format($statusItem['count']) }}</div>
                         </div>
-                        <span class="badge {{ $recordBadgeClasses[$statusItem['value']] ?? 'bg-secondary-lt text-secondary' }}">
+                        <span class="badge {{ $recordBadgeClasses[$statusItem['value']] ?? 'bg-secondary-lt text-secondary' }} flex-shrink-0">
                             {{ $statusItem['label'] }}
                         </span>
                     </div>
@@ -160,13 +160,13 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-vcenter card-table">
+                    <table class="table table-vcenter card-table table-mobile-md">
                         <thead>
                             <tr>
                                 <th>Kegiatan</th>
                                 <th>Status</th>
                                 <th>Terisi</th>
-                                <th>Perhatian</th>
+                                <th class="d-none d-md-table-cell">Perhatian</th>
                                 <th class="w-1">Aksi</th>
                             </tr>
                         </thead>
@@ -194,7 +194,7 @@
                                             <span class="small text-secondary text-nowrap">{{ $recordsCount }}/{{ $activeSantriCount }}</span>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         @if ((int) $session->issue_records_count > 0)
                                             <span class="badge bg-warning-lt text-warning">{{ number_format((int) $session->issue_records_count) }} catatan</span>
                                         @else
@@ -235,7 +235,7 @@
                 <div class="list-group list-group-flush" style="max-height: 320px; overflow-y: auto;" id="not-attended-list">
                     @forelse ($notAttendedSantris as $santri)
                         <div class="list-group-item">
-                            <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="d-flex align-items-start justify-content-between gap-2">
                                 <div class="min-width-0">
                                     <div class="fw-semibold text-truncate">{{ $santri->full_name }}</div>
                                     <div class="text-secondary small">
@@ -245,7 +245,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                <span class="badge bg-warning-lt text-warning">Belum</span>
+                                <span class="badge bg-warning-lt text-warning flex-shrink-0">Belum</span>
                             </div>
                         </div>
                     @empty
@@ -275,7 +275,7 @@
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>Santri</th>

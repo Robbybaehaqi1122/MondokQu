@@ -1264,6 +1264,17 @@ body {
     }
 }
 
+@media (max-width: 767.98px) {
+    .table-mobile-md td,
+    .table-mobile-md th {
+        padding: 0.55rem 0.6rem;
+    }
+
+    .table-mobile-md .d-none.d-md-table-cell {
+        display: none !important;
+    }
+}
+
 .user-detail-hero-card {
     border: 0;
     background:
