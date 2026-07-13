@@ -5,6 +5,7 @@ use App\Modules\Akademik\Controllers\AttitudeGradeController;
 use App\Modules\Akademik\Controllers\GradeLevelController;
 use App\Modules\Akademik\Controllers\MataPelajaranController;
 use App\Modules\Akademik\Controllers\NilaiSantriController;
+use App\Modules\Akademik\Controllers\NilaiSikapController;
 use App\Modules\Akademik\Controllers\RaporController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,14 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::get('/nilai-sikap/input', [AttitudeGradeController::class, 'create'])->name('attitude.create');
         Route::post('/nilai-sikap', [AttitudeGradeController::class, 'store'])->name('attitude.store');
         Route::get('/nilai-sikap/show', [AttitudeGradeController::class, 'show'])->name('attitude.show');
+
+        Route::get('/nilai-sikap-akhlak', [NilaiSikapController::class, 'index'])->name('nilai-sikap.index');
+        Route::get('/nilai-sikap-akhlak/create', [NilaiSikapController::class, 'create'])->name('nilai-sikap.create');
+        Route::post('/nilai-sikap-akhlak', [NilaiSikapController::class, 'store'])->name('nilai-sikap.store');
+        Route::get('/nilai-sikap-akhlak/show', [NilaiSikapController::class, 'show'])->name('nilai-sikap.show');
+        Route::get('/nilai-sikap-akhlak/{nilaiSikap}/edit', [NilaiSikapController::class, 'edit'])->name('nilai-sikap.edit');
+        Route::put('/nilai-sikap-akhlak/{nilaiSikap}', [NilaiSikapController::class, 'update'])->name('nilai-sikap.update');
+        Route::delete('/nilai-sikap-akhlak/{nilaiSikap}', [NilaiSikapController::class, 'destroy'])->name('nilai-sikap.destroy');
 
         Route::get('/rapor', [RaporController::class, 'index'])->name('rapor.index');
         Route::get('/rapor/show', [RaporController::class, 'show'])->name('rapor.show');
