@@ -63,6 +63,7 @@ class AttitudeGradeController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', AttitudeGrade::class);
         $currentUser = $request->user();
 
         $tenantId = $currentUser->effectiveTenantId();
@@ -110,6 +111,7 @@ class AttitudeGradeController extends Controller
 
     public function show(Request $request): View
     {
+        $this->authorize('viewAny', AttitudeGrade::class);
         $currentUser = $request->user();
 
         $validated = $request->validate([

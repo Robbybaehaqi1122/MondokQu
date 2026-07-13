@@ -12,6 +12,7 @@ class GradeLevelController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', GradeLevel::class);
         $currentUser = $request->user();
 
         $tenantId = $currentUser->effectiveTenantId();

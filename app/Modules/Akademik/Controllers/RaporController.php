@@ -117,6 +117,7 @@ class RaporController extends Controller
 
     public function exportPdf(Request $request)
     {
+        $this->authorize('viewAny', NilaiSantri::class);
         $currentUser = $request->user();
 
         $validated = $request->validate([
@@ -192,6 +193,7 @@ class RaporController extends Controller
 
     public function chartData(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', NilaiSantri::class);
         $currentUser = $request->user();
 
         $validated = $request->validate([
