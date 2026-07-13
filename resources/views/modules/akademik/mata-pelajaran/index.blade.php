@@ -5,15 +5,39 @@
                 <h2 class="page-title">Mata Pelajaran</h2>
             </div>
             <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-clone">
-                    <i class="ti ti-copy me-1"></i> Clone Mapel
-                </button>
-                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal-grade">
-                    <i class="ti ti-layers-difference me-1"></i> Kelola Tingkat
-                </button>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-create">
-                    <i class="ti ti-plus me-1"></i> Tambah Mapel
-                </button>
+                <div class="d-none d-sm-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-clone">
+                        <i class="ti ti-copy me-1"></i> Clone Mapel
+                    </button>
+                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal-grade">
+                        <i class="ti ti-layers-difference me-1"></i> Kelola Tingkat
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-create">
+                        <i class="ti ti-plus me-1"></i> Tambah Mapel
+                    </button>
+                </div>
+                <div class="dropdown d-sm-none">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-menu-2 me-1"></i> Aksi
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modal-create">
+                                <i class="ti ti-plus me-2 text-success"></i> Tambah Mapel
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modal-grade">
+                                <i class="ti ti-layers-difference me-2 text-info"></i> Kelola Tingkat
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modal-clone">
+                                <i class="ti ti-copy me-2 text-primary"></i> Clone Mapel
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </x-slot>
@@ -29,18 +53,20 @@
     @if ($gradeLevels->isNotEmpty())
         <div class="card mb-3">
             <div class="card-body py-2">
-                <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <span class="text-secondary fw-semibold small">Filter Tingkat:</span>
-                    <a href="{{ route('akademik.mata-pelajaran.index') }}"
-                        class="btn btn-sm {{ !$selectedGradeId ? 'btn-primary' : 'btn-outline-primary' }}">
-                        Semua
-                    </a>
-                    @foreach ($gradeLevels as $gl)
-                        <a href="{{ route('akademik.mata-pelajaran.index', ['grade_level_id' => $gl->id]) }}"
-                            class="btn btn-sm {{ (int) $selectedGradeId === $gl->id ? 'btn-primary' : 'btn-outline-primary' }}">
-                            {{ $gl->name }}
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-secondary fw-semibold small text-nowrap">Filter:</span>
+                    <div class="d-flex gap-1 overflow-auto pb-1 filter-scroll">
+                        <a href="{{ route('akademik.mata-pelajaran.index') }}"
+                            class="btn btn-sm text-nowrap {{ !$selectedGradeId ? 'btn-primary' : 'btn-outline-primary' }}">
+                            Semua
                         </a>
-                    @endforeach
+                        @foreach ($gradeLevels as $gl)
+                            <a href="{{ route('akademik.mata-pelajaran.index', ['grade_level_id' => $gl->id]) }}"
+                                class="btn btn-sm text-nowrap {{ (int) $selectedGradeId === $gl->id ? 'btn-primary' : 'btn-outline-primary' }}">
+                                {{ $gl->name }}
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
@@ -48,14 +74,14 @@
 
     <div class="card">
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>Nama</th>
-                        <th>Deskripsi</th>
+                        <th class="d-none d-md-table-cell">Deskripsi</th>
                         <th>KKM</th>
-                        <th>Tingkat</th>
-                        <th>Jumlah Nilai</th>
+                        <th class="d-none d-md-table-cell">Tingkat</th>
+                        <th class="d-none d-md-table-cell">Jumlah Nilai</th>
                         <th>Status</th>
                         <th>Aksi</th>
                     </tr>
@@ -67,16 +93,16 @@
                         @endphp
                         <tr>
                             <td class="fw-semibold">{{ $mapel->nama }}</td>
-                            <td class="text-secondary">{{ $mapel->deskripsi ?: '-' }}</td>
+                            <td class="text-secondary d-none d-md-table-cell">{{ $mapel->deskripsi ?: '-' }}</td>
                             <td><span class="badge bg-azure-lt text-azure">{{ $mapel->kkm }}</span></td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 @if ($glNames)
                                     <span class="text-secondary small">{{ $glNames }}</span>
                                 @else
                                     <span class="badge bg-secondary-lt text-secondary">Global</span>
                                 @endif
                             </td>
-                            <td>{{ number_format($mapel->nilai_santris_count) }}</td>
+                            <td class="d-none d-md-table-cell">{{ number_format($mapel->nilai_santris_count) }}</td>
                             <td>
                                 @if ($mapel->is_active)
                                     <span class="badge bg-success-lt text-success">Aktif</span>

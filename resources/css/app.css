@@ -1285,6 +1285,15 @@ body {
     }
 }
 
+.filter-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.filter-scroll::-webkit-scrollbar {
+    display: none;
+}
+
 .user-detail-hero-card {
     border: 0;
     background:
