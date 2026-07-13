@@ -14,7 +14,13 @@ class UpdateUserProfileRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $targetUser = $this->route('user');
+
+        if (! $targetUser) {
+            return false;
+        }
+
+        return $this->user()->can('update', $targetUser);
     }
 
     /**

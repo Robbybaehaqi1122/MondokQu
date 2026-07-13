@@ -8,7 +8,6 @@ use App\Models\Tenant;
 use App\Services\TenantBackupService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -125,10 +124,13 @@ class BackupController extends Controller
 
     public function markFailed(Request $request, Backup $backup): RedirectResponse
     {
-        DB::table('backups')->where('id', $backup->id)->update([
-            'status' => Backup::STATUS_FAILED,
-            'error_message' => 'Proses dihentikan oleh user karena stuck.',
-        ]);
+        $currentUser = $request->user();
+
+        if (! $currentUser->isSuperAdmin()) {
+            abort_unless((int) $backup->tenant_id === (int) $currentUser->tenant_id, 404);
+        }
+
+        $backup->markFailed('Proses dihentikan oleh user karena stuck.');
 
         return redirect()
             ->route('backup.index')
