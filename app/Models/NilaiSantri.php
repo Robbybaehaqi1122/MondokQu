@@ -69,7 +69,19 @@ class NilaiSantri extends Model
 
     public function getTuntasAttribute(): bool
     {
-        return $this->nilai_akhir >= ($this->mataPelajaran?->kkm ?? 70);
+        $kkm = $this->mataPelajaran?->kkm ?? 70;
+
+        if ($this->santri?->room?->gradeLevel) {
+            $pivotKkm = $this->mataPelajaran?->gradeLevels()
+                ->where('grade_level_id', $this->santri->room->grade_level_id)
+                ->first()?->pivot?->kkm;
+
+            if ($pivotKkm !== null) {
+                $kkm = $pivotKkm;
+            }
+        }
+
+        return $this->nilai_akhir >= $kkm;
     }
 
     public function scopeForSemester($query, string $semester)
