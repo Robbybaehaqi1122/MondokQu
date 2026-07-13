@@ -6,11 +6,11 @@
                 <div class="text-secondary mt-1">Ringkasan hafalan santri untuk {{ $today->translatedFormat('d M Y') }}.</div>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('tahfidz.setoran.create') }}" class="btn btn-primary">
+                <a href="{{ route('tahfidz.setoran.create') }}" class="btn btn-primary flex-fill flex-md-grow-0">
                     <i class="ti ti-plus me-1"></i>
                     Catat Setoran
                 </a>
-                <a href="{{ route('tahfidz.rapor.index') }}" class="btn btn-outline-primary">
+                <a href="{{ route('tahfidz.rapor.index') }}" class="btn btn-outline-primary flex-fill flex-md-grow-0">
                     <i class="ti ti-report-analytics me-1"></i>
                     Rapor Hafalan
                 </a>
@@ -19,53 +19,53 @@
     </x-slot>
 
     <div class="row row-cards mb-3">
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Setoran Hari Ini</div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Setoran Hari Ini</div>
                         <div class="fs-2 fw-bold">{{ number_format($stats['sessions_today']) }}</div>
                     </div>
-                    <span class="avatar bg-primary-lt text-primary">
+                    <span class="avatar bg-primary-lt text-primary flex-shrink-0">
                         <i class="ti ti-book-2"></i>
                     </span>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Total Setoran</div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Total Setoran</div>
                         <div class="fs-2 fw-bold">{{ number_format($stats['total_sessions']) }}</div>
                     </div>
-                    <span class="avatar bg-azure-lt text-azure">
+                    <span class="avatar bg-azure-lt text-azure flex-shrink-0">
                         <i class="ti ti-clipboard-list"></i>
                     </span>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Santri Setoran</div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Santri Setoran</div>
                         <div class="fs-2 fw-bold">{{ number_format($stats['total_santri_with_setoran']) }}</div>
                     </div>
-                    <span class="avatar bg-green-lt text-green">
+                    <span class="avatar bg-green-lt text-green flex-shrink-0">
                         <i class="ti ti-users"></i>
                     </span>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="d-flex align-items-center justify-content-between gap-3">
-                    <div>
-                        <div class="text-uppercase text-secondary small">Santri Aktif</div>
+        <div class="col-6 col-lg-3">
+            <div class="card card-body stat-card">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="min-width-0">
+                        <div class="text-uppercase text-secondary small text-truncate">Santri Aktif</div>
                         <div class="fs-2 fw-bold">{{ number_format($stats['total_santri_active']) }}</div>
                     </div>
-                    <span class="avatar bg-success-lt text-success">
+                    <span class="avatar bg-success-lt text-success flex-shrink-0">
                         <i class="ti ti-user-check"></i>
                     </span>
                 </div>
@@ -120,14 +120,14 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
+                        <table class="table table-vcenter card-table table-mobile-md">
                             <thead>
                                 <tr>
                                     <th>Musyrif</th>
                                     <th>Hari</th>
                                     <th>Jam</th>
                                     <th>Maks Santri</th>
-                                    <th>Ruangan</th>
+                                    <th class="d-none d-md-table-cell">Ruangan</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -137,7 +137,7 @@
                                         <td>{{ $schedule->dayLabel() }}</td>
                                         <td>{{ $schedule->timeRangeLabel() }}</td>
                                         <td>{{ $schedule->max_santri }} santri</td>
-                                        <td class="text-secondary">{{ $schedule->room?->name ?? '-' }}</td>
+                                        <td class="text-secondary d-none d-md-table-cell">{{ $schedule->room?->name ?? '-' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -162,12 +162,12 @@
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>Santri</th>
                         <th>Tanggal</th>
-                        <th>Musyrif</th>
+                        <th class="d-none d-md-table-cell">Musyrif</th>
                         <th>Jumlah Ayat</th>
                         <th>Status</th>
                         <th class="w-1">Aksi</th>
@@ -181,7 +181,7 @@
                                 <div class="text-secondary small">NIS {{ $session->santri?->nis ?? '-' }}</div>
                             </td>
                             <td>{{ $session->session_date?->translatedFormat('d M Y') ?? '-' }}</td>
-                            <td>{{ $session->musyrif?->name ?? '-' }}</td>
+                            <td class="d-none d-md-table-cell">{{ $session->musyrif?->name ?? '-' }}</td>
                             <td>{{ number_format($session->records->sum(fn ($r) => ($r->verse_end - $r->verse_start) + 1)) }}</td>
                             <td>
                                 <span class="badge {{ $session->status === 'completed' ? 'bg-success-lt text-success' : 'bg-secondary-lt text-secondary' }}">
