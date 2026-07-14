@@ -2,16 +2,26 @@
 
 namespace App\Modules\KesehatanQu\Controllers;
 
+use App\Enums\ExportFormat;
 use App\Http\Controllers\Controller;
+use App\Models\DataExport;
 use App\Models\KesehatanImunisasi;
 use App\Models\KesehatanObat;
 use App\Models\KesehatanPemeriksaan;
 use App\Models\Santri;
+use App\Services\DataExportManager;
+use App\Services\FormatDispatcher;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class KesehatanQuLaporanController extends Controller
 {
+    public function __construct(
+        protected DataExportManager $dataExportManager,
+    ) {}
     public function index(Request $request): View
     {
         $currentUser = $request->user();
@@ -71,5 +81,37 @@ class KesehatanQuLaporanController extends Controller
             'imunisasiPerSantri' => $imunisasiPerSantri,
             'obatExpired' => $obatExpired,
         ]);
+    }
+
+    public function export(Request $request): RedirectResponse|BinaryFileResponse|StreamedResponse
+    {
+        $currentUser = $request->user();
+        $dateFrom = trim((string) $request->string('date_from', now()->startOfMonth()->toDateString()));
+        $dateTo = trim((string) $request->string('date_to', now()->toDateString()));
+        $format = ExportFormat::tryFrom($request->string('format', 'xlsx')) ?? ExportFormat::XLSX;
+
+        $export = new \App\Exports\KesehatanLaporanExcelExport($currentUser, $dateFrom, $dateTo);
+        $rowCount = 0;
+        foreach ($export->sheets() as $sheet) {
+            $rowCount += $sheet->collection()->count();
+        }
+
+        if ($this->dataExportManager->shouldQueue($rowCount)) {
+            $this->dataExportManager->queue(
+                $currentUser,
+                DataExport::TYPE_KESEHATAN_LAPORAN,
+                'Export Laporan Kesehatan',
+                $export->filename(),
+                ['date_from' => $dateFrom, 'date_to' => $dateTo],
+                $rowCount,
+                $format->value
+            );
+
+            return redirect()
+                ->route('kesehatan.laporan.index', ['date_from' => $dateFrom, 'date_to' => $dateTo])
+                ->with('success', 'Export laporan kesehatan sedang diproses di background. Anda akan mendapat notifikasi saat selesai.');
+        }
+
+        return app(FormatDispatcher::class)->downloadKesehatanLaporan($currentUser, $dateFrom, $dateTo);
     }
 }

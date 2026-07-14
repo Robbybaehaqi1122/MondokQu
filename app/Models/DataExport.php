@@ -15,6 +15,8 @@ class DataExport extends Model
 
     public const TYPE_SANTRI_INVOICES = 'santri_invoices';
 
+    public const TYPE_KESEHATAN_LAPORAN = 'kesehatan_laporan';
+
     public const STATUS_QUEUED = 'queued';
 
     public const STATUS_PROCESSING = 'processing';

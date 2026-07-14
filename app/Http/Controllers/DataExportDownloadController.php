@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ExportFormat;
 use App\Models\DataExport;
+use App\Models\KesehatanPemeriksaan;
 use App\Models\Santri;
 use App\Models\SantriInvoice;
 use App\Models\User;
@@ -48,6 +49,7 @@ class DataExportDownloadController extends Controller
         return match ($type) {
             DataExport::TYPE_SANTRI => $user->can('viewAny', Santri::class),
             DataExport::TYPE_SANTRI_INVOICES => $user->can('viewAny', SantriInvoice::class),
+            DataExport::TYPE_KESEHATAN_LAPORAN => $user->can('manage kesehatan'),
             default => false,
         };
     }

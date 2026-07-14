@@ -4,6 +4,9 @@
             <div class="text-secondary text-uppercase small fw-bold">KesehatanQu</div>
             <h2 class="page-title mt-1">Laporan Kesehatan</h2>
         </div>
+        <a href="{{ route('kesehatan.laporan.export', ['date_from' => $dateFrom, 'date_to' => $dateTo]) }}" class="btn btn-primary btn-sm">
+            <i class="ti ti-download"></i> Export Excel
+        </a>
     </x-slot>
 
     <div class="row mb-3">

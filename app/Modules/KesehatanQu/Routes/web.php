@@ -37,4 +37,5 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::delete('/imunisasi/{kesehatanImunisasi}', [KesehatanQuImunisasiController::class, 'destroy'])->name('imunisasi.destroy');
 
         Route::get('/laporan', [KesehatanQuLaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/laporan/export', [KesehatanQuLaporanController::class, 'export'])->name('laporan.export');
     });

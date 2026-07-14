@@ -45,6 +45,7 @@ class GenerateDataExportJob implements ShouldQueue
             [$path, $filename, $rowCount] = match ($export->type) {
                 DataExport::TYPE_SANTRI => $dispatcher->storeSantri($export, $user, $export->filters ?? []),
                 DataExport::TYPE_SANTRI_INVOICES => $dispatcher->storeInvoices($export, $user, $export->filters ?? []),
+                DataExport::TYPE_KESEHATAN_LAPORAN => $dispatcher->storeKesehatanLaporan($export, $user, $export->filters ?? []),
                 default => throw new RuntimeException('Jenis export tidak dikenal.'),
             };
 

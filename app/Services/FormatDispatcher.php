@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ExportFormat;
+use App\Exports\KesehatanLaporanExcelExport;
 use App\Exports\SantriExcelExport;
 use App\Exports\SantriInvoiceExcelExport;
 use App\Exports\SantriInvoicePdfExport;
@@ -84,6 +85,23 @@ class FormatDispatcher
                 new SantriInvoicePdfExport($user, $search, $status, $santriId)
             ),
         };
+    }
+
+    public function downloadKesehatanLaporan(?User $user, string $dateFrom, string $dateTo): BinaryFileResponse|StreamedResponse|Response
+    {
+        $export = new KesehatanLaporanExcelExport($user, $dateFrom, $dateTo);
+
+        return Excel::download($export, $export->filename());
+    }
+
+    public function storeKesehatanLaporan(DataExport $export, User $user, array $filters): array
+    {
+        $dateFrom = (string) ($filters['date_from'] ?? now()->startOfMonth()->toDateString());
+        $dateTo = (string) ($filters['date_to'] ?? now()->toDateString());
+
+        $excelExport = new KesehatanLaporanExcelExport($user, $dateFrom, $dateTo);
+
+        return $this->storeExcel($export, $excelExport);
     }
 
     protected function storeExcel(DataExport $export, $excelExport): array
