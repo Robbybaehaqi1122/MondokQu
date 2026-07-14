@@ -457,6 +457,10 @@
                                 <span class="sidebar-link-icon"><i class="ti ti-pill"></i></span>
                                 <span>Stok Obat</span>
                             </a>
+                            <a class="sidebar-sublink {{ request()->routeIs('kesehatan.imunisasi.*') ? 'active' : '' }}" href="{{ route('kesehatan.imunisasi.index') }}">
+                                <span class="sidebar-link-icon"><i class="ti ti-syringe"></i></span>
+                                <span>Imunisasi</span>
+                            </a>
                             <a class="sidebar-sublink {{ request()->routeIs('kesehatan.laporan.*') ? 'active' : '' }}" href="{{ route('kesehatan.laporan.index') }}">
                                 <span class="sidebar-link-icon"><i class="ti ti-report-analytics"></i></span>
                                 <span>Laporan</span>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\KesehatanQu\Controllers\KesehatanQuDashboardController;
+use App\Modules\KesehatanQu\Controllers\KesehatanQuImunisasiController;
 use App\Modules\KesehatanQu\Controllers\KesehatanQuLaporanController;
 use App\Modules\KesehatanQu\Controllers\KesehatanQuObatController;
 use App\Modules\KesehatanQu\Controllers\KesehatanQuPemeriksaanController;
@@ -28,6 +29,11 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
         Route::post('/obat', [KesehatanQuObatController::class, 'store'])->name('obat.store');
         Route::patch('/obat/{kesehatanObat}', [KesehatanQuObatController::class, 'update'])->name('obat.update');
         Route::delete('/obat/{kesehatanObat}', [KesehatanQuObatController::class, 'destroy'])->name('obat.destroy');
+
+        Route::get('/imunisasi', [KesehatanQuImunisasiController::class, 'index'])->name('imunisasi.index');
+        Route::post('/imunisasi', [KesehatanQuImunisasiController::class, 'store'])->name('imunisasi.store');
+        Route::patch('/imunisasi/{kesehatanImunisasi}', [KesehatanQuImunisasiController::class, 'update'])->name('imunisasi.update');
+        Route::delete('/imunisasi/{kesehatanImunisasi}', [KesehatanQuImunisasiController::class, 'destroy'])->name('imunisasi.destroy');
 
         Route::get('/laporan', [KesehatanQuLaporanController::class, 'index'])->name('laporan.index');
     });
