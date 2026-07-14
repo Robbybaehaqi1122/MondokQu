@@ -9,6 +9,9 @@ use App\Models\AttendanceSession;
 use App\Models\AttitudeGrade;
 use App\Models\Communication;
 use App\Models\GradeLevel;
+use App\Models\KesehatanObat;
+use App\Models\KesehatanPemeriksaan;
+use App\Models\KesehatanRekamMedis;
 use App\Models\LeaveRequest;
 use App\Models\MataPelajaran;
 use App\Models\MemorizationSchedule;
@@ -36,6 +39,9 @@ use App\Policies\CoaAccountPolicy;
 use App\Policies\CommunicationPolicy;
 use App\Policies\GradeLevelPolicy;
 use App\Policies\JournalEntryPolicy;
+use App\Policies\KesehatanObatPolicy;
+use App\Policies\KesehatanPemeriksaanPolicy;
+use App\Policies\KesehatanRekamMedisPolicy;
 use App\Policies\LeaveRequestPolicy;
 use App\Policies\MataPelajaranPolicy;
 use App\Policies\MemorizationSchedulePolicy;
@@ -103,5 +109,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AttitudeGrade::class, AttitudeGradePolicy::class);
         Gate::policy(GradeLevel::class, GradeLevelPolicy::class);
         Gate::policy(NilaiSikap::class, NilaiSikapPolicy::class);
+        Gate::policy(KesehatanRekamMedis::class, KesehatanRekamMedisPolicy::class);
+        Gate::policy(KesehatanPemeriksaan::class, KesehatanPemeriksaanPolicy::class);
+        Gate::policy(KesehatanObat::class, KesehatanObatPolicy::class);
     }
 }
