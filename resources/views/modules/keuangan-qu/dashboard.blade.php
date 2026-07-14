@@ -14,39 +14,63 @@
     </x-slot>
 
     <div class="row row-cards">
-        <div class="col-sm-6 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="text-secondary small text-uppercase fw-semibold mb-2">Saldo Kas</div>
-                    <div class="h1 mb-1 text-truncate" style="font-size: 1.5rem;">Rp {{ number_format($saldoKas, 0, ',', '.') }}</div>
-                    <div class="text-secondary">Total saldo kas & bank</div>
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Saldo Kas</div>
+                                <span class="avatar bg-teal-lt text-teal">
+                                    <i class="ti ti-wallet"></i>
+                                </span>
+                            </div>
+                            <div class="fs-2 fw-bold mb-0 text-truncate">Rp {{ number_format($saldoKas, 0, ',', '.') }}</div>
+                            <div class="text-secondary small mt-1">Total saldo kas & bank</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="text-secondary small text-uppercase fw-semibold mb-2">Akun Aktif</div>
-                    <div class="h1 mb-1" style="font-size: 1.5rem;">{{ number_format($totalAkun) }}</div>
-                    <div class="text-secondary">Kode akun (COA) aktif</div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Akun Aktif</div>
+                                <span class="avatar bg-blue-lt text-blue">
+                                    <i class="ti ti-building-bank"></i>
+                                </span>
+                            </div>
+                            <div class="fs-2 fw-bold mb-0">{{ number_format($totalAkun) }}</div>
+                            <div class="text-secondary small mt-1">Kode akun (COA) aktif</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="text-secondary small text-uppercase fw-semibold mb-2">Jurnal Diposting</div>
-                    <div class="h1 mb-1" style="font-size: 1.5rem;">{{ number_format($totalPosted) }}</div>
-                    <div class="text-secondary">Bulan {{ str_pad((string) $month, 2, '0', STR_PAD_LEFT) }}</div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Jurnal Diposting</div>
+                                <span class="avatar bg-green-lt text-green">
+                                    <i class="ti ti-check"></i>
+                                </span>
+                            </div>
+                            <div class="fs-2 fw-bold mb-0">{{ number_format($totalPosted) }}</div>
+                            <div class="text-secondary small mt-1">Bulan {{ str_pad((string) $month, 2, '0', STR_PAD_LEFT) }}</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="text-secondary small text-uppercase fw-semibold mb-2">Jurnal Draft</div>
-                    <div class="h1 mb-1" style="font-size: 1.5rem;">{{ number_format($totalDraft) }}</div>
-                    <div class="text-secondary">Menunggu persetujuan</div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Jurnal Draft</div>
+                                <span class="avatar bg-yellow-lt text-yellow">
+                                    <i class="ti ti-clock"></i>
+                                </span>
+                            </div>
+                            <div class="fs-2 fw-bold mb-0">{{ number_format($totalDraft) }}</div>
+                            <div class="text-secondary small mt-1">Menunggu persetujuan</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
