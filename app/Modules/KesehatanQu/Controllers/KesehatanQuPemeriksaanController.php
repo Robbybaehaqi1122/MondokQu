@@ -177,10 +177,20 @@ class KesehatanQuPemeriksaanController extends Controller
 
         $pemeriksaan = KesehatanPemeriksaan::query()
             ->visibleTo($currentUser)
-            ->with('santri')
+            ->with(['santri', 'pemakaianObat.obat'])
             ->findOrFail($kesehatanPemeriksaan->id);
 
         $santriName = $pemeriksaan->santri?->full_name ?? "Santri #{$pemeriksaan->santri_id}";
+
+        DB::transaction(function () use ($pemeriksaan) {
+            foreach ($pemeriksaan->pemakaianObat as $pemakaian) {
+                if ($pemakaian->obat) {
+                    $pemakaian->obat->increment('stok', $pemakaian->jumlah);
+                }
+            }
+
+            $pemeriksaan->delete();
+        });
 
         $this->activityLogger->log(
             action: 'pemeriksaan_deleted',
@@ -194,8 +204,6 @@ class KesehatanQuPemeriksaanController extends Controller
             ipAddress: $request->ip(),
             userAgent: $request->userAgent()
         );
-
-        $pemeriksaan->delete();
 
         return redirect()
             ->route('kesehatan.pemeriksaan.index')
