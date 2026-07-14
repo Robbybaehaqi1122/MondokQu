@@ -14,38 +14,38 @@
     </x-slot>
 
     <div class="row row-cards">
-        <div class="col-md-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="text-secondary small text-uppercase fw-semibold mb-2">Saldo Kas</div>
-                    <div class="h1 mb-1">Rp {{ number_format($saldoKas, 0, ',', '.') }}</div>
+                    <div class="h1 mb-1 text-truncate" style="font-size: 1.5rem;">Rp {{ number_format($saldoKas, 0, ',', '.') }}</div>
                     <div class="text-secondary">Total saldo kas & bank</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="text-secondary small text-uppercase fw-semibold mb-2">Akun Aktif</div>
-                    <div class="h1 mb-1">{{ number_format($totalAkun) }}</div>
+                    <div class="h1 mb-1" style="font-size: 1.5rem;">{{ number_format($totalAkun) }}</div>
                     <div class="text-secondary">Kode akun (COA) aktif</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="text-secondary small text-uppercase fw-semibold mb-2">Jurnal Diposting</div>
-                    <div class="h1 mb-1">{{ number_format($totalPosted) }}</div>
+                    <div class="h1 mb-1" style="font-size: 1.5rem;">{{ number_format($totalPosted) }}</div>
                     <div class="text-secondary">Bulan {{ str_pad((string) $month, 2, '0', STR_PAD_LEFT) }}</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-xl-3">
+        <div class="col-sm-6 col-xl-3">
             <div class="card">
                 <div class="card-body">
                     <div class="text-secondary small text-uppercase fw-semibold mb-2">Jurnal Draft</div>
-                    <div class="h1 mb-1">{{ number_format($totalDraft) }}</div>
+                    <div class="h1 mb-1" style="font-size: 1.5rem;">{{ number_format($totalDraft) }}</div>
                     <div class="text-secondary">Menunggu persetujuan</div>
                 </div>
             </div>
@@ -86,15 +86,15 @@
                     <h3 class="card-title">Jurnal Terbaru</h3>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-vcenter card-table">
+                    <table class="table table-vcenter card-table table-mobile-md">
                         <thead>
                             <tr>
                                 <th>No. Jurnal</th>
                                 <th>Tanggal</th>
-                                <th>Deskripsi</th>
+                                <th class="d-none d-md-table-cell">Deskripsi</th>
                                 <th>Total</th>
                                 <th>Status</th>
-                                <th>Dibuat</th>
+                                <th class="d-none d-md-table-cell">Dibuat</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -106,7 +106,7 @@
                                         </a>
                                     </td>
                                     <td>{{ $entry->entry_date->format('d/m/Y') }}</td>
-                                    <td class="text-truncate" style="max-width: 250px;">{{ $entry->description }}</td>
+                                    <td class="d-none d-md-table-cell text-truncate" style="max-width: 250px;">{{ $entry->description }}</td>
                                     <td>Rp {{ number_format($entry->totalDebit(), 0, ',', '.') }}</td>
                                     <td>
                                         @if ($entry->isPosted())
@@ -115,7 +115,7 @@
                                             <span class="badge bg-warning">Draft</span>
                                         @endif
                                     </td>
-                                    <td>{{ $entry->creator?->name ?? '-' }}</td>
+                                    <td class="d-none d-md-table-cell">{{ $entry->creator?->name ?? '-' }}</td>
                                 </tr>
                             @empty
                                 <tr>
