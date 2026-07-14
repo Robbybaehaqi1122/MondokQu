@@ -57,14 +57,7 @@
                             </td>
                             <td class="d-none d-md-table-cell">{{ $obat->keterangan ?: '-' }}</td>
                             <td class="text-end">
-                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#obatModal"
-                                    data-id="{{ $obat->id }}"
-                                    data-nama="{{ $obat->nama_obat }}"
-                                    data-jenis="{{ $obat->jenis }}"
-                                    data-stok="{{ $obat->stok }}"
-                                    data-satuan="{{ $obat->satuan }}"
-                                    data-expired="{{ $obat->expired_date?->toDateString() }}"
-                                    data-keterangan="{{ $obat->keterangan }}">Edit</button>
+                                <a href="{{ route('kesehatan.obat.edit', $obat) }}" class="btn btn-outline-primary btn-sm">Edit</a>
                                 <form method="POST" action="{{ route('kesehatan.obat.destroy', $obat) }}" class="d-inline" onsubmit="return confirm('Hapus obat {{ $obat->nama_obat }}?')">
                                     @csrf
                                     @method('DELETE')
@@ -89,12 +82,10 @@
 
     <div class="modal fade" id="obatModal" tabindex="-1">
         <div class="modal-dialog">
-            <form method="POST" action="{{ route('kesehatan.obat.store') }}" class="modal-content" id="obatForm">
+            <form method="POST" action="{{ route('kesehatan.obat.store') }}" class="modal-content">
                 @csrf
-                <input type="hidden" name="_method" value="POST" id="obatFormMethod">
-                <input type="hidden" name="obat_id" id="obat_id" value="">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="obatModalTitle">Tambah Obat</h5>
+                    <h5 class="modal-title">Tambah Obat</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -130,42 +121,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary" id="obatModalSubmit">Simpan</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
                 </div>
             </form>
         </div>
     </div>
 </x-app-layout>
-
-@push('scripts')
-<script>
-    document.getElementById('obatModal')?.addEventListener('show.bs.modal', function (event) {
-        const btn = event.relatedTarget;
-        const isEdit = btn.dataset.id;
-        const form = document.getElementById('obatForm');
-        const title = document.getElementById('obatModalTitle');
-        const submit = document.getElementById('obatModalSubmit');
-
-        if (isEdit) {
-            title.textContent = 'Edit Obat';
-            submit.textContent = 'Update';
-            form.action = '{{ route("kesehatan.obat.index") }}/' + btn.dataset.id;
-            document.getElementById('obatFormMethod').value = 'PATCH';
-            document.getElementById('obat_id').value = btn.dataset.id;
-            document.getElementById('nama_obat').value = btn.dataset.nama;
-            document.getElementById('jenis').value = btn.dataset.jenis;
-            document.getElementById('stok').value = btn.dataset.stok;
-            document.getElementById('satuan').value = btn.dataset.satuan;
-            document.getElementById('expired_date').value = btn.dataset.expired;
-            document.getElementById('keterangan').value = btn.dataset.keterangan;
-        } else {
-            title.textContent = 'Tambah Obat';
-            submit.textContent = 'Simpan';
-            form.action = '{{ route("kesehatan.obat.store") }}';
-            document.getElementById('obatFormMethod').value = 'POST';
-            form.reset();
-            document.getElementById('obat_id').value = '';
-        }
-    });
-</script>
-@endpush

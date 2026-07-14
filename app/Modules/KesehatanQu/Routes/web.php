@@ -27,6 +27,7 @@ Route::middleware(['auth', 'password_change_required', 'subscription_active', 'v
 
         Route::get('/obat', [KesehatanQuObatController::class, 'index'])->name('obat.index');
         Route::post('/obat', [KesehatanQuObatController::class, 'store'])->name('obat.store');
+        Route::get('/obat/{kesehatanObat}/edit', [KesehatanQuObatController::class, 'edit'])->name('obat.edit');
         Route::patch('/obat/{kesehatanObat}', [KesehatanQuObatController::class, 'update'])->name('obat.update');
         Route::delete('/obat/{kesehatanObat}', [KesehatanQuObatController::class, 'destroy'])->name('obat.destroy');
 

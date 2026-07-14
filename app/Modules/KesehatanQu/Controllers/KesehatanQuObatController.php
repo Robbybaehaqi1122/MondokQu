@@ -36,6 +36,19 @@ class KesehatanQuObatController extends Controller
         ]);
     }
 
+    public function edit(Request $request, KesehatanObat $kesehatanObat): View
+    {
+        $currentUser = $request->user();
+
+        $obat = KesehatanObat::query()
+            ->visibleTo($currentUser)
+            ->findOrFail($kesehatanObat->id);
+
+        return view('modules.kesehatan-qu.obat.edit', [
+            'obat' => $obat,
+        ]);
+    }
+
     public function store(StoreObatRequest $request): RedirectResponse
     {
         $currentUser = $request->user();
