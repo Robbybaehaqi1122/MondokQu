@@ -46,10 +46,36 @@ class KesehatanQuDashboardController extends Controller
             ->where('stok', '<=', 0)
             ->count();
 
+        $obatExpired = KesehatanObat::query()
+            ->visibleTo($currentUser)
+            ->where('expired_date', '<=', now())
+            ->whereNotNull('expired_date')
+            ->count();
+
         $imunisasiTertunda = KesehatanImunisasi::query()
             ->visibleTo($currentUser)
             ->where('status', KesehatanImunisasi::STATUS_BELUM)
             ->count();
+
+        $obatStokHabisList = KesehatanObat::query()
+            ->visibleTo($currentUser)
+            ->where('stok', '<=', 0)
+            ->limit(5)
+            ->get();
+
+        $obatExpiredList = KesehatanObat::query()
+            ->visibleTo($currentUser)
+            ->where('expired_date', '<=', now())
+            ->whereNotNull('expired_date')
+            ->limit(5)
+            ->get();
+
+        $imunisasiTertundaList = KesehatanImunisasi::query()
+            ->visibleTo($currentUser)
+            ->with('santri')
+            ->where('status', KesehatanImunisasi::STATUS_BELUM)
+            ->limit(5)
+            ->get();
 
         $pemeriksaanTerbaru = KesehatanPemeriksaan::query()
             ->visibleTo($currentUser)
@@ -64,7 +90,11 @@ class KesehatanQuDashboardController extends Controller
             'pemeriksaanBulanIni' => $pemeriksaanBulanIni,
             'pemeriksaanHariIni' => $pemeriksaanHariIni,
             'obatStokHabis' => $obatStokHabis,
+            'obatExpired' => $obatExpired,
             'imunisasiTertunda' => $imunisasiTertunda,
+            'obatStokHabisList' => $obatStokHabisList,
+            'obatExpiredList' => $obatExpiredList,
+            'imunisasiTertundaList' => $imunisasiTertundaList,
             'pemeriksaanTerbaru' => $pemeriksaanTerbaru,
         ]);
     }
