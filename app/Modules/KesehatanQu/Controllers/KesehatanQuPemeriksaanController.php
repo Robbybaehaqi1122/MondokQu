@@ -10,6 +10,8 @@ use App\Modules\KesehatanQu\Requests\StorePemeriksaanRequest;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class KesehatanQuPemeriksaanController extends Controller
@@ -104,27 +106,36 @@ class KesehatanQuPemeriksaanController extends Controller
         }
 
         if (! empty($validated['obat_ids'])) {
-            foreach ($validated['obat_ids'] as $i => $obatId) {
-                if (empty($obatId)) {
-                    continue;
+            DB::transaction(function () use ($validated, $currentUser, $pemeriksaan) {
+                foreach ($validated['obat_ids'] as $i => $obatId) {
+                    if (empty($obatId)) {
+                        continue;
+                    }
+
+                    $obat = KesehatanObat::query()
+                        ->visibleTo($currentUser)
+                        ->where('id', $obatId)
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+                    $jumlah = (int) ($validated['obat_jumlahs'][$i] ?? 1);
+
+                    if ($jumlah > $obat->stok) {
+                        throw ValidationException::withMessages([
+                            'obat_jumlahs' => "Stok obat \"{$obat->nama_obat}\" tidak mencukupi. Tersedia: {$obat->stok}.",
+                        ]);
+                    }
+
+                    $pemeriksaan->pemakaianObat()->create([
+                        'tenant_id' => $currentUser->tenant_id,
+                        'obat_id' => $obat->id,
+                        'jumlah' => $jumlah,
+                        'catatan' => $validated['obat_catatans'][$i] ?? null,
+                    ]);
+
+                    $obat->decrement('stok', $jumlah);
                 }
-
-                $obat = KesehatanObat::query()
-                    ->visibleTo($currentUser)
-                    ->findOrFail($obatId);
-
-                $jumlah = (int) ($validated['obat_jumlahs'][$i] ?? 1);
-                $jumlah = min($jumlah, $obat->stok);
-
-                $pemeriksaan->pemakaianObat()->create([
-                    'tenant_id' => $currentUser->tenant_id,
-                    'obat_id' => $obat->id,
-                    'jumlah' => $jumlah,
-                    'catatan' => $validated['obat_catatans'][$i] ?? null,
-                ]);
-
-                $obat->decrement('stok', $jumlah);
-            }
+            });
         }
 
         $this->activityLogger->log(
