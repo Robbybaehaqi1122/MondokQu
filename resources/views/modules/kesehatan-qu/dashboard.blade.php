@@ -159,5 +159,186 @@
                 </div>
             </div>
         @endif
+
+        @if ($trenPemeriksaan->isNotEmpty() || $topKeluhan->isNotEmpty() || $topObat->isNotEmpty())
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Tren Pemeriksaan (6 Bulan)</h3>
+                    </div>
+                    <div class="card-body">
+                        @if ($trenPemeriksaan->isNotEmpty())
+                            <div style="height: 16rem;">
+                                <canvas id="chartTrenPemeriksaan"></canvas>
+                            </div>
+                        @else
+                            <div class="text-secondary text-center py-4">Belum ada data pemeriksaan.</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Top Keluhan</h3>
+                    </div>
+                    <div class="card-body">
+                        @if ($topKeluhan->isNotEmpty())
+                            <div style="height: 16rem;">
+                                <canvas id="chartKeluhan"></canvas>
+                            </div>
+                        @else
+                            <div class="text-secondary text-center py-4">Belum ada data keluhan.</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Obat Paling Sering Digunakan</h3>
+                    </div>
+                    <div class="card-body">
+                        @if ($topObat->isNotEmpty())
+                            <div style="height: 14rem;">
+                                <canvas id="chartObat"></canvas>
+                            </div>
+                        @else
+                            <div class="text-secondary text-center py-4">Belum ada data penggunaan obat.</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Ringkasan</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 14rem;">
+                            <canvas id="chartRingkasan"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 </x-app-layout>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const palette = ['#2563eb', '#0d9488', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+    const trenLabels = @json($trenPemeriksaan->pluck('label'));
+    const trenData = @json($trenPemeriksaan->pluck('count'));
+
+    if (document.getElementById('chartTrenPemeriksaan') && trenLabels.length) {
+        new Chart(document.getElementById('chartTrenPemeriksaan'), {
+            type: 'line',
+            data: {
+                labels: trenLabels,
+                datasets: [{
+                    label: 'Pemeriksaan',
+                    data: trenData,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37,99,235,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2563eb',
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            },
+        });
+    }
+
+    const keluhanLabels = @json($topKeluhan->pluck('keluhan'));
+    const keluhanData = @json($topKeluhan->pluck('total'));
+
+    if (document.getElementById('chartKeluhan') && keluhanLabels.length) {
+        new Chart(document.getElementById('chartKeluhan'), {
+            type: 'bar',
+            data: {
+                labels: keluhanLabels,
+                datasets: [{
+                    label: 'Jumlah',
+                    data: keluhanData,
+                    backgroundColor: palette.slice(0, keluhanLabels.length),
+                    borderRadius: 4,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            },
+        });
+    }
+
+    const obatLabels = @json($topObat->pluck('label'));
+    const obatData = @json($topObat->pluck('count'));
+
+    if (document.getElementById('chartObat') && obatLabels.length) {
+        new Chart(document.getElementById('chartObat'), {
+            type: 'bar',
+            data: {
+                labels: obatLabels,
+                datasets: [{
+                    label: 'Kali Digunakan',
+                    data: obatData,
+                    backgroundColor: palette.slice(0, obatLabels.length),
+                    borderRadius: 4,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            },
+        });
+    }
+
+    const ringkasanLabels = ['Total Santri', 'Rekam Medis', 'Pemeriksaan', 'Stok Habis', 'Expired', 'Imunisasi Tertunda'];
+    const ringkasanData = [
+        {{ $totalSantri }},
+        {{ $rekamMedisTerisi }},
+        {{ $pemeriksaanBulanIni }},
+        {{ $obatStokHabis }},
+        {{ $obatExpired }},
+        {{ $imunisasiTertunda }},
+    ];
+
+    if (document.getElementById('chartRingkasan')) {
+        new Chart(document.getElementById('chartRingkasan'), {
+            type: 'doughnut',
+            data: {
+                labels: ringkasanLabels,
+                datasets: [{
+                    data: ringkasanData,
+                    backgroundColor: ['#2563eb', '#0d9488', '#f59e0b', '#ef4444', '#f97316', '#8b5cf6'],
+                    borderWidth: 0,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } },
+                },
+            },
+        });
+    }
+});
+</script>
+@endpush

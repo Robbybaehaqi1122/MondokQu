@@ -84,6 +84,43 @@ class KesehatanQuDashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $trenPemeriksaan = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $count = KesehatanPemeriksaan::query()
+                ->visibleTo($currentUser)
+                ->whereMonth('tanggal_pemeriksaan', $month->month)
+                ->whereYear('tanggal_pemeriksaan', $month->year)
+                ->count();
+            $trenPemeriksaan->push([
+                'label' => $month->translatedFormat('M Y'),
+                'count' => $count,
+            ]);
+        }
+
+        $topKeluhan = KesehatanPemeriksaan::query()
+            ->visibleTo($currentUser)
+            ->whereNotNull('keluhan')
+            ->where('keluhan', '!=', '')
+            ->selectRaw('keluhan, COUNT(*) as total')
+            ->groupBy('keluhan')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        $topObat = \App\Models\KesehatanPemakaianObat::query()
+            ->whereHas('pemeriksaan', fn ($q) => $q->visibleTo($currentUser))
+            ->whereHas('obat')
+            ->selectRaw('obat_id, COUNT(*) as total')
+            ->groupBy('obat_id')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get()
+            ->map(fn ($item) => [
+                'label' => $item->obat?->nama_obat ?? '-',
+                'count' => $item->total,
+            ]);
+
         return view('modules.kesehatan-qu.dashboard', [
             'totalSantri' => $totalSantri,
             'rekamMedisTerisi' => $rekamMedisTerisi,
@@ -96,6 +133,9 @@ class KesehatanQuDashboardController extends Controller
             'obatExpiredList' => $obatExpiredList,
             'imunisasiTertundaList' => $imunisasiTertundaList,
             'pemeriksaanTerbaru' => $pemeriksaanTerbaru,
+            'trenPemeriksaan' => $trenPemeriksaan,
+            'topKeluhan' => $topKeluhan,
+            'topObat' => $topObat,
         ]);
     }
 }
