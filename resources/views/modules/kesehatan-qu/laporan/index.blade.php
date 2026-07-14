@@ -48,13 +48,13 @@
                 <div class="text-secondary small">Memiliki riwayat penyakit atau alergi.</div>
             </div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table table-mobile-md">
                     <thead>
                         <tr>
                             <th>Santri</th>
                             <th>Riwayat Penyakit</th>
-                            <th>Alergi Obat</th>
-                            <th>Alergi Makanan</th>
+                            <th class="d-none d-md-table-cell">Alergi Obat</th>
+                            <th class="d-none d-md-table-cell">Alergi Makanan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -62,8 +62,8 @@
                             <tr>
                                 <td class="fw-semibold">{{ $santri->full_name }} ({{ $santri->nis }})</td>
                                 <td>{{ $santri->rekamMedis?->riwayat_penyakit ?: '-' }}</td>
-                                <td>{{ $santri->rekamMedis?->alergi_obat ?: '-' }}</td>
-                                <td>{{ $santri->rekamMedis?->alergi_makanan ?: '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $santri->rekamMedis?->alergi_obat ?: '-' }}</td>
+                                <td class="d-none d-md-table-cell">{{ $santri->rekamMedis?->alergi_makanan ?: '-' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -79,12 +79,12 @@
                 <div class="text-secondary small">Periode {{ $dateFrom }} s/d {{ $dateTo }}.</div>
             </div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table table-mobile-md">
                     <thead>
                         <tr>
                             <th>Santri</th>
-                            <th>Jenis Imunisasi</th>
-                            <th>Tanggal</th>
+                            <th class="d-none d-md-table-cell">Jenis Imunisasi</th>
+                            <th class="d-none d-md-table-cell">Tanggal</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -93,8 +93,8 @@
                             @foreach ($imunisasis as $imunisasi)
                                 <tr>
                                     <td class="fw-semibold">{{ $santriName }}</td>
-                                    <td>{{ $imunisasi->jenis_imunisasi }}</td>
-                                    <td>{{ $imunisasi->tanggal?->translatedFormat('d M Y') ?? '-' }}</td>
+                                    <td class="d-none d-md-table-cell">{{ $imunisasi->jenis_imunisasi }}</td>
+                                    <td class="d-none d-md-table-cell">{{ $imunisasi->tanggal?->translatedFormat('d M Y') ?? '-' }}</td>
                                     <td>
                                         <span class="badge {{ $imunisasi->status === 'sudah' ? 'bg-success' : 'bg-warning' }}">
                                             {{ $imunisasi->status }}
@@ -116,12 +116,12 @@
                 <div class="text-secondary small">1 bulan ke depan.</div>
             </div>
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-vcenter card-table table-mobile-md">
                     <thead>
                         <tr>
                             <th>Nama Obat</th>
-                            <th>Stok</th>
-                            <th>Expired Date</th>
+                            <th class="d-none d-md-table-cell">Stok</th>
+                            <th class="d-none d-md-table-cell">Expired Date</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -129,8 +129,8 @@
                         @foreach ($obatExpired as $obat)
                             <tr class="{{ $obat->expired_date?->isPast() ? 'table-danger' : 'table-warning' }}">
                                 <td class="fw-semibold">{{ $obat->nama_obat }}</td>
-                                <td>{{ $obat->stok }} {{ $obat->satuan }}</td>
-                                <td>{{ $obat->expired_date?->translatedFormat('d M Y') }}</td>
+                                <td class="d-none d-md-table-cell">{{ $obat->stok }} {{ $obat->satuan }}</td>
+                                <td class="d-none d-md-table-cell">{{ $obat->expired_date?->translatedFormat('d M Y') }}</td>
                                 <td>
                                     @if ($obat->expired_date?->isPast())
                                         <span class="badge bg-danger">Expired</span>

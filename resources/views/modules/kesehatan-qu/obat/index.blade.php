@@ -23,30 +23,30 @@
 
     <div class="card">
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>Nama Obat</th>
-                        <th>Jenis</th>
+                        <th class="d-none d-md-table-cell">Jenis</th>
                         <th>Stok</th>
-                        <th>Satuan</th>
-                        <th>Expired</th>
-                        <th>Keterangan</th>
-                        <th></th>
+                        <th class="d-none d-md-table-cell">Satuan</th>
+                        <th class="d-none d-md-table-cell">Expired</th>
+                        <th class="d-none d-md-table-cell">Keterangan</th>
+                        <th class="w-1"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($obats as $obat)
                         <tr class="{{ $obat->stok <= 0 ? 'table-danger' : ($obat->expired_date?->isPast() ? 'table-warning' : '') }}">
                             <td class="fw-semibold">{{ $obat->nama_obat }}</td>
-                            <td>{{ $obat->jenis ?: '-' }}</td>
+                            <td class="d-none d-md-table-cell">{{ $obat->jenis ?: '-' }}</td>
                             <td>
                                 <span class="badge {{ $obat->stok <= 0 ? 'bg-danger' : ($obat->stok <= 10 ? 'bg-warning' : 'bg-success') }}">
                                     {{ $obat->stok }}
                                 </span>
                             </td>
-                            <td>{{ $obat->satuan }}</td>
-                            <td>
+                            <td class="d-none d-md-table-cell">{{ $obat->satuan }}</td>
+                            <td class="d-none d-md-table-cell">
                                 @if ($obat->expired_date)
                                     <span class="{{ $obat->expired_date->isPast() ? 'text-danger fw-semibold' : '' }}">
                                         {{ $obat->expired_date->translatedFormat('d M Y') }}
@@ -55,7 +55,7 @@
                                     <span class="text-secondary">-</span>
                                 @endif
                             </td>
-                            <td>{{ $obat->keterangan ?: '-' }}</td>
+                            <td class="d-none d-md-table-cell">{{ $obat->keterangan ?: '-' }}</td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#obatModal"
                                     data-id="{{ $obat->id }}"

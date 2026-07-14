@@ -33,15 +33,15 @@
 
     <div class="card">
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>Tanggal</th>
                         <th>Santri</th>
-                        <th>Keluhan</th>
-                        <th>Diagnosis</th>
-                        <th>Rujukan</th>
-                        <th></th>
+                        <th class="d-none d-md-table-cell">Keluhan</th>
+                        <th class="d-none d-md-table-cell">Diagnosis</th>
+                        <th class="d-none d-md-table-cell">Rujukan</th>
+                        <th class="w-1"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,9 +49,9 @@
                         <tr>
                             <td>{{ $p->tanggal_pemeriksaan->translatedFormat('d M Y') }}</td>
                             <td class="fw-semibold">{{ $p->santri?->full_name ?? 'Unknown' }}</td>
-                            <td>{{ $p->keluhan }}</td>
-                            <td>{{ $p->diagnosis ?: '-' }}</td>
-                            <td>
+                            <td class="d-none d-md-table-cell">{{ $p->keluhan }}</td>
+                            <td class="d-none d-md-table-cell">{{ $p->diagnosis ?: '-' }}</td>
+                            <td class="d-none d-md-table-cell">
                                 @if ($p->rujukan)
                                     <span class="badge bg-warning-lt">Dirujuk</span>
                                 @else

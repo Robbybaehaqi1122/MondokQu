@@ -22,15 +22,15 @@
 
     <div class="card">
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-vcenter card-table table-mobile-md">
                 <thead>
                     <tr>
                         <th>NIS</th>
                         <th>Nama Santri</th>
-                        <th>Gol. Darah</th>
-                        <th>Riwayat Penyakit</th>
-                        <th>Alergi</th>
-                        <th></th>
+                        <th class="d-none d-md-table-cell">Gol. Darah</th>
+                        <th class="d-none d-md-table-cell">Riwayat Penyakit</th>
+                        <th class="d-none d-md-table-cell">Alergi</th>
+                        <th class="w-1"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,21 +38,21 @@
                         <tr>
                             <td>{{ $santri->nis }}</td>
                             <td class="fw-semibold">{{ $santri->full_name }}</td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 @if ($santri->rekamMedis)
                                     <span class="badge bg-cyan-lt">{{ $santri->rekamMedis->golongan_darah ?: '-' }}</span>
                                 @else
                                     <span class="text-secondary">-</span>
                                 @endif
                             </td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 @if ($santri->rekamMedis?->riwayat_penyakit)
                                     <span class="text-truncate d-inline-block" style="max-width: 200px;">{{ $santri->rekamMedis->riwayat_penyakit }}</span>
                                 @else
                                     <span class="text-secondary">-</span>
                                 @endif
                             </td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 @php
                                     $alergi = collect();
                                     if ($santri->rekamMedis?->alergi_obat) $alergi->push('Obat: '.$santri->rekamMedis->alergi_obat);
