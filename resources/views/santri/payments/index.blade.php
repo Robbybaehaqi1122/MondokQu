@@ -7,32 +7,64 @@
     </x-slot>
 
     <div class="row row-cards mb-3">
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Total Tagihan</div>
-                <div class="fs-2 fw-bold">{{ number_format($summary['total_invoices']) }}</div>
-                <div class="text-secondary small">Rp {{ number_format($summary['total_amount'] / 100, 0, ',', '.') }}</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Terbayar</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format($summary['paid_amount'] / 100, 0, ',', '.') }}</div>
-                <div class="text-secondary small">{{ number_format($summary['paid_invoices']) }} tagihan lunas</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Sisa Tagihan</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format($summary['outstanding_amount'] / 100, 0, ',', '.') }}</div>
-                <div class="text-secondary small">{{ number_format($summary['partial_invoices'] + $summary['pending_invoices']) }} belum lunas</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card card-body">
-                <div class="text-uppercase text-secondary small">Masuk Bulan Ini</div>
-                <div class="fs-2 fw-bold">Rp {{ number_format($paidThisMonth / 100, 0, ',', '.') }}</div>
-                <div class="text-secondary small">{{ number_format($summary['overdue_invoices']) }} tunggakan aktif</div>
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Total Tagihan</div>
+                                <span class="avatar bg-blue-lt text-blue">
+                                    <i class="ti ti-file-invoice"></i>
+                                </span>
+                            </div>
+                            <div class="fs-2 fw-bold mb-0">{{ number_format($summary['total_invoices']) }}</div>
+                            <div class="text-secondary small mt-1">Rp {{ number_format($summary['total_amount'] / 100, 0, ',', '.') }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Terbayar</div>
+                                <span class="avatar bg-green-lt text-green">
+                                    <i class="ti ti-check"></i>
+                                </span>
+                            </div>
+                            <div class="fs-2 fw-bold mb-0">Rp {{ number_format($summary['paid_amount'] / 100, 0, ',', '.') }}</div>
+                            <div class="text-secondary small mt-1">{{ number_format($summary['paid_invoices']) }} tagihan lunas</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Sisa Tagihan</div>
+                                <span class="avatar bg-yellow-lt text-yellow">
+                                    <i class="ti ti-clock"></i>
+                                </span>
+                            </div>
+                            <div class="fs-2 fw-bold mb-0">Rp {{ number_format($summary['outstanding_amount'] / 100, 0, ',', '.') }}</div>
+                            <div class="text-secondary small mt-1">{{ number_format($summary['partial_invoices'] + $summary['pending_invoices']) }} belum lunas</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="text-secondary small text-uppercase fw-bold">Masuk Bulan Ini</div>
+                                <span class="avatar bg-teal-lt text-teal">
+                                    <i class="ti ti-calendar-event"></i>
+                                </span>
+                            </div>
+                            <div class="fs-2 fw-bold mb-0">Rp {{ number_format($paidThisMonth / 100, 0, ',', '.') }}</div>
+                            <div class="text-secondary small mt-1">{{ number_format($summary['overdue_invoices']) }} tunggakan aktif</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -53,12 +85,12 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-vcenter card-table">
+                    <table class="table table-vcenter card-table table-mobile-md">
                         <thead>
                             <tr>
                                 <th>No. Tagihan</th>
                                 <th>Santri</th>
-                                <th>Nominal</th>
+                                <th class="d-none d-md-table-cell">Nominal</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -70,7 +102,7 @@
                                         <div class="text-secondary small">{{ optional($invoice->due_date)->translatedFormat('d M Y') }}</div>
                                     </td>
                                     <td>{{ $invoice->santri?->full_name ?? '-' }}</td>
-                                    <td>Rp {{ number_format($invoice->amount / 100, 0, ',', '.') }}</td>
+                                    <td class="d-none d-md-table-cell">Rp {{ number_format($invoice->amount / 100, 0, ',', '.') }}</td>
                                     <td>{{ $invoice->statusLabel() }}</td>
                                 </tr>
                             @empty
